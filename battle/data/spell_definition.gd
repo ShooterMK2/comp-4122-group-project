@@ -17,3 +17,9 @@ static func make(p_id: StringName, p_name: String, p_pattern: SpellPattern,
 		s.requirements.append(r)
 	s.base_damage = p_damage
 	return s
+
+func requirement_text() -> String:
+	var parts: Array[String] = []
+	for r in requirements:
+		parts.append("%d %s" % [r.min_count, BattleTypes.name_of(r.element)])
+	return "%s · %d tiles" % [", ".join(parts), pattern.cells.size()]
