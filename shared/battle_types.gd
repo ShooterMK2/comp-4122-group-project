@@ -4,7 +4,7 @@ extends RefCounted
 enum Element { NONE, UNIVERSAL, FIRE, ICE, EARTH, WIND, LIGHTNING, DARK }
 
 const EMPTY := -1
-const BOARD_SIZE := Vector2i(10, 3)
+const BOARD_SIZE := Vector2i(10, 10)
 
 const COLORS := {
 	Element.NONE: Color(0.6, 0.6, 0.6),
