@@ -2,12 +2,15 @@ extends Control
 
 const E := BattleTypes.Element
 const PREVIEW_CELL := 28
+const OUTLINE_COLOR_COUNT := 20
 
 var board := CastingBoardModel.new()
 var spells: Array[SpellDefinition] = []
 var hand: Array[FragmentData] = []
 var queue: Array[QueuedSpell] = []
 var selected := -1
+var _outlined_cells: Dictionary = {}
+var _matched_cells: Dictionary = {}
 
 var _cell_buttons: Array[Button] = []
 var _hand_box: HBoxContainer
@@ -66,8 +69,15 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 32)
 	add_child(root)
 
+	var left_scroll := ScrollContainer.new()
+	left_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	root.add_child(left_scroll)
+
 	var left := VBoxContainer.new()
-	root.add_child(left)
+	left.custom_minimum_size.x = 64.0 * board.size.x
+	left_scroll.add_child(left)
 	_info = Label.new()
 	_info.text = "Drag a fragment onto the board (or click it, then click a cell). R = rotate."
 	left.add_child(_info)
@@ -107,9 +117,15 @@ func _build_ui() -> void:
 	reset.pressed.connect(_reset)
 	tools.add_child(reset)
 
+	var right_scroll := ScrollContainer.new()
+	right_scroll.custom_minimum_size.x = 300
+	right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	root.add_child(right_scroll)
+
 	var right := VBoxContainer.new()
-	right.custom_minimum_size = Vector2(300, 0)
-	root.add_child(right)
+	right.custom_minimum_size.x = 300
+	right_scroll.add_child(right)
 	var title := Label.new()
 	title.text = "Spell List"
 	right.add_child(title)
@@ -161,6 +177,8 @@ func _draw_hand() -> void:
 
 func _reset() -> void:
 	queue.clear()
+	_outlined_cells.clear()
+	_matched_cells.clear()
 	board.reset()
 	_draw_hand()
 	_refresh_queue()
@@ -197,16 +215,28 @@ func _try_place(index: int, anchor: Vector2i) -> void:
 	_refresh_hand.call_deferred()
 
 func _resolve_matches() -> void:
+	var match_index := 0
 	while true:
 		var hit := SpellMatcher.find_first_match(board, spells)
 		if hit.is_empty():
 			break
+		if match_index == 0:
+			_outlined_cells.clear()
+			_matched_cells.clear()
+		var outline_color := Color.from_hsv(
+			float(match_index % OUTLINE_COLOR_COUNT) / OUTLINE_COLOR_COUNT, 0.8, 1.0)
+		for i in hit.cells.size():
+			var cell: Vector2i = hit.cells[i]
+			_outlined_cells[cell] = outline_color
+			_matched_cells[cell] = hit.elements[i]
 		board.clear_cells(hit.cells)
 		var elems: Array[int] = []
 		for e in hit.elements:
 			elems.append(e)
 		queue.append(QueuedSpell.new(hit.spell, elems))
 		_info.text = "Matched: %s" % hit.spell.display_name
+		match_index += 1
+	_refresh_board()
 	_refresh_queue()
 
 # ---------- refresh ----------
@@ -215,15 +245,48 @@ func _refresh_board() -> void:
 		for x in board.size.x:
 			var t := board.get_tile(Vector2i(x, y))
 			var b := _cell_buttons[y * board.size.x + x]
-			var tex := BattleTypes.texture_of(t)
+			var cell := Vector2i(x, y)
+			var is_preview := t == BattleTypes.EMPTY and _matched_cells.has(cell)
+			var display_element: int = _matched_cells[cell] if is_preview else t
+			var tex := BattleTypes.texture_of(display_element)
 			b.icon = tex
+			if _outlined_cells.has(cell):
+				var outline := StyleBoxFlat.new()
+				outline.bg_color = Color(0, 0, 0, 0)
+				var outline_color: Color = _outlined_cells[cell]
+				outline.border_color = outline_color
+				if not _outlined_cells.has(cell + Vector2i.LEFT) \
+						or _outlined_cells[cell + Vector2i.LEFT] != outline_color:
+					outline.set_border_width(SIDE_LEFT, 3)
+				if not _outlined_cells.has(cell + Vector2i.RIGHT) \
+						or _outlined_cells[cell + Vector2i.RIGHT] != outline_color:
+					outline.set_border_width(SIDE_RIGHT, 3)
+				if not _outlined_cells.has(cell + Vector2i.UP) \
+						or _outlined_cells[cell + Vector2i.UP] != outline_color:
+					outline.set_border_width(SIDE_TOP, 3)
+				if not _outlined_cells.has(cell + Vector2i.DOWN) \
+						or _outlined_cells[cell + Vector2i.DOWN] != outline_color:
+					outline.set_border_width(SIDE_BOTTOM, 3)
+				b.add_theme_stylebox_override("normal", outline)
+				b.add_theme_stylebox_override("hover", outline)
+				b.add_theme_stylebox_override("pressed", outline)
+				b.add_theme_stylebox_override("focus", outline)
+			else:
+				b.remove_theme_stylebox_override("normal")
+				b.remove_theme_stylebox_override("hover")
+				b.remove_theme_stylebox_override("pressed")
+				b.remove_theme_stylebox_override("focus")
 			if tex:
 				b.text = ""
-				b.self_modulate = Color.WHITE
+				b.self_modulate = Color(0.45, 0.45, 0.45) if is_preview else Color.WHITE
 			else:
-				b.text = BattleTypes.letter_of(t)
-				b.self_modulate = Color(0.25, 0.25, 0.25) if t == BattleTypes.EMPTY \
-					else BattleTypes.color_of(t)
+				b.text = BattleTypes.letter_of(display_element)
+				if is_preview:
+					b.self_modulate = Color(0.35, 0.35, 0.35)
+				elif t == BattleTypes.EMPTY:
+					b.self_modulate = Color(0.25, 0.25, 0.25)
+				else:
+					b.self_modulate = BattleTypes.color_of(t)
 
 func _refresh_hand() -> void:
 	for c in _hand_box.get_children():
@@ -282,6 +345,13 @@ func _refresh_queue() -> void:
 	for c in _spell_list.get_children():
 		c.queue_free()
 	for q in queue:
-		var l := Label.new()
-		l.text = q.summary()
-		_spell_list.add_child(l)
+		var entry := VBoxContainer.new()
+		var elements: Array[String] = []
+		for e in q.source_elements:
+			elements.append(BattleTypes.name_of(e))
+		var title := Label.new()
+		title.text = "\"%s\" (%s)" % [q.definition.display_name, ", ".join(elements)]
+		entry.add_child(title)
+		var pattern := FragmentData.make(q.definition.pattern.cells, q.source_elements)
+		entry.add_child(_make_fragment_preview(pattern))
+		_spell_list.add_child(entry)
