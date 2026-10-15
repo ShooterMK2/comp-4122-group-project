@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://yfllorn05xvs"
-path="res://.godot/imported/tile_lightning.png-97a267dd992bf337eca671b427a8d5ad.ctex"
+uid="uid://bnfk86cm7i1xs"
+path="res://.godot/imported/enemy_wooden_dummy.png-efa96e197c9b7ed7a34e5b36211adeb2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/texture/tiles/tile_lightning.png"
-dest_files=["res://.godot/imported/tile_lightning.png-97a267dd992bf337eca671b427a8d5ad.ctex"]
+source_file="res://assets/enemies/enemy_wooden_dummy.png"
+dest_files=["res://.godot/imported/enemy_wooden_dummy.png-efa96e197c9b7ed7a34e5b36211adeb2.ctex"]
 
 [params]
 

@@ -1,10 +1,7 @@
-class_name BattleTypes
+class_name Elements
 extends RefCounted
 
 enum Element { NONE, UNIVERSAL, FIRE, ICE, EARTH, WIND, LIGHTNING, DARK }
-
-const EMPTY := -1
-const BOARD_SIZE := Vector2i(10, 10)
 
 const COLORS := {
 	Element.NONE: Color(0.6, 0.6, 0.6),
@@ -36,17 +33,20 @@ const TILE_ALIASES := {
 
 static var _tex_cache := {}
 
+static func is_valid(e: int) -> bool:
+	return e >= 0 and e < Element.size()
+
 static func color_of(e: int) -> Color:
 	return COLORS.get(e, Color(0.2, 0.2, 0.2))
 
 static func name_of(e: int) -> String:
-	return Element.keys()[e].capitalize()
+	return Element.keys()[e].capitalize() if is_valid(e) else "Empty"
 
 static func letter_of(e: int) -> String:
-	return "·" if e == EMPTY else Element.keys()[e].substr(0, 1)
+	return Element.keys()[e].substr(0, 1) if is_valid(e) else "·"
 
 static func texture_of(e: int) -> Texture2D:
-	if e == EMPTY:
+	if not is_valid(e):
 		return null
 	if _tex_cache.has(e):
 		return _tex_cache[e]

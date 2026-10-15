@@ -2,8 +2,8 @@ class_name CastingBoardModel
 extends RefCounted
 
 signal changed
-
-var size: Vector2i = BattleTypes.BOARD_SIZE
+const EMPTY := -1
+var size: Vector2i = BattleConfig.BOARD_SIZE
 var _tiles := PackedInt32Array()
 
 func _init() -> void:
@@ -11,7 +11,7 @@ func _init() -> void:
 
 func reset() -> void:
 	_tiles.resize(size.x * size.y)
-	_tiles.fill(BattleTypes.EMPTY)
+	_tiles.fill(EMPTY)
 	changed.emit()
 
 func in_bounds(p: Vector2i) -> bool:
@@ -21,7 +21,14 @@ func get_tile(p: Vector2i) -> int:
 	return _tiles[p.y * size.x + p.x]
 
 func is_empty(p: Vector2i) -> bool:
-	return get_tile(p) == BattleTypes.EMPTY
+	return get_tile(p) == EMPTY
+
+func filled_count() -> int:
+	var n := 0
+	for t in _tiles:
+		if t != EMPTY:
+			n += 1
+	return n
 
 func can_place(f: FragmentData, anchor: Vector2i) -> bool:
 	for c in f.cells:
@@ -41,5 +48,5 @@ func place(f: FragmentData, anchor: Vector2i) -> bool:
 
 func clear_cells(cells: Array) -> void:
 	for p in cells:
-		_tiles[p.y * size.x + p.x] = BattleTypes.EMPTY
+		_tiles[p.y * size.x + p.x] = EMPTY
 	changed.emit()

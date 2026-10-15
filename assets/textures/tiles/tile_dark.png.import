@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bokokd4j1ihk0"
-path="res://.godot/imported/tile_earth.png-879c1653206415b2b2af85ea6b4ea498.ctex"
+uid="uid://cy5tcmtw5lkwo"
+path="res://.godot/imported/tile_dark.png-865b94f9cb15c481d4f508358853d23d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/texture/tiles/tile_earth.png"
-dest_files=["res://.godot/imported/tile_earth.png-879c1653206415b2b2af85ea6b4ea498.ctex"]
+source_file="res://assets/textures/tiles/tile_dark.png"
+dest_files=["res://.godot/imported/tile_dark.png-865b94f9cb15c481d4f508358853d23d.ctex"]
 
 [params]
 

@@ -27,7 +27,7 @@ static func _try_at(board: CastingBoardModel, spell: SpellDefinition, anchor: Ve
 	return {"spell": spell, "cells": cells, "elements": elems}
 
 static func _meets_requirements(spell: SpellDefinition, elems: Array[int]) -> bool:
-	var wild := elems.count(BattleTypes.Element.UNIVERSAL)
+	var wild := elems.count(Elements.Element.UNIVERSAL)
 	var wild_needed := 0
 	for req in spell.requirements:
 		wild_needed += maxi(0, req.min_count - elems.count(req.element))

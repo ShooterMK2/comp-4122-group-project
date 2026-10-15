@@ -39,6 +39,6 @@ func preview_text() -> String:
 		var row := ""
 		for x in w:
 			var idx := cells.find(Vector2i(x, y))
-			row += (BattleTypes.letter_of(elements[idx]) if idx >= 0 else " ") + " "
+			row += (Elements.letter_of(elements[idx]) if idx >= 0 else " ") + " "
 		rows.append(row)
 	return "\n".join(rows)

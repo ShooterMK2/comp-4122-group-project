@@ -1,206 +1,225 @@
 extends Control
+const HAND_COLUMN_WIDTH := 118*3   # 2 cards per row; use 118 for a single column
 
-const E := BattleTypes.Element
-const PREVIEW_CELL := 28
-const OUTLINE_COLOR_COUNT := 20
-
+var state: BattleState
 var board := CastingBoardModel.new()
 var spells: Array[SpellDefinition] = []
 var hand: Array[FragmentData] = []
 var queue: Array[QueuedSpell] = []
 var selected := -1
-var _outlined_cells: Dictionary = {}
-var _matched_cells: Dictionary = {}
 
-var _cell_buttons: Array[Button] = []
-var _hand_box: HBoxContainer
-var _spell_list: VBoxContainer
+var _outlined: Dictionary = {}
+var _ghosts: Dictionary = {}
+var _snapshot_hand: Array[FragmentData] = []
+
+var _battlefield: BattlefieldView
 var _info: Label
+var _board_view: CastingBoardView
+var _hand_view: FragmentZone
+var _debug: DebugPanel
+var _turn_bar: TurnIndicator
+var _queue_view: SpellQueueView
+var _log: BattleLogView
 
 func _ready() -> void:
 	randomize()
-	_build_demo_spells()
-	_build_ui()
-	board.changed.connect(_refresh_board)
-	_draw_hand()
-	_refresh_board()
+	spells = DemoSpellLibrary.build()
+	state = BattleState.new(TestEncounter.enemies())
+	_build_layout()
+	_board_view.bind(board, _fragment_at)
+	_battlefield.setup(state)
+	_connect_signals()
+	_start_turn()
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
-		_rotate_selected()
+	if event is InputEventKey and event.pressed and not event.echo \
+			and event.keycode == KEY_R:
+		_rotate(selected)
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_DRAG_END and not _cell_buttons.is_empty():
-		_refresh_board()
+# ---------- layout ----------
+func _build_layout() -> void:
+	var margin := MarginContainer.new()
+	add_child(margin)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 12)
 
-# ---------- demo content ----------
-func _build_demo_spells() -> void:
-	spells.append(SpellDefinition.make(&"fire_bolt", "Fire Bolt",
-		SpellPattern.make([Vector2i(0,0), Vector2i(1,0), Vector2i(2,0)]),
-		[ElementRequirement.make(E.FIRE, 2)], 6))
-	spells.append(SpellDefinition.make(&"frost_nova", "Frost Nova",
-		SpellPattern.make([Vector2i(0,0), Vector2i(1,0), Vector2i(0,1), Vector2i(1,1)]),
-		[ElementRequirement.make(E.ICE, 3)], 9))
-	spells.append(SpellDefinition.make(&"stone_wall", "Stone Wall",
-		SpellPattern.make([Vector2i(0,0), Vector2i(0,1), Vector2i(0,2), Vector2i(1,2)]),
-		[ElementRequirement.make(E.EARTH, 2)], 7))
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 8)
+	margin.add_child(root)
 
-func _random_fragment() -> FragmentData:
-	var shapes := [
-		[Vector2i(0,0), Vector2i(1,0), Vector2i(2,0)],
-		[Vector2i(0,0), Vector2i(1,0), Vector2i(0,1), Vector2i(1,1)],
-		[Vector2i(0,0), Vector2i(0,1), Vector2i(0,2), Vector2i(1,2)],
-		[Vector2i(0,0), Vector2i(1,0)],
-		[Vector2i(0,0), Vector2i(1,0), Vector2i(2,0), Vector2i(1,1)],
-	]
-	var pool := [E.FIRE, E.FIRE, E.ICE, E.ICE, E.EARTH, E.UNIVERSAL, E.NONE]
-	var cells: Array = shapes.pick_random()
-	var elems: Array = []
-	for i in cells.size():
-		elems.append(pool.pick_random())
-	return FragmentData.make(cells, elems)
+	_battlefield = BattlefieldView.new()
+	root.add_child(_battlefield)
 
-# ---------- UI (built in code) ----------
-func _build_ui() -> void:
-	var root := HBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 24
-	root.offset_top = 24
-	root.add_theme_constant_override("separation", 32)
-	add_child(root)
+	var body := HBoxContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 16)
+	root.add_child(body)
 
 	var left_scroll := ScrollContainer.new()
 	left_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	root.add_child(left_scroll)
-
+	body.add_child(left_scroll)
 	var left := VBoxContainer.new()
-	left.custom_minimum_size.x = 64.0 * board.size.x
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_theme_constant_override("separation", 8)
 	left_scroll.add_child(left)
+
+	var play_row := HBoxContainer.new()
+	play_row.add_theme_constant_override("separation", 12)
+	left.add_child(play_row)
+
+	_hand_view = FragmentZone.new()
+	_hand_view.custom_minimum_size = Vector2(HAND_COLUMN_WIDTH, 110)
+	_hand_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	play_row.add_child(_hand_view)
+
+	_board_view = CastingBoardView.new()
+	_board_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	play_row.add_child(_board_view)
+
+	_debug = DebugPanel.new()
+	left.add_child(_debug)
+	
 	_info = Label.new()
-	_info.text = "Drag a fragment onto the board (or click it, then click a cell). R = rotate."
-	left.add_child(_info)
-
-	var grid := GridContainer.new()
-	grid.columns = board.size.x
-	left.add_child(grid)
-	for y in board.size.y:
-		for x in board.size.x:
-			var anchor := Vector2i(x, y)
-			var b := Button.new()
-			b.custom_minimum_size = Vector2(64, 64)
-			b.expand_icon = true
-			b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			b.pressed.connect(_on_cell_pressed.bind(anchor))
-			b.set_drag_forwarding(Callable(),
-				_cell_can_drop.bind(anchor), _cell_drop.bind(anchor))
-			grid.add_child(b)
-			_cell_buttons.append(b)
-
-	_hand_box = HBoxContainer.new()
-	left.add_child(_hand_box)
-
-	var tools := HBoxContainer.new()
-	left.add_child(tools)
-	var rot := Button.new()
-	rot.text = "Rotate (R)"
-	rot.pressed.connect(_rotate_selected)
-	tools.add_child(rot)
-	var redraw := Button.new()
-	redraw.text = "New hand"
-	redraw.pressed.connect(_draw_hand)
-	tools.add_child(redraw)
-	var reset := Button.new()
-	reset.text = "Reset"
-	reset.pressed.connect(_reset)
-	tools.add_child(reset)
 
 	var right_scroll := ScrollContainer.new()
-	right_scroll.custom_minimum_size.x = 300
-	right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_scroll.custom_minimum_size = Vector2(400, 0)
 	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	root.add_child(right_scroll)
-
+	body.add_child(right_scroll)
 	var right := VBoxContainer.new()
-	right.custom_minimum_size.x = 300
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 8)
 	right_scroll.add_child(right)
-	var title := Label.new()
-	title.text = "Spell List"
-	right.add_child(title)
-	_spell_list = VBoxContainer.new()
-	right.add_child(_spell_list)
 
-# ---------- drag and drop ----------
-func _hand_drag(_at_position: Vector2, index: int) -> Variant:
-	if index < 0 or index >= hand.size():
-		return null
-	selected = index
-	var wrapper := Control.new()
-	var ghost := _make_fragment_preview(hand[index])
-	ghost.position = Vector2(-PREVIEW_CELL / 2.0, -PREVIEW_CELL / 2.0)
-	ghost.modulate = Color(1, 1, 1, 0.8)
-	wrapper.add_child(ghost)
-	set_drag_preview(wrapper)
-	return {"hand_index": index}
+	_turn_bar = TurnIndicator.new()
+	right.add_child(_turn_bar)
+	_queue_view = SpellQueueView.new()
+	right.add_child(_queue_view)
+	_log = BattleLogView.new()
+	right.add_child(_log)
 
-func _cell_can_drop(_at_position: Vector2, data: Variant, anchor: Vector2i) -> bool:
-	if not (data is Dictionary and data.has("hand_index")):
-		return false
-	var idx: int = data["hand_index"]
-	if idx < 0 or idx >= hand.size():
-		return false
-	var frag := hand[idx]
-	var ok := board.can_place(frag, anchor)
-	_show_ghost(frag, anchor, ok)
-	return ok
+func _connect_signals() -> void:
+	_board_view.cell_clicked.connect(_on_cell_clicked)
+	_board_view.fragment_dropped.connect(_try_place)
+	_hand_view.card_selected.connect(_on_card_selected)
+	_hand_view.card_rotate.connect(_on_card_rotate)
+	_hand_view.card_drag_started.connect(_on_card_drag_started)
+	_debug.give_element.connect(_on_debug_give)
+	_debug.reroll_pressed.connect(_on_reroll)
+	_battlefield.enemy_clicked.connect(_on_enemy_clicked)
+	_queue_view.reorder.connect(_on_reorder)
+	_turn_bar.cast_pressed.connect(_on_cast)
+	_turn_bar.reset_pressed.connect(_on_reset)
 
-func _cell_drop(_at_position: Vector2, data: Variant, anchor: Vector2i) -> void:
-	_try_place(data["hand_index"], anchor)
-
-func _show_ghost(frag: FragmentData, anchor: Vector2i, ok: bool) -> void:
-	_refresh_board()
-	var tint := Color(0.6, 1.0, 0.6) if ok else Color(1.0, 0.45, 0.45)
-	for c in frag.cells:
-		var p := anchor + c
-		if board.in_bounds(p):
-			_cell_buttons[p.y * board.size.x + p.x].self_modulate = tint
-
-# ---------- actions ----------
-func _draw_hand() -> void:
-	hand.clear()
-	for i in 3:
-		hand.append(_random_fragment())
+# ---------- turn flow ----------
+func _start_turn() -> void:
+	TurnSystem.start_player_turn(state)
+	state.ensure_valid_target()
+	_log.add_line("--- Turn %d ---" % state.turn)
+	var n := maxi(1, BattleConfig.HAND_SIZE - state.overload_debt)
+	if state.overload_debt > 0:
+		_log.add_line("Overload: you draw %d fewer fragment(s) this turn." % state.overload_debt)
+	state.overload_debt = 0
+	hand = FragmentGenerator.draw(n)
+	_snapshot_hand = _copy_hand(hand)
 	selected = -1
-	_refresh_hand()
+	_info.text = "Drag a fragment onto the board (or click it, then click a cell). R or right-click = rotate."
+	_refresh_all()
 
-func _reset() -> void:
-	queue.clear()
-	_outlined_cells.clear()
-	_matched_cells.clear()
-	board.reset()
-	_draw_hand()
-	_refresh_queue()
-
-func _rotate_selected() -> void:
-	if selected < 0 or selected >= hand.size():
+func _on_cast() -> void:
+	if state.over:
 		return
-	hand[selected] = hand[selected].rotated_cw()
-	_refresh_hand()
+	var lines: Array[String] = []
+	var tiles := board.filled_count()
+	var spell_total := SpellResolver.resolve_queue(queue, state, lines)
+	var basic_total := SpellResolver.resolve_basic_attack(tiles, state, lines)
+	lines.append("Turn total: spells %d + tiles %d = %d" % [
+		spell_total, basic_total, spell_total + basic_total])
+	TurnSystem.end_turn_effects(state.player, lines)
+	var outcome := _outcome()
+	if outcome == 0:
+		TurnSystem.run_enemies_turn(state, lines)
+		outcome = _outcome()
+	if outcome != 0:
+		_finish(outcome > 0, lines)
+		return
+	_log.add_lines(lines)
+	board.reset()
+	queue.clear()
+	_outlined.clear()
+	_ghosts.clear()
+	_start_turn()
 
-func _on_fragment_pressed(i: int) -> void:
+func _outcome() -> int:
+	if state.player.is_dead():
+		return -1
+	if state.all_enemies_dead():
+		return 1
+	return 0
+
+func _finish(won: bool, lines: Array[String]) -> void:
+	state.over = true
+	if won:
+		lines.append("VICTORY! All enemies are down.")
+		_info.text = "Victory! Press Reset to restart."
+	else:
+		lines.append("DEFEAT... you ran out of HP.")
+		_info.text = "Defeat. Press Reset to restart."
+	_log.add_lines(lines)
+	_refresh_all()
+
+func _on_reset() -> void:
+	if state.over:
+		get_tree().reload_current_scene()
+		return
+	board.reset()
+	queue.clear()
+	_outlined.clear()
+	_ghosts.clear()
+	hand = _copy_hand(_snapshot_hand)
+	selected = -1
+	state.overload_debt = 0
+	_info.text = "Turn reset."
+	_refresh_all()
+
+# ---------- hand and placement ----------
+func _fragment_at(i: int) -> FragmentData:
+	if i < 0 or i >= hand.size():
+		return null
+	return hand[i]
+
+func _copy_hand(src: Array[FragmentData]) -> Array[FragmentData]:
+	var out: Array[FragmentData] = []
+	for f in src:
+		out.append(f)
+	return out
+
+func _on_card_selected(i: int) -> void:
+	selected = -1 if selected == i else i
+	_refresh_hand.call_deferred()
+
+func _on_card_drag_started(i: int) -> void:
 	selected = i
-	_refresh_hand()
 
-func _on_cell_pressed(anchor: Vector2i) -> void:
+func _on_card_rotate(i: int) -> void:
+	selected = i
+	_rotate(i)
+
+func _rotate(i: int) -> void:
+	if i < 0 or i >= hand.size():
+		return
+	hand[i] = hand[i].rotated_cw()
+	_refresh_hand.call_deferred()
+
+func _on_cell_clicked(anchor: Vector2i) -> void:
 	if selected < 0:
 		_info.text = "Select a fragment first."
 		return
 	_try_place(selected, anchor)
 
 func _try_place(index: int, anchor: Vector2i) -> void:
-	if index < 0 or index >= hand.size():
+	if state.over or index < 0 or index >= hand.size():
 		return
 	var frag := hand[index]
 	if not board.place(frag, anchor):
@@ -208,10 +227,10 @@ func _try_place(index: int, anchor: Vector2i) -> void:
 		return
 	hand.remove_at(index)
 	selected = -1
+	_outlined.clear()
+	_ghosts.clear()
 	_info.text = "Placed %d tiles." % frag.cells.size()
 	_resolve_matches()
-	if hand.is_empty():
-		_draw_hand()
 	_refresh_hand.call_deferred()
 
 func _resolve_matches() -> void:
@@ -220,138 +239,81 @@ func _resolve_matches() -> void:
 		var hit := SpellMatcher.find_first_match(board, spells)
 		if hit.is_empty():
 			break
-		if match_index == 0:
-			_outlined_cells.clear()
-			_matched_cells.clear()
-		var outline_color := Color.from_hsv(
-			float(match_index % OUTLINE_COLOR_COUNT) / OUTLINE_COLOR_COUNT, 0.8, 1.0)
-		for i in hit.cells.size():
-			var cell: Vector2i = hit.cells[i]
-			_outlined_cells[cell] = outline_color
-			_matched_cells[cell] = hit.elements[i]
-		board.clear_cells(hit.cells)
+		var color := Color.from_hsv(float(match_index % 12) / 12.0, 0.8, 1.0)
+		var hit_cells: Array = hit["cells"]
+		var hit_elems: Array = hit["elements"]
+		for i in hit_cells.size():
+			var cell: Vector2i = hit_cells[i]
+			_outlined[cell] = color
+			_ghosts[cell] = hit_elems[i]
+		board.clear_cells(hit_cells)
 		var elems: Array[int] = []
-		for e in hit.elements:
+		for e in hit_elems:
 			elems.append(e)
-		queue.append(QueuedSpell.new(hit.spell, elems))
-		_info.text = "Matched: %s" % hit.spell.display_name
+		var spell: SpellDefinition = hit["spell"]
+		queue.append(QueuedSpell.new(spell, elems))
+		_apply_on_queue_effects(spell)
+		_info.text = "Matched: %s" % spell.display_name
 		match_index += 1
 	_refresh_board()
 	_refresh_queue()
 
+func _apply_on_queue_effects(spell: SpellDefinition) -> void:
+	for fx in spell.effects:
+		if fx.kind == SpellEffect.Kind.OVERLOAD:
+			for i in fx.amount:
+				hand.append(FragmentGenerator.random_fragment())
+			state.overload_debt += fx.amount2
+			_log.add_line("Overload! Drew %d extra fragment(s); next turn -%d." % [
+				fx.amount, fx.amount2])
+
+# ---------- queue and targeting ----------
+func _on_reorder(from_i: int, to_i: int) -> void:
+	if from_i < 0 or from_i >= queue.size() or to_i < 0 or to_i >= queue.size():
+		return
+	var q: QueuedSpell = queue.pop_at(from_i)
+	queue.insert(to_i, q)
+	_refresh_queue()
+
+func _on_enemy_clicked(i: int) -> void:
+	if state.over or i < 0 or i >= state.enemies.size() or state.enemies[i].is_dead():
+		return
+	state.target_index = i
+	_battlefield.refresh(state)
+	_refresh_queue()
+
+# ---------- debug ----------
+func _on_debug_give(element: int) -> void:
+	var f := FragmentGenerator.single_element(element)
+	hand.append(f)
+	_snapshot_hand.append(f)
+	_refresh_hand.call_deferred()
+
+func _on_reroll() -> void:
+	hand = FragmentGenerator.draw(BattleConfig.HAND_SIZE)
+	_snapshot_hand = _copy_hand(hand)
+	selected = -1
+	_refresh_hand.call_deferred()
+
 # ---------- refresh ----------
+func _refresh_all() -> void:
+	_battlefield.refresh(state)
+	_refresh_board()
+	_refresh_hand()
+	_refresh_queue()
+	_turn_bar.set_turn(state.turn)
+
 func _refresh_board() -> void:
-	for y in board.size.y:
-		for x in board.size.x:
-			var t := board.get_tile(Vector2i(x, y))
-			var b := _cell_buttons[y * board.size.x + x]
-			var cell := Vector2i(x, y)
-			var is_preview := t == BattleTypes.EMPTY and _matched_cells.has(cell)
-			var display_element: int = _matched_cells[cell] if is_preview else t
-			var tex := BattleTypes.texture_of(display_element)
-			b.icon = tex
-			if _outlined_cells.has(cell):
-				var outline := StyleBoxFlat.new()
-				outline.bg_color = Color(0, 0, 0, 0)
-				var outline_color: Color = _outlined_cells[cell]
-				outline.border_color = outline_color
-				if not _outlined_cells.has(cell + Vector2i.LEFT) \
-						or _outlined_cells[cell + Vector2i.LEFT] != outline_color:
-					outline.set_border_width(SIDE_LEFT, 3)
-				if not _outlined_cells.has(cell + Vector2i.RIGHT) \
-						or _outlined_cells[cell + Vector2i.RIGHT] != outline_color:
-					outline.set_border_width(SIDE_RIGHT, 3)
-				if not _outlined_cells.has(cell + Vector2i.UP) \
-						or _outlined_cells[cell + Vector2i.UP] != outline_color:
-					outline.set_border_width(SIDE_TOP, 3)
-				if not _outlined_cells.has(cell + Vector2i.DOWN) \
-						or _outlined_cells[cell + Vector2i.DOWN] != outline_color:
-					outline.set_border_width(SIDE_BOTTOM, 3)
-				b.add_theme_stylebox_override("normal", outline)
-				b.add_theme_stylebox_override("hover", outline)
-				b.add_theme_stylebox_override("pressed", outline)
-				b.add_theme_stylebox_override("focus", outline)
-			else:
-				b.remove_theme_stylebox_override("normal")
-				b.remove_theme_stylebox_override("hover")
-				b.remove_theme_stylebox_override("pressed")
-				b.remove_theme_stylebox_override("focus")
-			if tex:
-				b.text = ""
-				b.self_modulate = Color(0.45, 0.45, 0.45) if is_preview else Color.WHITE
-			else:
-				b.text = BattleTypes.letter_of(display_element)
-				if is_preview:
-					b.self_modulate = Color(0.35, 0.35, 0.35)
-				elif t == BattleTypes.EMPTY:
-					b.self_modulate = Color(0.25, 0.25, 0.25)
-				else:
-					b.self_modulate = BattleTypes.color_of(t)
+	_board_view.outlined = _outlined
+	_board_view.ghosts = _ghosts
+	_board_view.refresh()
 
 func _refresh_hand() -> void:
-	for c in _hand_box.get_children():
-		c.queue_free()
-	for i in hand.size():
-		var b := Button.new()
-		b.custom_minimum_size = Vector2(110, 110)
-		b.toggle_mode = true
-		b.button_pressed = (i == selected)
-		b.pressed.connect(_on_fragment_pressed.bind(i))
-		b.set_drag_forwarding(_hand_drag.bind(i), Callable(), Callable())
-		var center := CenterContainer.new()
-		center.set_anchors_preset(Control.PRESET_FULL_RECT)
-		center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		center.add_child(_make_fragment_preview(hand[i]))
-		b.add_child(center)
-		_hand_box.add_child(b)
-
-func _make_fragment_preview(f: FragmentData) -> Control:
-	var w := 0
-	var h := 0
-	for c in f.cells:
-		w = maxi(w, c.x + 1)
-		h = maxi(h, c.y + 1)
-	var grid := GridContainer.new()
-	grid.columns = w
-	grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	grid.add_theme_constant_override("h_separation", 2)
-	grid.add_theme_constant_override("v_separation", 2)
-	for y in h:
-		for x in w:
-			var idx := f.cells.find(Vector2i(x, y))
-			var cell: Control
-			if idx < 0:
-				cell = Control.new()
-			else:
-				var e: int = f.elements[idx]
-				var tex := BattleTypes.texture_of(e)
-				if tex:
-					var tr := TextureRect.new()
-					tr.texture = tex
-					tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-					tr.stretch_mode = TextureRect.STRETCH_SCALE
-					tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-					cell = tr
-				else:
-					var cr := ColorRect.new()
-					cr.color = BattleTypes.color_of(e)
-					cell = cr
-			cell.custom_minimum_size = Vector2(PREVIEW_CELL, PREVIEW_CELL)
-			cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			grid.add_child(cell)
-	return grid
+	_hand_view.show_hand(hand, selected)
 
 func _refresh_queue() -> void:
-	for c in _spell_list.get_children():
-		c.queue_free()
-	for q in queue:
-		var entry := VBoxContainer.new()
-		var elements: Array[String] = []
-		for e in q.source_elements:
-			elements.append(BattleTypes.name_of(e))
-		var title := Label.new()
-		title.text = "\"%s\" (%s)" % [q.definition.display_name, ", ".join(elements)]
-		entry.add_child(title)
-		var pattern := FragmentData.make(q.definition.pattern.cells, q.source_elements)
-		entry.add_child(_make_fragment_preview(pattern))
-		_spell_list.add_child(entry)
+	_queue_view.show_queue(queue)
+	_queue_view.show_preview(SpellResolver.preview(queue, board.filled_count(), state))
+	var has_work := not queue.is_empty() or board.filled_count() > 0
+	_turn_bar.set_cast_label("CAST" if has_work else "End Turn")
+	_turn_bar.set_cast_enabled(not state.over)
