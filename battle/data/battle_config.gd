@@ -50,3 +50,8 @@ const CORRUPTION_LIFESTEAL_PER_STACK := 3  # HP restored to the player per stack
 
 const PLAYER_ART := "player"            # assets/.../characters/player.png
 const DUMMY_ART := "enemy_wooden_dummy.png"       # assets/.../characters/wooden_dummy.png
+
+# ---------- Deadlock: Backlash / Fizzle ----------
+const BACKLASH_BASE_FRACTION := 0.10        # HP cost = this * max HP ...
+const BACKLASH_PROGRESSION_FRACTION := 0.05 # ... + this * max HP per earlier Backlash this battle
+const BACKLASH_MIN_HP_AFTER := 1            # Backlash is refused if it would leave you below this

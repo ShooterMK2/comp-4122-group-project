@@ -50,3 +50,11 @@ func clear_cells(cells: Array) -> void:
 	for p in cells:
 		_tiles[p.y * size.x + p.x] = EMPTY
 	changed.emit()
+
+# Used by "Reset turn": tiles now persist, so we restore instead of emptying.
+func snapshot() -> PackedInt32Array:
+	return _tiles.duplicate()
+
+func restore(s: PackedInt32Array) -> void:
+	_tiles = s.duplicate()
+	changed.emit()

@@ -21,6 +21,10 @@ var _turn_bar: TurnIndicator
 var _queue_view: SpellQueueView
 var _log: BattleLogView
 
+var _placed_this_turn := 0   # tiles placed this turn; basic attack counts only these
+var _snapshot_board := PackedInt32Array()
+var _deadlock_overlay: DeadlockOverlay
+
 func _ready() -> void:
 	randomize()
 	spells = DemoSpellLibrary.build()
@@ -74,9 +78,13 @@ func _build_layout() -> void:
 	_hand_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	play_row.add_child(_hand_view)
 
+	var board_frame := MarginContainer.new()
+	board_frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	play_row.add_child(board_frame)
 	_board_view = CastingBoardView.new()
-	_board_view.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	play_row.add_child(_board_view)
+	board_frame.add_child(_board_view)
+	_deadlock_overlay = DeadlockOverlay.new()
+	board_frame.add_child(_deadlock_overlay)
 
 	_debug = DebugPanel.new()
 	left.add_child(_debug)
@@ -111,6 +119,8 @@ func _connect_signals() -> void:
 	_queue_view.reorder.connect(_on_reorder)
 	_turn_bar.cast_pressed.connect(_on_cast)
 	_turn_bar.reset_pressed.connect(_on_reset)
+	_deadlock_overlay.backlash_pressed.connect(_on_backlash)
+	_deadlock_overlay.fizzle_pressed.connect(_on_fizzle)
 
 # ---------- turn flow ----------
 func _start_turn() -> void:
@@ -123,19 +133,24 @@ func _start_turn() -> void:
 	state.overload_debt = 0
 	hand = FragmentGenerator.draw(n)
 	_snapshot_hand = _copy_hand(hand)
+	_snapshot_board = board.snapshot()
+	_placed_this_turn = 0
 	selected = -1
 	_info.text = "Drag a fragment onto the board (or click it, then click a cell). R or right-click = rotate."
 	_refresh_all()
+	_update_deadlock()
 
 func _on_cast() -> void:
-	if state.over:
+	if state.over or _deadlock_overlay.visible:
 		return
 	var lines: Array[String] = []
-	var tiles := board.filled_count()
 	var spell_total := SpellResolver.resolve_queue(queue, state, lines)
-	var basic_total := SpellResolver.resolve_basic_attack(tiles, state, lines)
+	var basic_total := SpellResolver.resolve_basic_attack(board.filled_count(), state, lines)
 	lines.append("Turn total: spells %d + tiles %d = %d" % [
 		spell_total, basic_total, spell_total + basic_total])
+	_finish_turn(lines)
+
+func _finish_turn(lines: Array[String]) -> void:
 	TurnSystem.end_turn_effects(state.player, lines)
 	var outcome := _outcome()
 	if outcome == 0:
@@ -145,7 +160,6 @@ func _on_cast() -> void:
 		_finish(outcome > 0, lines)
 		return
 	_log.add_lines(lines)
-	board.reset()
 	queue.clear()
 	_outlined.clear()
 	_ghosts.clear()
@@ -173,15 +187,17 @@ func _on_reset() -> void:
 	if state.over:
 		get_tree().reload_current_scene()
 		return
-	board.reset()
+	board.restore(_snapshot_board)
 	queue.clear()
 	_outlined.clear()
 	_ghosts.clear()
 	hand = _copy_hand(_snapshot_hand)
 	selected = -1
+	_placed_this_turn = 0
 	state.overload_debt = 0
 	_info.text = "Turn reset."
 	_refresh_all()
+	_update_deadlock()
 
 # ---------- hand and placement ----------
 func _fragment_at(i: int) -> FragmentData:
@@ -219,7 +235,7 @@ func _on_cell_clicked(anchor: Vector2i) -> void:
 	_try_place(selected, anchor)
 
 func _try_place(index: int, anchor: Vector2i) -> void:
-	if state.over or index < 0 or index >= hand.size():
+	if state.over or _deadlock_overlay.visible or index < 0 or index >= hand.size():
 		return
 	var frag := hand[index]
 	if not board.place(frag, anchor):
@@ -227,11 +243,13 @@ func _try_place(index: int, anchor: Vector2i) -> void:
 		return
 	hand.remove_at(index)
 	selected = -1
+	_placed_this_turn += frag.cells.size()
 	_outlined.clear()
 	_ghosts.clear()
 	_info.text = "Placed %d tiles." % frag.cells.size()
 	_resolve_matches()
 	_refresh_hand.call_deferred()
+
 
 func _resolve_matches() -> void:
 	var match_index := 0
@@ -282,18 +300,59 @@ func _on_enemy_clicked(i: int) -> void:
 	_battlefield.refresh(state)
 	_refresh_queue()
 
+# ---------- deadlock ----------
+func _update_deadlock() -> void:
+	var stuck := not state.over and _placed_this_turn == 0 and queue.is_empty() \
+			and DeadlockDetector.is_deadlocked(board, hand)
+	if not stuck:
+		_deadlock_overlay.hide_overlay()
+		return
+	var tiles := board.filled_count()
+	var check := DeadlockResolver.check_backlash(state)
+	if not _deadlock_overlay.visible:
+		_log.add_line("Deadlock! No fragment fits the board.")
+	_deadlock_overlay.show_choice({
+		"tiles": tiles,
+		"cost": check["cost"],
+		"damage": DamageCalculator.basic_attack(tiles, state.player),
+		"can_backlash": check["ok"],
+		"reason": check["reason"],
+	})
+
+func _on_backlash() -> void:
+	var lines: Array[String] = []
+	if not DeadlockResolver.backlash(state, board, lines):
+		_log.add_lines(lines)
+		return
+	_deadlock_overlay.hide_overlay()
+	_outlined.clear()
+	_ghosts.clear()
+	lines.append("Backlash ends your turn.")
+	_finish_turn(lines)
+
+func _on_fizzle() -> void:
+	var lines: Array[String] = []
+	DeadlockResolver.fizzle(board, lines)
+	_deadlock_overlay.hide_overlay()
+	_outlined.clear()
+	_ghosts.clear()
+	lines.append("Fizzle ends your turn.")
+	_finish_turn(lines)
+
 # ---------- debug ----------
 func _on_debug_give(element: int) -> void:
 	var f := FragmentGenerator.single_element(element)
 	hand.append(f)
 	_snapshot_hand.append(f)
 	_refresh_hand.call_deferred()
+	_update_deadlock()
 
 func _on_reroll() -> void:
 	hand = FragmentGenerator.draw(BattleConfig.HAND_SIZE)
 	_snapshot_hand = _copy_hand(hand)
 	selected = -1
 	_refresh_hand.call_deferred()
+	_update_deadlock()
 
 # ---------- refresh ----------
 func _refresh_all() -> void:

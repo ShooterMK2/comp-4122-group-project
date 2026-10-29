@@ -8,6 +8,7 @@ var target_index := 0
 var turn := 0
 var over := false
 var overload_debt := 0
+var discharge_uses := 0   # Backlash uses this battle (drives the HP cost progression)
 
 func _init(defs: Array[EnemyDefinition] = []) -> void:
 	player = CombatantState.new("Player", BattleConfig.PLAYER_MAX_HP)
@@ -48,4 +49,5 @@ func duplicate_state() -> BattleState:
 	s.turn = turn
 	s.over = over
 	s.overload_debt = overload_debt
+	s.discharge_uses = discharge_uses
 	return s

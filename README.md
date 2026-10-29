@@ -2,13 +2,117 @@
 
 ## Pending work
 
-- [ ] Expand the spell, fragment, and enemy content beyond the current demo
-- [ ] Add more encounters and a progression system
-- [ ] Add a complete game loop outside the battle prototype
-- [ ] Replace placeholder combat presentation with polished art and effects
-- [ ] Improve accessibility, feedback, and UI polish
-- [ ] Add automated tests for placement, matching, status effects, and combat
-- [ ] Add a documented build/release workflow
+## 1. Foundation and Open Decisions
+
+- Define base damage and the damage formula ( )
+- Decide whether special grids are random or fixed ( )
+- Decide the boss ultimate interval ( )
+- Decide whether levels and talents exist ( )
+- Set up the Godot project structure and version control ( )
+- Create the autoload singleton for run state ( )
+- Define data formats (resources) for spells, fragments, enemies and items ( )
+
+## 2. Core Battle System
+
+- Build the battle state machine: player turn, enemy turn, resolve, end ( )
+- Build the casting board and grid data structure ( )
+- Implement the element system and weakness table ( )
+- Implement damage multiplier modification ( )
+- Implement board buffs to elements (damage +/−) ( )
+- Implement special grids on the board ( )
+- Implement turn order based on the Speed stat ( )
+- Implement the turn timer and its timeout behaviour ( )
+- Build the status effect framework: duration, stacking, removal ( )
+- Implement knock-down status: weakness trigger, enemy disabled for x turns, ×1.5 damage (to be tuned) ( )
+- Add win/lose conditions and a result screen ( )
+
+## 3. Spells and Fragments
+
+- Implement the spell data and casting logic ( )
+- Define fragment generation rules (element arrangement) ( )
+- Implement fragment placement, rotation and validation ( )
+- Implement fragment draw/refresh rules ( )
+- Add more spells ( )
+- Run a spell balance pass ( )
+
+## 4. Player Systems
+
+- Implement base stats: HP, damage multipliers, DEF, Speed ( )
+- Implement the charging gauge ( )
+- Implement FEVER mode: trigger, duration, effects ( )
+- Implement the character ultimate ( )
+- Implement talents (element buffs, stat changes) **[?]** ( )
+- Implement levels/progression **[?]** ( )
+- Add more selectable characters and a select screen **[?]** ( )
+
+## 5. Enemy and Boss AI
+
+- Build the enemy base class and stats ( )
+- Implement minion AI with fixed damage ( )
+- Add minion effects **[?]** ( )
+- Implement elite AI: multiple spells, one per attack, forming a combo ( )
+- Show enemy intent (telegraphing) ( )
+- Implement boss AI built on the elite framework with higher damage ( )
+- Add boss ultimate spells on the set interval ( )
+- Add the boss ability to ban grids on the board ( )
+- Add boss terrain-change status **[?]** ( )
+- Add more enemies ( )
+
+## 6. Equipment, Inventory and Economy
+
+- Implement armour (player stat modifiers) ( )
+- Implement casting boards (weapons): board shape and board buffs ( )
+- Build the backpack/inventory system ( )
+- Add spell and fragment capacity limits ( )
+- Implement equip/unequip logic with stat recalculation ( )
+- Implement buff items **[?]** ( )
+- Implement consumables **[?]** ( )
+- Let inventory affect stats, storyline and economy **[?]** ( )
+- Implement the gold economy: income, prices, sinks ( )
+
+## 7. Exploration and Run Flow
+
+- Generate the node-based map ( )
+- Add battle nodes with scaling difficulty ( )
+- Add elite battle nodes ( )
+- Add the boss node ( )
+- Add shop nodes ( )
+- Add treasure nodes ( )
+- Add event nodes with choices and outcomes ( )
+- Implement save/load and run resume ( )
+
+## 8. Terrain **[?]**
+
+- Implement the terrain system **[?]** ( )
+- Add terrain buffs/debuffs to specific elements **[?]** ( )
+- Add terrain–equipment interaction **[?]** ( )
+
+## 9. UI
+
+- Explore background ( )
+- Battle background ( )
+- Battle HUD: HP, timer, gauge, fragments ( )
+- Node descriptions ( )
+- Story presentation ( )
+- Dialogue system, if used ( )
+- Event node UI: choices and buttons ( )
+- Shop UI ( )
+- Inventory/backpack UI ( )
+- Main menu, pause and settings ( )
+
+## 10. Art, Animation and Audio
+
+- Player character art ( )
+- Enemy art ( )
+- Item art ( )
+- Spell icons ( )
+- Character animations ( )
+- Attack action animations ( )
+- Spell animations and FX ( )
+- Enemy action animations ( )
+- Status and state-change FX ( )
+- UI animations ( )
+- Sound effects and music ( )
 
 This repository contains a Godot 4 prototype for a turn-based, elemental
 spell-casting game. Players build spells by placing rotatable fragments on a
