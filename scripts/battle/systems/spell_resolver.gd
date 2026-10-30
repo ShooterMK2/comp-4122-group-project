@@ -5,19 +5,24 @@ const K := SpellEffect.Kind
 const S := StatusTypes.Status
 const E := Elements.Element
 
+# ---------- player side ----------
 static func resolve_queue(queue: Array[QueuedSpell], state: BattleState,
-		log: Array[String]) -> int:
+		_log: Array[String]) -> int:
 	var total := 0
 	for q in queue:
 		state.ensure_valid_target()
 		if state.all_enemies_dead():
-			log.append("No targets left.")
+			_log.append("No targets left.")
 			break
-		total += resolve_spell(q, state, log)
+		total += resolve_spell(q, state, _log)
 	return total
 
+# A board spell: the caster is the player, the target is the selected enemy.
+static func resolve_spell(q: QueuedSpell, state: BattleState, _log: Array[String]) -> int:
+	return cast(q.definition, state.player, state.enemies[state.target_index], state, _log)
+
 static func resolve_basic_attack(tile_count: int, state: BattleState,
-		log: Array[String]) -> int:
+		_log: Array[String]) -> int:
 	state.ensure_valid_target()
 	var target := state.enemies[state.target_index]
 	if target.is_dead() or tile_count <= 0:
@@ -25,20 +30,15 @@ static func resolve_basic_attack(tile_count: int, state: BattleState,
 	var dmg := DamageCalculator.basic_attack(tile_count, state.player)
 	var res := target.take_damage(dmg)
 	var dealt: int = res["hp"] + res["absorbed"]
-	log.append("Tiles on board: %d -> %d basic dmg to %s." % [tile_count, dealt, target.display_name])
+	_log.append("Tiles on board: %d -> %d basic dmg to %s." % [tile_count, dealt, target.display_name])
 	return dealt
 
-# Order per spell:
-#  1. Passive modifiers (Tailwind, Shatter, Conductive) - damaging spells only
-#  2. Consumer effects (Detonate, Smite)
-#  3. Damage = finalize(base + bonuses)
-#  4. Conductive splash to adjacent enemies
-#  5. Applier effects (Burn, Chill, Fortify, Tailwind, Decay, Conductive...)
-static func resolve_spell(q: QueuedSpell, state: BattleState, log: Array[String]) -> int:
-	var caster := state.player
-	var ti := state.target_index
-	var target := state.enemies[ti]
-	var d := q.definition
+# ---------- generic: anyone casts a spell ----------
+# Order: 1 passive modifiers (Tailwind, Shatter, Conductive)  2 consumers (Detonate, Smite)
+#        3 damage  4 Conductive splash  5 appliers (statuses, Fortify, Heal ...)
+static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantState,
+		state: BattleState, _log: Array[String]) -> int:
+	var target := caster if d.target_kind == SpellDefinition.TargetKind.SELF else chosen
 	var elem := d.primary_element()
 	var damaging := d.base_damage > 0
 	var bonus := 0
@@ -81,12 +81,13 @@ static func resolve_spell(q: QueuedSpell, state: BattleState, log: Array[String]
 					notes.append("Smite fizzled (needs %d Shield)" % fx.amount)
 
 	var final := DamageCalculator.finalize(d.base_damage + bonus, caster)
-	var res := target.take_damage(final)
-	var dealt: int = res["hp"] + res["absorbed"]
+	var dealt := 0
+	if final > 0:
+		var res := target.take_damage(final)
+		dealt = res["hp"] + res["absorbed"]
 
 	if conductive_hit:
-		for ai in state.adjacent_indices(ti):
-			var adj := state.enemies[ai]
+		for adj in state.adjacent_to(target):
 			var splash := roundi(final * BattleConfig.CONDUCTIVE_SPLASH_RATIO)
 			var r2 := adj.take_damage(splash)
 			adj.add_status(S.CONDUCTIVE, 1)
@@ -101,7 +102,7 @@ static func resolve_spell(q: QueuedSpell, state: BattleState, log: Array[String]
 				notes.append("+%d Burn" % fx.amount)
 			K.SELF_BURN:
 				StatusSystem.apply_status(caster, S.BURN, fx.amount, side)
-				notes.append("you gain %d Burn" % fx.amount)
+				notes.append("%s gains %d Burn" % [caster.display_name, fx.amount])
 			K.CHILL:
 				dealt += StatusSystem.apply_status(target, S.CHILL, fx.amount, side)
 				notes.append("+%d Chill" % fx.amount)
@@ -117,11 +118,14 @@ static func resolve_spell(q: QueuedSpell, state: BattleState, log: Array[String]
 			K.CONDUCTIVE:
 				target.add_status(S.CONDUCTIVE, fx.amount)
 				notes.append("+%d Conductive" % fx.amount)
+			K.HEAL:
+				notes.append("heals %d HP" % caster.heal(fx.amount))
 
-	log.append("%s -> %s: %d dmg (base %d, bonus +%d)%s" % [
-		d.display_name, target.display_name, dealt, d.base_damage, bonus,
+	var on := "itself" if target == caster else target.display_name
+	_log.append("%s casts %s on %s: %d dmg (base %d, bonus +%d)%s" % [
+		caster.display_name, d.display_name, on, dealt, d.base_damage, bonus,
 		(" | " + ", ".join(notes)) if not notes.is_empty() else ""])
-	log.append_array(side)
+	_log.append_array(side)
 	return dealt
 
 static func preview(queue: Array[QueuedSpell], tile_count: int, state: BattleState) -> Dictionary:

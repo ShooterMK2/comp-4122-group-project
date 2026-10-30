@@ -1,12 +1,15 @@
 class_name SpellDefinition
 extends Resource
 
+enum TargetKind { HOSTILE, SELF }
+
 @export var id: StringName
 @export var display_name: String = ""
 @export var pattern: SpellPattern
 @export var requirements: Array[ElementRequirement] = []
 @export var base_damage: int = 1
 @export var effects: Array[SpellEffect] = []
+@export var target_kind: TargetKind = TargetKind.HOSTILE   # SELF: ignores the chosen target
 
 static func make(p_id: StringName, p_name: String, p_pattern: SpellPattern,
 		p_reqs: Array, p_damage: int, p_effects: Array = []) -> SpellDefinition:

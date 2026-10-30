@@ -7,9 +7,11 @@ const BOARD_SIZE := Vector2i(10, 10)
 
 # ---------- General ----------
 const PLAYER_MAX_HP := 50
+const PLAYER_BASE_SPEED := 10.0
 const HAND_SIZE := 4                    # fragments drawn at the start of each turn
 const BASIC_DAMAGE_PER_TILE := 1        # damage per tile left on the board when you Cast
 const DOT_IGNORES_SHIELD := true        # Burn / Decay / Detonate bypass shield if true
+const CONFIRM_ENEMY_ACTIONS := false    # Require confirmation before enemy actions
 
 # ---------- Fire ----------
 const BURN_DAMAGE_PER_STACK := 2        # end of turn: stacks * this
@@ -18,8 +20,8 @@ const DETONATE_THRESHOLD := 8           # Burn stacks that auto-detonate
 const DETONATE_FIXED_DAMAGE := 20       # damage dealt by the auto-detonation
 
 # ---------- Ice ----------
-const CHILL_REDUCTION_PER_STACK := 0.10 # -10% attack damage per Chill stack
-const CHILL_MIN_DAMAGE_FRACTION := 0.05 # damage never drops below 5% of original
+const CHILL_SPEED_REDUCTION_PER_STACK := 0.25 # -25% Speed per Chill stack (to discuss)
+const CHILL_MIN_SPEED_FRACTION := 0.50        # Speed never drops below 50% of base
 const CHILL_LOSS_PER_TURN := 1          # lost at end of the chilled unit's turn
 const FREEZE_THRESHOLD := 3             # Chill consumed per conversion
 const FREEZE_STACKS_PER_CONVERSION := 1
@@ -55,3 +57,8 @@ const DUMMY_ART := "enemy_wooden_dummy.png"       # assets/.../characters/wooden
 const BACKLASH_BASE_FRACTION := 0.10        # HP cost = this * max HP ...
 const BACKLASH_PROGRESSION_FRACTION := 0.05 # ... + this * max HP per earlier Backlash this battle
 const BACKLASH_MIN_HP_AFTER := 1            # Backlash is refused if it would leave you below this
+
+# ---------- Speed / turn order ----------
+const DUMMY_BASE_SPEED := 10.0     # TestEncounter overrides this per dummy
+const DUMMY_HEAL_PER_TURN := 10    # Mend: HP a dummy heals on each of its actions
+

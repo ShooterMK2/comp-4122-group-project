@@ -13,6 +13,7 @@ enum Kind {
 	DECAY,       # apply Decay to target
 	CONDUCTIVE,  # apply Conductive to target after resolving
 	OVERLOAD,    # on queue: draw `amount` fragments, draw `amount2` fewer next turn
+	HEAL		 # caster restores `amount` HP
 }
 
 @export var kind: Kind = Kind.BURN
@@ -38,4 +39,5 @@ func describe() -> String:
 		Kind.DECAY: return "Decay +%d" % amount
 		Kind.CONDUCTIVE: return "Conductive +%d" % amount
 		Kind.OVERLOAD: return "Overload: draw %d, next turn -%d" % [amount, amount2]
+		Kind.HEAL: return "Heal +%d HP" % amount
 	return ""

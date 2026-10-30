@@ -19,22 +19,22 @@ static func check_backlash(state: BattleState) -> Dictionary:
 	return {"ok": true, "cost": cost, "reason": ""}
 
 # Ends your turn (the controller calls _finish_turn afterwards).
-static func backlash(state: BattleState, board: CastingBoardModel, log: Array[String]) -> bool:
+static func backlash(state: BattleState, board: CastingBoardModel, _log: Array[String]) -> bool:
 	var check := check_backlash(state)
 	if not check["ok"]:
-		log.append(check["reason"])
+		_log.append(check["reason"])
 		return false
 	var cost: int = check["cost"]
 	var tiles := board.filled_count()
 	state.player.hp -= cost
 	state.backlash_uses += 1
 	board.reset()
-	log.append("Backlash! You lose %d HP and %d tile(s) discharge." % [cost, tiles])
-	SpellResolver.resolve_basic_attack(tiles, state, log)
+	_log.append("Backlash! You lose %d HP and %d tile(s) discharge." % [cost, tiles])
+	SpellResolver.resolve_basic_attack(tiles, state, _log)
 	return true
 
 # Also ends your turn.
-static func fizzle(board: CastingBoardModel, log: Array[String]) -> void:
+static func fizzle(board: CastingBoardModel, _log: Array[String]) -> void:
 	var tiles := board.filled_count()
 	board.reset()
-	log.append("Fizzle: %d tile(s) fade away." % tiles)
+	_log.append("Fizzle: %d tile(s) fade away." % tiles)
