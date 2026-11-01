@@ -27,7 +27,7 @@ static func resolve_basic_attack(tile_count: int, state: BattleState,
 	var target := state.enemies[state.target_index]
 	if target.is_dead() or tile_count <= 0:
 		return 0
-	var dmg := DamageCalculator.basic_attack(tile_count, state.player)
+	var dmg := DamageCalculator.basic_attack(tile_count, state.player, target)
 	var res := target.take_damage(dmg)
 	var dealt: int = res["hp"] + res["absorbed"]
 	_log.append("Tiles on board: %d -> %d basic dmg to %s." % [tile_count, dealt, target.display_name])
@@ -80,7 +80,8 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 				else:
 					notes.append("Smite fizzled (needs %d Shield)" % fx.amount)
 
-	var final := DamageCalculator.finalize(d.base_damage + bonus, caster)
+	var final := DamageCalculator.finalize(d.base_damage + bonus, caster, target, elem,
+		d.other_multiplier)
 	var dealt := 0
 	if final > 0:
 		var res := target.take_damage(final)
@@ -131,10 +132,19 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 static func preview(queue: Array[QueuedSpell], tile_count: int, state: BattleState) -> Dictionary:
 	var sim := state.duplicate_state()
 	var lines: Array[String] = []
-	var spells := resolve_queue(queue, sim, lines)
+	var spell_damages: Array[int] = []
+	var spells := 0
+	for q in queue:
+		sim.ensure_valid_target()
+		if sim.all_enemies_dead():
+			break
+		var damage := resolve_spell(q, sim, lines)
+		spell_damages.append(damage)
+		spells += damage
 	var basic := resolve_basic_attack(tile_count, sim, lines)
 	var after: Array[Dictionary] = []
 	for e in sim.enemies:
 		after.append({"name": e.display_name, "hp": e.hp, "max_hp": e.max_hp})
-	return {"spells": spells, "basic": basic, "lines": lines, "enemies_after": after,
+	return {"spells": spells, "spell_damages": spell_damages, "basic": basic,
+		"lines": lines, "enemies_after": after,
 		"player_hp": sim.player.hp, "player_max_hp": sim.player.max_hp}

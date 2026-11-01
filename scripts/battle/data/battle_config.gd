@@ -6,12 +6,21 @@ const E := Elements.Element
 const BOARD_SIZE := Vector2i(10, 10)
 
 # ---------- General ----------
-const PLAYER_MAX_HP := 50
-const PLAYER_BASE_SPEED := 10.0
 const HAND_SIZE := 4                    # fragments drawn at the start of each turn
 const BASIC_DAMAGE_PER_TILE := 1        # damage per tile left on the board when you Cast
 const DOT_IGNORES_SHIELD := true        # Burn / Decay / Detonate bypass shield if true
 const CONFIRM_ENEMY_ACTIONS := false    # Require confirmation before enemy actions
+const OTHER_MULTIPLIER_DEFAULT := 1.0
+const OTHER_MULTIPLIER_LOW := 0.20
+const OTHER_MULTIPLIER_MEDIUM := 0.45
+const OTHER_MULTIPLIER_HIGH := 0.90
+const SPELL_ATTACK_FACTOR := 0.25
+const DAMAGE_RANDOM_MIN := 0.90
+const DAMAGE_RANDOM_MAX := 1.15
+const ELEMENTAL_MULTIPLIER_DEFAULT := 1.0
+const ELEMENTAL_MULTIPLIER_COUNTERED := 1.75
+const ELEMENTAL_MULTIPLIER_COUNTERING := 0.65
+const DEFENCE_MULTIPLIER_BASE := 100.0
 
 # ---------- Fire ----------
 const BURN_DAMAGE_PER_STACK := 2        # end of turn: stacks * this
@@ -50,15 +59,10 @@ const CORRUPTION_DAMAGE_PER_STACK := 6  # before the enemy acts: stacks * this
 const CORRUPTION_STACKS_CONSUMED := 1   # stacks lost after triggering
 const CORRUPTION_LIFESTEAL_PER_STACK := 3  # HP restored to the player per stack
 
-const PLAYER_ART := "player"            # assets/.../characters/player.png
-const DUMMY_ART := "enemy_wooden_dummy.png"       # assets/.../characters/wooden_dummy.png
-
 # ---------- Deadlock: Backlash / Fizzle ----------
 const BACKLASH_BASE_FRACTION := 0.10        # HP cost = this * max HP ...
 const BACKLASH_PROGRESSION_FRACTION := 0.05 # ... + this * max HP per earlier Backlash this battle
 const BACKLASH_MIN_HP_AFTER := 1            # Backlash is refused if it would leave you below this
 
 # ---------- Speed / turn order ----------
-const DUMMY_BASE_SPEED := 10.0     # TestEncounter overrides this per dummy
 const DUMMY_HEAL_PER_TURN := 10    # Mend: HP a dummy heals on each of its actions
-

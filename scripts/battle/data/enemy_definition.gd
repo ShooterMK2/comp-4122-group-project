@@ -1,21 +1,24 @@
 class_name EnemyDefinition
-extends Resource
+extends CombatantDefinition
 
-@export var display_name: String = "Enemy"
-@export var max_hp: int = 50
-@export var speed: float = 10.0
-@export var art_name: String = ""
-@export var placeholder_color: Color = Color(0.5, 0.4, 0.3)
 # Enemy actions. They skip the casting board, so pattern/requirements are ignored.
 # One spell per round, cycling in order.
 @export var spells: Array[SpellDefinition] = []
 
 static func wooden_dummy() -> EnemyDefinition:
-	var d := EnemyDefinition.new()
-	d.display_name = "Wooden Dummy"
-	d.max_hp = 60
-	d.speed = BattleConfig.DUMMY_BASE_SPEED
-	d.art_name = BattleConfig.DUMMY_ART
-	d.placeholder_color = Color(0.55, 0.4, 0.25)
+	return wooden_dummy_variant(0)
+
+static func wooden_dummy_variant(index: int) -> EnemyDefinition:
+	var paths := [
+		"res://resources/enemies/wooden_dummy_fire.tres",
+		"res://resources/enemies/wooden_dummy_ice.tres",
+		"res://resources/enemies/wooden_dummy_lightning.tres",
+	]
+	var path: String = paths[clampi(index, 0, paths.size() - 1)]
+	var d := load(path) as EnemyDefinition
+	if d == null:
+		push_error("Unable to load enemy definition resource: %s" % path)
+		return EnemyDefinition.new()
+	d = d.duplicate(true) as EnemyDefinition
 	d.spells.append(EnemySpellLibrary.mend(BattleConfig.DUMMY_HEAL_PER_TURN))
 	return d

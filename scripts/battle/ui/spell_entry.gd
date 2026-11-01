@@ -4,6 +4,8 @@ extends PanelContainer
 signal move_up(index: int)
 signal move_down(index: int)
 
+var _damage_label: Label
+
 func setup(index: int, count: int, q: QueuedSpell) -> void:
 	var d := q.definition
 	var box := VBoxContainer.new()
@@ -39,8 +41,16 @@ func setup(index: int, count: int, q: QueuedSpell) -> void:
 	info.text = "Base %d | %s" % [d.base_damage, fx_line]
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(info)
+	_damage_label = Label.new()
+	_damage_label.text = "Final damage: --"
+	_damage_label.add_theme_color_override("font_color", Color(1.0, 0.86, 0.4))
+	box.add_child(_damage_label)
 
 	box.add_child(FragmentPreview.new().setup(d.pattern.cells, q.source_elements, 16))
+
+func set_projected_damage(damage: int) -> void:
+	if _damage_label != null:
+		_damage_label.text = "Final damage: %d" % damage
 
 func _on_up(index: int) -> void:
 	move_up.emit(index)

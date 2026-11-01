@@ -11,19 +11,21 @@ var overload_debt := 0
 var backlash_uses := 0         # Backlash uses this battle (drives the HP cost progression)
 
 # Speed / turn order (actor ids: 0 = player, enemy i = i + 1)
-var player_speed: float = BattleConfig.PLAYER_BASE_SPEED
+var player_speed: float = 1.0
 var enemy_speeds: Array[float] = []
 var pending_actors: Array[int] = []
 var acted_actors: Array[int] = []
 var current_actor := -1
 
 func _init(defs: Array[EnemyDefinition] = []) -> void:
-	player = CombatantState.new("Player", BattleConfig.PLAYER_MAX_HP)
+	var player_definition := PlayerDefinition.default_player()
+	player = CombatantState.from_definition(player_definition)
+	player_speed = player_definition.speed
 	for i in defs.size():
 		enemy_defs.append(defs[i])
 		enemy_speeds.append(defs[i].speed)
-		enemies.append(CombatantState.new(
-			"%s %s" % [defs[i].display_name, char(65 + i)], defs[i].max_hp))
+		enemies.append(CombatantState.from_definition(defs[i],
+			"%s %s" % [defs[i].display_name, char(65 + i)]))
 
 func all_enemies_dead() -> bool:
 	for e in enemies:

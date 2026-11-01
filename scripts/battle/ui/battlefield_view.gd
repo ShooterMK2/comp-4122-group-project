@@ -12,7 +12,9 @@ func _init() -> void:
 
 func setup(state: BattleState) -> void:
 	_player_view = CombatantView.new()
-	_player_view.setup(BattleConfig.PLAYER_ART, Color(0.25, 0.4, 0.8), "PLAYER", false)
+	var player_definition := PlayerDefinition.default_player()
+	_player_view.setup(player_definition.art_name, player_definition.placeholder_color,
+		"PLAYER", false)
 	add_child(_player_view)
 	add_child(VSeparator.new())
 	var row := HBoxContainer.new()

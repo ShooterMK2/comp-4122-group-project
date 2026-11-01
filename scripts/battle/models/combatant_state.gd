@@ -4,13 +4,32 @@ extends RefCounted
 var display_name := ""
 var max_hp := 1
 var hp := 1
+var level := 1
+var attack := 1
+var defence := 0
+var elemental_weaknesses: Array[int] = []
+var elemental_strengths: Array[int] = []
 var shield := 0
 var statuses := {}
 
-func _init(p_name: String = "", p_max_hp: int = 1) -> void:
+func _init(p_name: String = "", p_max_hp: int = 1, p_level: int = 1,
+		p_attack: int = 1, p_defence: int = 0) -> void:
 	display_name = p_name
 	max_hp = p_max_hp
 	hp = p_max_hp
+	level = p_level
+	attack = p_attack
+	defence = p_defence
+
+static func from_definition(definition: CombatantDefinition,
+		name_override: String = "") -> CombatantState:
+	var name := definition.display_name if name_override.is_empty() else name_override
+	var state := CombatantState.new(name, definition.max_hp, definition.level,
+		definition.attack, definition.defence)
+	state.elemental_weaknesses = definition.elemental_weaknesses.duplicate()
+	state.elemental_strengths = definition.elemental_strengths.duplicate()
+	return state
+
 
 func get_status(s: int) -> int:
 	return statuses.get(s, 0)
@@ -43,7 +62,9 @@ func is_dead() -> bool:
 	return hp <= 0
 
 func duplicate_state() -> CombatantState:
-	var c := CombatantState.new(display_name, max_hp)
+	var c := CombatantState.new(display_name, max_hp, level, attack, defence)
+	c.elemental_weaknesses = elemental_weaknesses.duplicate()
+	c.elemental_strengths = elemental_strengths.duplicate()
 	c.hp = hp
 	c.shield = shield
 	c.statuses = statuses.duplicate()

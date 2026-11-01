@@ -38,6 +38,7 @@ var _log: BattleLogView
 
 func _ready() -> void:
 	randomize()
+	DisplayServer.window_set_min_size(Vector2i(1300, 720))
 	spells = DemoSpellLibrary.build()
 	state = BattleState.new(TestEncounter.enemies())
 	_build_layout()
@@ -77,13 +78,15 @@ func _build_layout() -> void:
 	root.add_child(_order_bar)
 
 	var body := HBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 16)
 	root.add_child(body)
 
 	var left_scroll := ScrollContainer.new()
+	left_scroll.custom_minimum_size = Vector2(864, 0)
 	left_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	body.add_child(left_scroll)
 	var left := VBoxContainer.new()
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -113,10 +116,12 @@ func _build_layout() -> void:
 	_info = Label.new()
 
 	var right_scroll := ScrollContainer.new()
-	right_scroll.custom_minimum_size = Vector2(400, 0)
+	right_scroll.custom_minimum_size = Vector2(380, 0)
+	right_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	body.add_child(right_scroll)
 	var right := VBoxContainer.new()
+	right.custom_minimum_size = Vector2(0, 0)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.add_theme_constant_override("separation", 8)
 	right_scroll.add_child(right)

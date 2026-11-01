@@ -4,7 +4,7 @@
 
 ## 1. Foundation and Open Decisions
 
-- [ ] Define base damage and the damage formula ()
+- [x] Define base damage and the damage formula () - Loky
 - [ ] Decide whether special grids are random or fixed ()
 - [ ] Decide the boss ultimate interval ()
 - [ ] Decide whether levels and talents exist ()
@@ -31,7 +31,7 @@
 
 ## 4. Player Systems
 
-- [ ] Implement base stats: HP, damage multipliers, DEF, Speed ()
+- [x] Implement base stats: HP, damage multipliers, DEF, Speed () - Loky
 - [ ] Implement the charging gauge ()
 - [ ] Implement FEVER mode: trigger, duration, effects ()
 - [ ] Implement the character ultimate ()
@@ -443,9 +443,15 @@ in models or systems; UI scripts should present state and emit input events.
 
 #### `scripts/battle/systems/damage_calculator.gd`
 
-Calculates final attack damage and calculates basic board attacks from the
-number of filled cells. Chill is not a damage modifier; it reduces effective
-Speed in `turn_order_system.gd`.
+Calculates spell damage using `ceil(Spell Damage * (ATK * 0.25))`, then applies
+`(Base * Other Multiplier) * Defence Multiplier * Elemental Multiplier` and a
+random 90%-115% factor before rounding up. Basic board attacks use their
+tile-based base damage and also receive the final multipliers and randomness.
+The default Other Multiplier is 100%; the available default tier values are
+Low 20%, Medium 45%, and High 90%. Enemy weaknesses apply a 175% Countered
+multiplier, strengths apply a 65% Countering multiplier, and unmatched elements
+use 100%. Chill is not a damage modifier; it reduces effective Speed in
+`turn_order_system.gd`.
 
 #### `scripts/battle/systems/enemy_intent_system.gd`
 
@@ -523,16 +529,25 @@ The scripts in `scripts/battle/data/` define content and centralize tunable rule
 They are lightweight resources or enums so systems can consume consistent
 data without embedding content-specific logic.
 
+- `scripts/battle/data/combatant_definition.gd` is the shared stat schema for
+  player and enemy records. Both use `max_hp`, `level`, `attack`, `defence`, and
+  `speed`, plus editable elemental weakness and strength lists, with
+  presentation fields for the display name and artwork.
+- `resources/characters/player.tres` and
+  `resources/enemies/wooden_dummy_*.tres` are the local Godot resource database
+  records loaded by the battle state. They require no external service and can
+  be edited in the Godot Inspector.
 - `scripts/battle/data/battle_config.gd` is the main balance/configuration file.
-  It defines board size, player HP, hand size, basic damage, player and dummy
-  Speed, enemy-action confirmation, shield behavior, damage-over-time values,
-  status thresholds and decay rates, Shatter, Tailwind, Conductive,
-  Corruption, Backlash, deadlock, and current art identifiers.
+  It defines board size, hand size, basic damage, enemy-action confirmation,
+  shield behavior, damage-over-time values, status thresholds and decay rates, Shatter, Tailwind, Conductive,
+  Corruption, Backlash, and deadlock behavior.
 - `scripts/battle/data/element_requirement.gd` represents a minimum count of one
   element needed by a spell and provides a construction helper.
-- `scripts/battle/data/enemy_definition.gd` describes enemy content, including
-  name, HP, Speed, art identifier, and a list of spells. `wooden_dummy()`
-  supplies the current demo enemy definition.
+- `scripts/battle/data/player_definition.gd` loads the player record from the
+  local resource database.
+- `scripts/battle/data/enemy_definition.gd` describes enemy content and loads
+  enemy records from the local resource database. `wooden_dummy()` adds the
+  current demo enemy's runtime spell list.
 - `scripts/battle/data/fragment_data.gd` stores a fragment's relative cell positions
   and element values. It normalizes shapes, rotates them clockwise, and
   produces preview text.
@@ -554,7 +569,7 @@ data without embedding content-specific logic.
 - `scripts/content/spells/enemy_spell_library.gd` builds enemy spells. The
   current wooden dummy uses Mend, which targets itself and heals it.
 - `scripts/content/encounters/test_encounter.gd` builds the current test
-  encounter by creating three wooden-dummy enemy definitions.
+  encounter by loading three wooden-dummy enemy records.
 
 The shared scripts complement these data definitions:
 
@@ -575,7 +590,7 @@ The UI layer is created at runtime by `scripts/battle/battle_controller.gd`.
 - `scripts/battle/ui/fragment_zone.gd`, `fragment_card.gd`, and
   `fragment_preview.gd` display the hand, selection, rotation, and drag data.
 - `scripts/battle/ui/spell_queue_view.gd` and `spell_entry.gd` display matched spells,
-  previews, and queue reorder controls.
+  projected final damage, previews, and queue reorder controls.
 - `scripts/battle/ui/turn_indicator.gd` displays the round and Cast/Reset actions.
 - `scripts/battle/ui/turn_order_bar.gd` displays actor order and effective Speed.
 - `scripts/battle/ui/target_prompt.gd` displays target confirmation and

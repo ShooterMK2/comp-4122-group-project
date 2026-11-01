@@ -8,6 +8,7 @@ enum TargetKind { HOSTILE, SELF }
 @export var pattern: SpellPattern
 @export var requirements: Array[ElementRequirement] = []
 @export var base_damage: int = 1
+@export_range(0.0, 10.0, 0.05) var other_multiplier: float = BattleConfig.OTHER_MULTIPLIER_DEFAULT
 @export var effects: Array[SpellEffect] = []
 @export var target_kind: TargetKind = TargetKind.HOSTILE   # SELF: ignores the chosen target
 
