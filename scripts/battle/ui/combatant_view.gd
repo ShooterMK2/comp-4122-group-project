@@ -18,6 +18,7 @@ var _hp_bar: ProgressBar
 var _hp_label: Label
 var _status: Label
 var _intent: Label
+var _elemental_info: VBoxContainer
 
 func _init() -> void:
 	custom_minimum_size = Vector2(ART_SIZE + 24, 0)
@@ -76,6 +77,10 @@ func _init() -> void:
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(_status)
 
+	_elemental_info = VBoxContainer.new()
+	_elemental_info.add_theme_constant_override("separation", 2)
+	box.add_child(_elemental_info)
+
 	_intent = Label.new()
 	_intent.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_intent.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -109,11 +114,59 @@ func refresh(c: CombatantState, intent_text: String, is_target: bool) -> void:
 	_hp_bar.value = c.hp
 	_hp_label.text = "HP %d/%d" % [c.hp, c.max_hp]
 	_status.text = StatusSystem.describe(c)
+	_refresh_elemental_info(c)
 	_intent.text = intent_text
 	var targeted := is_target and not dead
 	_target.modulate.a = 1.0 if targeted else 0.0
 	_style.border_color = BORDER_TARGET if targeted else BORDER_IDLE
 	modulate = Color(0.45, 0.45, 0.45) if dead else Color.WHITE
+
+func _refresh_elemental_info(c: CombatantState) -> void:
+	for child in _elemental_info.get_children():
+		child.queue_free()
+	if c.elemental_weaknesses.is_empty() and c.elemental_strengths.is_empty():
+		return
+	if not c.elemental_weaknesses.is_empty():
+		_add_element_row("WEAK", c.elemental_weaknesses, Color(0.2, 0.65, 0.25))
+	if not c.elemental_strengths.is_empty():
+		_add_element_row("STRONG", c.elemental_strengths, Color(0.75, 0.2, 0.2))
+
+func _add_element_row(title: String, elements: Array[int], background: Color) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 3)
+	_elemental_info.add_child(row)
+	var label := Label.new()
+	label.text = title
+	label.custom_minimum_size = Vector2(48, 0)
+	label.add_theme_font_size_override("font_size", 11)
+	row.add_child(label)
+	for element in elements:
+		var chip := PanelContainer.new()
+		chip.custom_minimum_size = Vector2(28, 28)
+		var style := StyleBoxFlat.new()
+		style.bg_color = background
+		style.set_corner_radius_all(4)
+		style.set_content_margin_all(2)
+		chip.add_theme_stylebox_override("panel", style)
+		var icon := TextureRect.new()
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.texture = Elements.texture_of(element)
+		icon.tooltip_text = Elements.name_of(element)
+		chip.tooltip_text = Elements.name_of(element)
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chip.add_child(icon)
+		if icon.texture == null:
+			var fallback := Label.new()
+			fallback.text = Elements.letter_of(element)
+			fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			fallback.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			chip.add_child(fallback)
+		row.add_child(chip)
 
 func _gui_input(event: InputEvent) -> void:
 	if clickable and event is InputEventMouseButton and event.pressed \
