@@ -8,6 +8,8 @@ static func describe(c: CombatantState) -> String:
 	if c.shield > 0:
 		parts.append("Shield %d" % c.shield)
 	for s in c.statuses.keys():
+		if s == S.BREAK:
+			continue
 		parts.append("%s %d" % [StatusTypes.status_name(s), c.statuses[s]])
 	return ", ".join(parts) if not parts.is_empty() else "-"
 

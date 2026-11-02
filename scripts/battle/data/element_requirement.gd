@@ -6,6 +6,6 @@ extends Resource
 
 static func make(e: int, n: int) -> ElementRequirement:
 	var r := ElementRequirement.new()
-	r.element = e
+	r.element = e as Elements.Element
 	r.min_count = n
 	return r

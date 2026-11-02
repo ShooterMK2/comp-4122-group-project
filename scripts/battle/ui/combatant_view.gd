@@ -113,13 +113,30 @@ func refresh(c: CombatantState, intent_text: String, is_target: bool) -> void:
 	_hp_bar.max_value = c.max_hp
 	_hp_bar.value = c.hp
 	_hp_label.text = "HP %d/%d" % [c.hp, c.max_hp]
-	_status.text = StatusSystem.describe(c)
+	var status_text := StatusSystem.describe(c)
+	if c.break_threshold > 0:
+		status_text = "Shield Break: %s (%d/%d)" % [
+			_break_stage(c), c.break_hits, c.break_threshold] \
+			+ (" | " + status_text) if not status_text.is_empty() else "Shield Break: " + _break_stage(c)
+	_status.text = status_text
 	_refresh_elemental_info(c)
 	_intent.text = intent_text
 	var targeted := is_target and not dead
 	_target.modulate.a = 1.0 if targeted else 0.0
 	_style.border_color = BORDER_TARGET if targeted else BORDER_IDLE
 	modulate = Color(0.45, 0.45, 0.45) if dead else Color.WHITE
+
+func _break_stage(c: CombatantState) -> String:
+	if c.is_broken():
+		return "Break"
+	if c.break_hits <= 0:
+		return "No"
+	var progress := float(c.break_hits) / float(c.break_threshold)
+	if progress < 0.34:
+		return "Minor"
+	if progress < 0.67:
+		return "Medium"
+	return "Major"
 
 func _refresh_elemental_info(c: CombatantState) -> void:
 	for child in _elemental_info.get_children():

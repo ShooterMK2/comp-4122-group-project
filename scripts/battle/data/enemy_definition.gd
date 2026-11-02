@@ -1,6 +1,10 @@
 class_name EnemyDefinition
 extends CombatantDefinition
 
+enum Rank { MINOR, ELITE, BOSS }
+
+@export var rank: Rank = Rank.MINOR
+
 # Enemy actions. They skip the casting board, so pattern/requirements are ignored.
 # One spell per round, cycling in order.
 @export var spells: Array[SpellDefinition] = []

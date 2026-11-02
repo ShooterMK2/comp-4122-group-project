@@ -27,7 +27,7 @@ static func resolve_basic_attack(tile_count: int, state: BattleState,
 	var target := state.enemies[state.target_index]
 	if target.is_dead() or tile_count <= 0:
 		return 0
-	var dmg := DamageCalculator.basic_attack(tile_count, state.player, target)
+	var dmg := DamageCalculator.basic_attack(tile_count, state.player, target, state.terrain)
 	var res := target.take_damage(dmg)
 	var dealt: int = res["hp"] + res["absorbed"]
 	_log.append("Tiles on board: %d -> %d basic dmg to %s." % [tile_count, dealt, target.display_name])
@@ -81,16 +81,19 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 					notes.append("Smite fizzled (needs %d Shield)" % fx.amount)
 
 	var final := DamageCalculator.finalize(d.base_damage + bonus, caster, target, elem,
-		d.other_multiplier)
+		d.other_multiplier, state.terrain)
 	var dealt := 0
 	if final > 0:
 		var res := target.take_damage(final)
 		dealt = res["hp"] + res["absorbed"]
+		_register_weakness_hit(target, elem, notes)
 
 	if conductive_hit:
 		for adj in state.adjacent_to(target):
 			var splash := roundi(final * BattleConfig.CONDUCTIVE_SPLASH_RATIO)
 			var r2 := adj.take_damage(splash)
+			if splash > 0:
+				_register_weakness_hit(adj, E.LIGHTNING, notes)
 			adj.add_status(S.CONDUCTIVE, 1)
 			dealt += r2["hp"] + r2["absorbed"]
 			notes.append("%s takes %d splash, now Conductive" % [adj.display_name, splash])
@@ -128,6 +131,14 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 		(" | " + ", ".join(notes)) if not notes.is_empty() else ""])
 	_log.append_array(side)
 	return dealt
+
+static func _register_weakness_hit(target: CombatantState, element: int,
+		notes: Array[String]) -> void:
+	if element == E.NONE or element not in target.elemental_weaknesses:
+		return
+	if target.register_weakness_hit():
+		notes.append("Shield Break! %s is broken for %d turns" % [
+		 target.display_name, BattleConfig.BREAK_TURNS])
 
 static func preview(queue: Array[QueuedSpell], tile_count: int, state: BattleState) -> Dictionary:
 	var sim := state.duplicate_state()

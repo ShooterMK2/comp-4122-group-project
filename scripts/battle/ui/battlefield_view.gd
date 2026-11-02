@@ -40,6 +40,8 @@ func refresh(state: BattleState) -> void:
 		var intent := ""
 		if e.is_dead():
 			intent = "Destroyed"
+		elif e.is_broken():
+			intent = "BROKEN (skips turn)"
 		elif e.get_status(StatusTypes.Status.FREEZE) > 0:
 			intent = "FROZEN (skips turn)"
 		else:

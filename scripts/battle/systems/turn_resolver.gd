@@ -23,7 +23,10 @@ static func run_enemy_action(state: BattleState, i: int, _log: Array[String]) ->
 		return
 	var corruption_triggered := 0
 
-	if e.get_status(S.FREEZE) > 0:
+	if e.get_status(S.BREAK) > 0:
+		e.finish_break_turn()
+		_log.append("%s is Broken and skips its turn." % e.display_name)
+	elif e.get_status(S.FREEZE) > 0:
 		e.consume_status(S.FREEZE, BattleConfig.FREEZE_LOSS_PER_SKIP)
 		_log.append("%s is Frozen and skips its turn (no Corruption trigger)." % e.display_name)
 	else:

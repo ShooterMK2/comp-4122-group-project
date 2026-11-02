@@ -4,6 +4,7 @@ extends RefCounted
 var player: CombatantState
 var enemies: Array[CombatantState] = []
 var enemy_defs: Array[EnemyDefinition] = []
+var terrain: TerrainDefinition
 var target_index := 0          # remembered cast target (last choice)
 var turn := 0                  # round counter
 var over := false
@@ -17,7 +18,8 @@ var pending_actors: Array[int] = []
 var acted_actors: Array[int] = []
 var current_actor := -1
 
-func _init(defs: Array[EnemyDefinition] = []) -> void:
+func _init(defs: Array[EnemyDefinition] = [], p_terrain: TerrainDefinition = null) -> void:
+	terrain = p_terrain if p_terrain != null else TerrainSystem.plain()
 	var player_definition := PlayerDefinition.default_player()
 	player = CombatantState.from_definition(player_definition)
 	player_speed = player_definition.speed
@@ -62,6 +64,7 @@ func duplicate_state() -> BattleState:
 	s.overload_debt = overload_debt
 	s.backlash_uses = backlash_uses
 	s.player_speed = player_speed
+	s.terrain = terrain
 	for a in pending_actors:
 		s.pending_actors.append(a)
 	for a in acted_actors:

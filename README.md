@@ -4,7 +4,7 @@
 
 ## 1. Foundation and Open Decisions
 
-- [x] Define base damage and the damage formula () - Loky
+- [x] Define base damage and the damage formula () - Lok
 - [ ] Decide whether special grids are random or fixed ()
 - [ ] Decide the boss ultimate interval ()
 - [ ] Decide whether levels and talents exist ()
@@ -21,7 +21,7 @@
 - [x] Implement turn order based on the Speed stat — Jimmy
 - [ ] Implement the turn timer and its timeout behaviour ()
 - [ ] Build the status effect framework: duration, stacking, removal ()
-- [ ] Implement knock-down status: weakness trigger, enemy disabled for x turns, ×1.5 damage (to be tuned) ()
+- [x] Implement knock-down status: weakness trigger, enemy disabled for x turns, ×1.5 damage (to be tuned) () - Lok
 - [] Add win/lose conditions and a result screen ()
 
 ## 3. Spells and Fragments
@@ -31,7 +31,7 @@
 
 ## 4. Player Systems
 
-- [x] Implement base stats: HP, damage multipliers, DEF, Speed () - Loky
+- [x] Implement base stats: HP, damage multipliers, DEF, Speed () - Lok
 - [ ] Implement the charging gauge ()
 - [ ] Implement FEVER mode: trigger, duration, effects ()
 - [ ] Implement the character ultimate ()
@@ -77,8 +77,8 @@
 
 ## 8. Terrain **[?]**
 
-- [ ] Implement the terrain system **[?]**
-- [ ] Add terrain buffs/debuffs to specific elements **[?]**
+- [x] Implement the terrain system **[?]** - Lok
+- [x] Add terrain buffs/debuffs to specific elements **[?]** - Lok
 - [ ] Add terrain–equipment interaction **[?]**
 
 ## 9. UI ()

@@ -35,12 +35,13 @@ var _turn_bar: TurnIndicator
 var _target_prompt: TargetPrompt
 var _queue_view: SpellQueueView
 var _log: BattleLogView
+var _terrain_label: Label
 
 func _ready() -> void:
 	randomize()
 	DisplayServer.window_set_min_size(Vector2i(1300, 720))
 	spells = DemoSpellLibrary.build()
-	state = BattleState.new(TestEncounter.enemies())
+	state = BattleState.new(TestEncounter.enemies(), TerrainSystem.random_terrain())
 	_build_layout()
 	_board_view.bind(board, _fragment_at)
 	_battlefield.setup(state)
@@ -70,6 +71,13 @@ func _build_layout() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
 	margin.add_child(root)
+
+	_terrain_label = Label.new()
+	_terrain_label.text = "TERRAIN: %s\n%s" % [state.terrain.display_name, state.terrain.description()]
+	_terrain_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_terrain_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_terrain_label.custom_minimum_size = Vector2(0, 42)
+	root.add_child(_terrain_label)
 
 	_battlefield = BattlefieldView.new()
 	root.add_child(_battlefield)
@@ -185,7 +193,8 @@ func _run_enemy_actor(actor: int) -> bool:
 	return true
 
 func _enemy_will_cast(i: int) -> bool:
-	return state.enemies[i].get_status(StatusTypes.Status.FREEZE) <= 0 \
+	return not state.enemies[i].is_broken() \
+		and state.enemies[i].get_status(StatusTypes.Status.FREEZE) <= 0 \
 			and EnemyIntentSystem.pick_spell(state.enemy_defs[i], state.turn) != null
 
 func _show_enemy_prompt(i: int) -> void:
