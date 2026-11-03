@@ -12,6 +12,9 @@ var _outlined: Dictionary = {}
 var _ghosts: Dictionary = {}
 var _snapshot_hand: Array[FragmentData] = []
 var _snapshot_board: Dictionary = {}
+var _snapshot_charge_gauge := 0.0
+var _snapshot_ultimate_active := false
+var _snapshot_damage_multiplier := 1.0
 var _placed_this_turn := 0   # only used to detect deadlock (nothing placed yet this turn)
 
 # targeted casting (player's turn)
@@ -152,6 +155,7 @@ func _connect_signals() -> void:
 	_debug.give_element.connect(_on_debug_give)
 	_debug.reroll_pressed.connect(_on_reroll)
 	_battlefield.enemy_clicked.connect(_on_enemy_clicked)
+	_battlefield.ultimate_pressed.connect(_on_ultimate_pressed)
 	_queue_view.reorder.connect(_on_reorder)
 	_turn_bar.cast_pressed.connect(_on_cast)
 	_turn_bar.reset_pressed.connect(_on_reset)
@@ -210,6 +214,8 @@ func _show_enemy_prompt(i: int) -> void:
 
 # The player's turn begins (planning phase).
 func _start_turn() -> void:
+	state.ultimate_active = false
+	state.player.set_damage_output_multiplier(1.0)
 	board.advance_special_tiles()
 	state.player.advance_stat_tile_turn()
 	for enemy in state.enemies:
@@ -229,6 +235,9 @@ func _start_turn() -> void:
 	hand = FragmentGenerator.draw(n)
 	_snapshot_hand = _copy_hand(hand)
 	_snapshot_board = board.snapshot()
+	_snapshot_charge_gauge = state.charge_gauge
+	_snapshot_ultimate_active = state.ultimate_active
+	_snapshot_damage_multiplier = state.player.damage_output_multiplier
 	_placed_this_turn = 0
 	selected = -1
 	_info.text = "Drag a fragment onto the board (or click it, then click a cell). R or right-click = rotate."
@@ -283,6 +292,9 @@ func _on_reset() -> void:
 	selected = -1
 	_placed_this_turn = 0
 	state.overload_debt = 0
+	state.charge_gauge = _snapshot_charge_gauge
+	state.ultimate_active = _snapshot_ultimate_active
+	state.player.set_damage_output_multiplier(_snapshot_damage_multiplier)
 	state.player.clear_stat_tiles()
 	for enemy in state.enemies:
 		enemy.clear_stat_tiles()
@@ -348,9 +360,12 @@ func _run_cast_step() -> void:
 	state.ensure_valid_target()
 	var lines: Array[String] = []
 	if step["kind"] == "spell":
-		_cast_spell_total += SpellResolver.resolve_spell(step["spell"], state, lines)
+		var queued: QueuedSpell = step["spell"]
+		_cast_spell_total += SpellResolver.resolve_spell(queued, state, lines)
+		_add_charge(_charge_for_spell(queued), lines)
 	else:
 		_cast_basic_total += SpellResolver.resolve_basic_attack(board.filled_count(), state, lines)
+		_add_charge(BattleConfig.CHARGE_BASIC_ATTACK, lines)
 	_log.add_lines(lines)
 	TurnOrderSystem.refresh(state)   # statuses changed: update the order now
 	_cast_index += 1
@@ -375,6 +390,35 @@ func _on_target_cancelled() -> void:
 	_target_prompt.hide_prompt()
 	_info.text = "Cast cancelled."
 	_refresh_queue()
+
+func _on_ultimate_pressed() -> void:
+	if state.over or _casting or _awaiting_enemy >= 0 or state.charge_gauge < 100.0:
+		return
+	var spent: float = state.charge_gauge
+	var ratio: float = (spent - 100.0) / 50.0
+	var multiplier: float = lerpf(BattleConfig.ULTIMATE_MIN_MULTIPLIER,
+		BattleConfig.ULTIMATE_MAX_MULTIPLIER, clampf(ratio, 0.0, 1.0))
+	state.charge_gauge = 0.0
+	state.ultimate_active = true
+	state.player.set_damage_output_multiplier(multiplier)
+	_log.add_line("Ultimate activated: %.2fx damage this turn." % multiplier)
+	_refresh_status_ui()
+
+func _add_charge(amount: float, _lines: Array[String]) -> void:
+	if state.ultimate_active:
+		return
+	state.charge_gauge = minf(BattleConfig.CHARGE_GAUGE_MAX,
+		state.charge_gauge + amount)
+
+func _charge_for_spell(q: QueuedSpell) -> float:
+	var size: int = q.definition.pattern.cells.size()
+	var charge: float = BattleConfig.CHARGE_LEVEL_1
+	if size >= 8:
+		charge = BattleConfig.CHARGE_LEVEL_3
+	elif size >= 5:
+		charge = BattleConfig.CHARGE_LEVEL_2
+	charge += q.special_tiles.size() * BattleConfig.CHARGE_SPECIAL_TILE
+	return charge
 
 func _living_enemy_count() -> int:
 	var n := 0
@@ -565,7 +609,18 @@ func _refresh_all() -> void:
 	_turn_bar.set_turn(state.turn)
 
 func _refresh_status_ui() -> void:
-	_battlefield.refresh(state, board.filled_count(), queue)
+	var preview_queue: Array[QueuedSpell] = queue
+	var preview_tiles := board.filled_count()
+	if _casting and _cast_index < _cast_steps.size():
+		preview_queue = []
+		preview_tiles = 0
+		var step: Dictionary = _cast_steps[_cast_index]
+		if step["kind"] == "spell":
+			var queued: QueuedSpell = step["spell"]
+			preview_queue.append(queued)
+		else:
+			preview_tiles = board.filled_count()
+	_battlefield.refresh(state, preview_tiles, preview_queue)
 	_order_bar.show_order(TurnOrderSystem.summary(state))
 
 func _refresh_board() -> void:

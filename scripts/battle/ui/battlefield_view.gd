@@ -2,6 +2,7 @@ class_name BattlefieldView
 extends HBoxContainer
 
 signal enemy_clicked(index: int)
+signal ultimate_pressed
 
 var _player_view: CombatantView
 var _enemy_views: Array[CombatantView] = []
@@ -36,13 +37,15 @@ func setup(state: BattleState) -> void:
 		_enemy_views.append(view)
 		_damage_previews.append(preview)
 	refresh(state)
+	_player_view.ultimate_pressed.connect(func(): ultimate_pressed.emit())
 
 func _on_enemy_clicked(index: int) -> void:
 	enemy_clicked.emit(index)
 
 func refresh(state: BattleState, tile_count: int = 0,
 		queue: Array[QueuedSpell] = []) -> void:
-	_player_view.refresh(state.player, "", false)
+	_player_view.refresh(state.player, "", false, state.charge_gauge,
+		state.charge_gauge >= 100.0 and not state.ultimate_active)
 	for i in _enemy_views.size():
 		var e: CombatantState = state.enemies[i]
 		var intent := ""
@@ -62,7 +65,8 @@ func refresh(state: BattleState, tile_count: int = 0,
 func _build_damage_actions(state: BattleState, enemy_index: int,
 		tile_count: int, queue: Array[QueuedSpell]) -> Array[Dictionary]:
 	var actions: Array[Dictionary] = []
-	for q in queue:
+	if not queue.is_empty():
+		var q: QueuedSpell = queue[0]
 		var sim := state.duplicate_state()
 		sim.target_index = enemy_index
 		var target: CombatantState = sim.player if q.definition.target_kind == SpellDefinition.TargetKind.SELF \
@@ -71,7 +75,7 @@ func _build_damage_actions(state: BattleState, enemy_index: int,
 		var info: Dictionary = DamageCalculator.explain_spell(q.definition.base_damage, sim.player,
 			target, q.definition.primary_element(), q.definition.other_multiplier, sim.terrain)
 		actions.append({"name": q.definition.display_name, "info": info})
-	if tile_count > 0:
+	elif tile_count > 0:
 		var sim_basic := state.duplicate_state()
 		sim_basic.target_index = enemy_index
 		var info: Dictionary = DamageCalculator.explain_basic_attack(tile_count, sim_basic.player,

@@ -11,14 +11,16 @@ func _init() -> void:
 
 func show_preview(actions: Array[Dictionary]) -> void:
 	if actions.is_empty():
-		_label.text = "DAMAGE PREVIEW\nNo queued spell or attack"
+		_label.text = "DAMAGE PREVIEW\nNo current spell or attack"
 		return
-	var lines: Array[String] = ["DAMAGE PREVIEW"]
+	var lines: Array[String] = ["CURRENT ACTION"]
 	for action in actions:
 		var info: Dictionary = action["info"]
 		var name: String = action["name"]
 		lines.append("%s: %d" % [name, info["expected"]])
+		lines.append(" DMG %d  BASE %d" % [info["damage"], info["base"]])
 		lines.append(" ATK %d  AF %.2fx" % [info["effective_attack"], info["attack_factor"]])
+		lines.append(" AM %.2fx  U %.2fx" % [info["attack"], info["ultimate"]])
 		lines.append(" T %.2fx  O %.2fx" % [info["attack_terrain"], info["other"]])
 		lines.append(" D %.2fx  E %.2fx" % [info["defence"], info["elemental"]])
 		lines.append(" Br %.2fx R %.2fx" % [info["break"], info["random"]])

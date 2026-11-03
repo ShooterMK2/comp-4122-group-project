@@ -10,6 +10,8 @@ var turn := 0                  # round counter
 var over := false
 var overload_debt := 0
 var backlash_uses := 0         # Backlash uses this battle (drives the HP cost progression)
+var charge_gauge := 0.0
+var ultimate_active := false
 
 # Speed / turn order (actor ids: 0 = player, enemy i = i + 1)
 var player_speed: float = 1.0
@@ -63,6 +65,8 @@ func duplicate_state() -> BattleState:
 	s.over = over
 	s.overload_debt = overload_debt
 	s.backlash_uses = backlash_uses
+	s.charge_gauge = charge_gauge
+	s.ultimate_active = ultimate_active
 	s.player_speed = player_speed
 	s.terrain = terrain
 	for a in pending_actors:

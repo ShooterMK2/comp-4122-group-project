@@ -2,6 +2,7 @@ class_name CombatantView
 extends PanelContainer
 
 signal clicked
+signal ultimate_pressed
 
 const ART_SIZE := 140
 const BORDER_IDLE := Color(0.25, 0.25, 0.3)
@@ -19,6 +20,9 @@ var _hp_label: Label
 var _status: Label
 var _intent: Label
 var _elemental_info: VBoxContainer
+var _charge_bar: ProgressBar
+var _charge_label: Label
+var _ultimate: Button
 
 func _init() -> void:
 	custom_minimum_size = Vector2(ART_SIZE + 24, 0)
@@ -72,6 +76,19 @@ func _init() -> void:
 	_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_hp_label)
 
+	_charge_bar = ProgressBar.new()
+	_charge_bar.max_value = BattleConfig.CHARGE_GAUGE_MAX
+	_charge_bar.show_percentage = false
+	_charge_bar.custom_minimum_size = Vector2(0, 14)
+	box.add_child(_charge_bar)
+	_charge_label = Label.new()
+	_charge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_charge_label)
+	_ultimate = Button.new()
+	_ultimate.text = "ULTIMATE"
+	_ultimate.pressed.connect(func(): ultimate_pressed.emit())
+	box.add_child(_ultimate)
+
 	_status = Label.new()
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -87,6 +104,7 @@ func _init() -> void:
 	box.add_child(_intent)
 
 	_ignore_mouse(self)
+	_ultimate.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _ignore_mouse(n: Node) -> void:
 	for c in n.get_children():
@@ -107,17 +125,31 @@ func setup(art_name: String, placeholder_color: Color, placeholder_text: String,
 	if clickable:
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
-func refresh(c: CombatantState, intent_text: String, is_target: bool) -> void:
+func refresh(c: CombatantState, intent_text: String, is_target: bool,
+		charge: float = 0.0, can_ultimate: bool = false) -> void:
 	var dead := c.is_dead()
 	_title.text = c.display_name
 	_hp_bar.max_value = c.max_hp
 	_hp_bar.value = c.hp
 	_hp_label.text = "HP %d/%d" % [c.hp, c.max_hp]
+	_charge_bar.visible = not clickable
+	_charge_label.visible = not clickable
+	_ultimate.visible = not clickable
+	if not clickable:
+		_charge_bar.value = charge
+		_charge_label.text = "Charge %.0f%% / 150%%" % charge
+		_ultimate.disabled = not can_ultimate
 	var status_text := StatusSystem.describe(c)
 	if c.break_threshold > 0:
+		var break_turns := c.get_status(StatusTypes.Status.BREAK)
+		var break_text := "Break (%d turns total, %d remaining)" % [
+			BattleConfig.BREAK_TURNS,
+			break_turns] \
+			if c.is_broken() else _break_stage(c)
 		status_text = "Shield Break: %s (%d/%d)" % [
-			_break_stage(c), c.break_hits, c.break_threshold] \
-			+ (" | " + status_text) if not status_text.is_empty() else "Shield Break: " + _break_stage(c)
+			break_text, c.break_hits, c.break_threshold] \
+			+ (" | " + status_text) if not status_text.is_empty() else \
+			"Shield Break: " + break_text
 	_status.text = status_text
 	_refresh_elemental_info(c)
 	_intent.text = intent_text

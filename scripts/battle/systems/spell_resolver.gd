@@ -109,14 +109,14 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 	if final > 0:
 		var res := target.take_damage(final)
 		dealt = res["hp"] + res["absorbed"]
-		_register_weakness_hit(target, elem, notes)
+		_register_weakness_hit(target, elem, notes, caster, state)
 
 	if conductive_hit:
 		for adj in state.adjacent_to(target):
 			var splash := roundi(final * BattleConfig.CONDUCTIVE_SPLASH_RATIO)
 			var r2 := adj.take_damage(splash)
 			if splash > 0:
-				_register_weakness_hit(adj, E.LIGHTNING, notes)
+				_register_weakness_hit(adj, E.LIGHTNING, notes, caster, state)
 			adj.add_status(S.CONDUCTIVE, 1)
 			dealt += r2["hp"] + r2["absorbed"]
 			notes.append("%s takes %d splash, now Conductive" % [adj.display_name, splash])
@@ -156,10 +156,14 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 	return dealt
 
 static func _register_weakness_hit(target: CombatantState, element: int,
-		notes: Array[String]) -> void:
+		notes: Array[String], caster: CombatantState, state: BattleState) -> void:
 	if element == E.NONE or element not in target.elemental_weaknesses:
 		return
 	if target.register_weakness_hit():
+		if caster == state.player and not state.ultimate_active:
+			state.charge_gauge = minf(BattleConfig.CHARGE_GAUGE_MAX,
+				state.charge_gauge + BattleConfig.CHARGE_BREAK)
+			notes.append("+%d%% charge from Break" % int(BattleConfig.CHARGE_BREAK))
 		notes.append("Shield Break! %s is broken for %d turns" % [
 		 target.display_name, BattleConfig.BREAK_TURNS])
 

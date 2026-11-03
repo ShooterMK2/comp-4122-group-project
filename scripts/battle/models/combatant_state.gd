@@ -10,6 +10,7 @@ var defence := 0
 var attack_multiplier := 1.0
 var defence_multiplier := 1.0
 var speed_multiplier := 1.0
+var damage_output_multiplier := 1.0
 var stat_buff_turns: Array[int] = [0, 0, 0]
 var stat_debuff_turns: Array[int] = [0, 0, 0]
 var elemental_weaknesses: Array[int] = []
@@ -19,6 +20,7 @@ var statuses := {}
 var break_rank := EnemyDefinition.Rank.MINOR
 var break_hits := 0
 var break_threshold := 0
+var break_last_processed_turn := -1
 
 func _init(p_name: String = "", p_max_hp: int = 1, p_level: int = 1,
 		p_attack: int = 1, p_defence: int = 0) -> void:
@@ -84,6 +86,7 @@ func duplicate_state() -> CombatantState:
 	c.attack_multiplier = attack_multiplier
 	c.defence_multiplier = defence_multiplier
 	c.speed_multiplier = speed_multiplier
+	c.damage_output_multiplier = damage_output_multiplier
 	c.stat_buff_turns = stat_buff_turns.duplicate()
 	c.stat_debuff_turns = stat_debuff_turns.duplicate()
 	c.hp = hp
@@ -92,6 +95,7 @@ func duplicate_state() -> CombatantState:
 	c.break_rank = break_rank
 	c.break_hits = break_hits
 	c.break_threshold = break_threshold
+	c.break_last_processed_turn = break_last_processed_turn
 	return c
 
 func apply_stat_tile(stat: int, is_buff: bool) -> void:
@@ -113,6 +117,9 @@ func clear_stat_tiles() -> void:
 	stat_buff_turns = [0, 0, 0]
 	stat_debuff_turns = [0, 0, 0]
 	_refresh_stat_multipliers()
+
+func set_damage_output_multiplier(multiplier: float) -> void:
+	damage_output_multiplier = multiplier
 
 func _refresh_stat_multipliers() -> void:
 	attack_multiplier = _stat_multiplier(0)
@@ -136,9 +143,13 @@ func register_weakness_hit() -> bool:
 	if break_hits < break_threshold:
 		return false
 	add_status(StatusTypes.Status.BREAK, BattleConfig.BREAK_TURNS)
+	break_last_processed_turn = -1
 	return true
 
-func finish_break_turn() -> void:
+func finish_break_turn(turn: int) -> void:
+	if break_last_processed_turn == turn:
+		return
+	break_last_processed_turn = turn
 	consume_status(StatusTypes.Status.BREAK)
 	if not is_broken():
 		break_hits = 0
