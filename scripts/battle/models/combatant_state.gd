@@ -7,6 +7,11 @@ var hp := 1
 var level := 1
 var attack := 1
 var defence := 0
+var attack_multiplier := 1.0
+var defence_multiplier := 1.0
+var speed_multiplier := 1.0
+var stat_buff_turns: Array[int] = [0, 0, 0]
+var stat_debuff_turns: Array[int] = [0, 0, 0]
 var elemental_weaknesses: Array[int] = []
 var elemental_strengths: Array[int] = []
 var shield := 0
@@ -76,6 +81,11 @@ func duplicate_state() -> CombatantState:
 	var c := CombatantState.new(display_name, max_hp, level, attack, defence)
 	c.elemental_weaknesses = elemental_weaknesses.duplicate()
 	c.elemental_strengths = elemental_strengths.duplicate()
+	c.attack_multiplier = attack_multiplier
+	c.defence_multiplier = defence_multiplier
+	c.speed_multiplier = speed_multiplier
+	c.stat_buff_turns = stat_buff_turns.duplicate()
+	c.stat_debuff_turns = stat_debuff_turns.duplicate()
 	c.hp = hp
 	c.shield = shield
 	c.statuses = statuses.duplicate()
@@ -83,6 +93,38 @@ func duplicate_state() -> CombatantState:
 	c.break_hits = break_hits
 	c.break_threshold = break_threshold
 	return c
+
+func apply_stat_tile(stat: int, is_buff: bool) -> void:
+	if stat < 0 or stat >= stat_buff_turns.size():
+		return
+	var own_turns: Array[int] = stat_buff_turns if is_buff else stat_debuff_turns
+	var opposite_turns: Array[int] = stat_debuff_turns if is_buff else stat_buff_turns
+	opposite_turns[stat] = 0
+	own_turns[stat] += BattleConfig.SPECIAL_TILE_EFFECT_TURNS
+	_refresh_stat_multipliers()
+
+func advance_stat_tile_turn() -> void:
+	for stat in stat_buff_turns.size():
+		stat_buff_turns[stat] = maxi(0, stat_buff_turns[stat] - 1)
+		stat_debuff_turns[stat] = maxi(0, stat_debuff_turns[stat] - 1)
+	_refresh_stat_multipliers()
+
+func clear_stat_tiles() -> void:
+	stat_buff_turns = [0, 0, 0]
+	stat_debuff_turns = [0, 0, 0]
+	_refresh_stat_multipliers()
+
+func _refresh_stat_multipliers() -> void:
+	attack_multiplier = _stat_multiplier(0)
+	defence_multiplier = _stat_multiplier(1)
+	speed_multiplier = _stat_multiplier(2)
+
+func _stat_multiplier(stat: int) -> float:
+	if stat_buff_turns[stat] > 0:
+		return 1.0 + BattleConfig.SPECIAL_TILE_STAT_MULTIPLIER
+	if stat_debuff_turns[stat] > 0:
+		return 1.0 - BattleConfig.SPECIAL_TILE_STAT_MULTIPLIER
+	return 1.0
 
 func is_broken() -> bool:
 	return get_status(StatusTypes.Status.BREAK) > 0

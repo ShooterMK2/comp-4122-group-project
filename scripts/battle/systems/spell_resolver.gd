@@ -19,7 +19,30 @@ static func resolve_queue(queue: Array[QueuedSpell], state: BattleState,
 
 # A board spell: the caster is the player, the target is the selected enemy.
 static func resolve_spell(q: QueuedSpell, state: BattleState, _log: Array[String]) -> int:
-	return cast(q.definition, state.player, state.enemies[state.target_index], state, _log)
+	var target := state.player if q.definition.target_kind == SpellDefinition.TargetKind.SELF \
+		else state.enemies[state.target_index]
+	apply_special_tiles(q.special_tiles, state.player, target, _log)
+	return cast(q.definition, state.player, target, state, _log)
+
+static func apply_special_tiles(tiles: Array[int], caster: CombatantState,
+		target: CombatantState, _log: Array[String]) -> void:
+	for tile in tiles:
+		if CastingBoardModel.is_heal(tile):
+			var amount := ceili(caster.max_hp * BattleConfig.SPECIAL_TILE_HEAL_FRACTION)
+			var healed := caster.heal(amount)
+			_log.append("Heal tile restored %d HP." % healed)
+		elif CastingBoardModel.is_buff(tile):
+			var stat: int = CastingBoardModel.special_stat(tile)
+			caster.apply_stat_tile(stat, true)
+			_log.append("Buff tile increased player's %s for 3 turns." % _stat_name(stat))
+		elif CastingBoardModel.is_debuff(tile):
+			var stat: int = CastingBoardModel.special_stat(tile)
+			target.apply_stat_tile(stat, false)
+			_log.append("Debuff tile reduced %s's %s for 3 turns." % [
+				target.display_name, _stat_name(stat)])
+
+static func _stat_name(stat: int) -> String:
+	return ["ATK", "DEF", "SPD"][stat]
 
 static func resolve_basic_attack(tile_count: int, state: BattleState,
 		_log: Array[String]) -> int:

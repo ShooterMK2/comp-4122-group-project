@@ -16,15 +16,20 @@ static func find_first_match(board: CastingBoardModel, spells: Array[SpellDefini
 static func _try_at(board: CastingBoardModel, spell: SpellDefinition, anchor: Vector2i) -> Dictionary:
 	var cells: Array[Vector2i] = []
 	var elems: Array[int] = []
+	var special_tiles: Array[int] = []
 	for c in spell.pattern.cells:
 		var p := anchor + c
 		if not board.in_bounds(p) or board.is_empty(p):
 			return {}
 		cells.append(p)
 		elems.append(board.get_tile(p))
+		var special := board.special_tile_at(p)
+		if special != CastingBoardModel.EMPTY:
+			special_tiles.append(special)
 	if not _meets_requirements(spell, elems):
 		return {}
-	return {"spell": spell, "cells": cells, "elements": elems}
+	return {"spell": spell, "cells": cells, "elements": elems,
+		"special_tiles": special_tiles}
 
 static func _meets_requirements(spell: SpellDefinition, elems: Array[int]) -> bool:
 	var wild := elems.count(Elements.Element.UNIVERSAL)

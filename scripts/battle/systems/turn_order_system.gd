@@ -16,8 +16,10 @@ static func is_alive(state: BattleState, actor: int) -> bool:
 
 # Base speed reduced by Chill: base * max(1 - chill * per_stack, min_fraction)
 static func effective_speed(state: BattleState, actor: int) -> float:
+	var c := combatant(state, actor)
 	var base: float = state.player_speed if actor == PLAYER else state.enemy_speeds[actor - 1]
-	var chill := combatant(state, actor).get_status(StatusTypes.Status.CHILL)
+	base = ceili(base * c.speed_multiplier)
+	var chill := c.get_status(StatusTypes.Status.CHILL)
 	var mult := maxf(1.0 - chill * BattleConfig.CHILL_SPEED_REDUCTION_PER_STACK,
 			BattleConfig.CHILL_MIN_SPEED_FRACTION)
 	return base * mult * state.terrain.speed_multiplier_for(actor == PLAYER)

@@ -27,6 +27,10 @@ const BREAK_ELITE_HITS_MIN := 6
 const BREAK_ELITE_HITS_MAX := 9
 const BREAK_DAMAGE_BONUS := 1.45
 const BREAK_TURNS := 2
+const SPECIAL_TILE_APPEAR_CHANCE := 0.25
+const SPECIAL_TILE_STAT_MULTIPLIER := 0.60
+const SPECIAL_TILE_HEAL_FRACTION := 0.10
+const SPECIAL_TILE_EFFECT_TURNS := 3
 
 # ---------- Fire ----------
 const BURN_DAMAGE_PER_STACK := 2        # end of turn: stacks * this

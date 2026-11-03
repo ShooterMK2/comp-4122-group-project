@@ -11,7 +11,7 @@ var selected := -1
 var _outlined: Dictionary = {}
 var _ghosts: Dictionary = {}
 var _snapshot_hand: Array[FragmentData] = []
-var _snapshot_board := PackedInt32Array()
+var _snapshot_board: Dictionary = {}
 var _placed_this_turn := 0   # only used to detect deadlock (nothing placed yet this turn)
 
 # targeted casting (player's turn)
@@ -210,8 +210,18 @@ func _show_enemy_prompt(i: int) -> void:
 
 # The player's turn begins (planning phase).
 func _start_turn() -> void:
+	board.advance_special_tiles()
+	state.player.advance_stat_tile_turn()
+	for enemy in state.enemies:
+		enemy.advance_stat_tile_turn()
 	state.ensure_valid_target()
 	_log.add_line("--- Your turn (round %d) ---" % state.turn)
+	var special_tiles := board.spawn_special_tiles()
+	if not special_tiles.is_empty():
+		var labels: Array[String] = []
+		for tile in special_tiles:
+			labels.append(_special_tile_name(tile))
+		_log.add_line("Special tiles appeared: %s." % ", ".join(labels))
 	var n := maxi(1, BattleConfig.HAND_SIZE - state.overload_debt)
 	if state.overload_debt > 0:
 		_log.add_line("Overload: you draw %d fewer fragment(s) this turn." % state.overload_debt)
@@ -273,6 +283,9 @@ func _on_reset() -> void:
 	selected = -1
 	_placed_this_turn = 0
 	state.overload_debt = 0
+	state.player.clear_stat_tiles()
+	for enemy in state.enemies:
+		enemy.clear_stat_tiles()
 	_info.text = "Turn reset."
 	_refresh_all()
 	_update_deadlock()
@@ -470,6 +483,7 @@ func _resolve_matches() -> void:
 		var color := Color.from_hsv(float(match_index % 12) / 12.0, 0.8, 1.0)
 		var hit_cells: Array = hit["cells"]
 		var hit_elems: Array = hit["elements"]
+		var hit_special_tiles: Array = hit["special_tiles"]
 		for i in hit_cells.size():
 			var cell: Vector2i = hit_cells[i]
 			_outlined[cell] = color
@@ -479,12 +493,21 @@ func _resolve_matches() -> void:
 		for e in hit_elems:
 			elems.append(e)
 		var spell: SpellDefinition = hit["spell"]
-		queue.append(QueuedSpell.new(spell, elems))
+		queue.append(QueuedSpell.new(spell, elems, hit_special_tiles))
 		_apply_on_queue_effects(spell)
 		_info.text = "Matched: %s" % spell.display_name
 		match_index += 1
 	_refresh_board()
 	_refresh_queue()
+
+func _stat_name(stat: int) -> String:
+	return ["ATK", "DEF", "SPD"][stat]
+
+func _special_tile_name(tile: int) -> String:
+	if CastingBoardModel.is_heal(tile):
+		return "Heal"
+	var prefix: String = "Buff" if CastingBoardModel.is_buff(tile) else "Debuff"
+	return "%s %s" % [prefix, _stat_name(CastingBoardModel.special_stat(tile))]
 
 func _apply_on_queue_effects(spell: SpellDefinition) -> void:
 	for fx in spell.effects:
@@ -542,7 +565,7 @@ func _refresh_all() -> void:
 	_turn_bar.set_turn(state.turn)
 
 func _refresh_status_ui() -> void:
-	_battlefield.refresh(state)
+	_battlefield.refresh(state, board.filled_count(), queue)
 	_order_bar.show_order(TurnOrderSystem.summary(state))
 
 func _refresh_board() -> void:

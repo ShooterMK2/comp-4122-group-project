@@ -11,7 +11,15 @@ static func describe(c: CombatantState) -> String:
 		if s == S.BREAK:
 			continue
 		parts.append("%s %d" % [StatusTypes.status_name(s), c.statuses[s]])
+	for stat in 3:
+		if c.stat_buff_turns[stat] > 0:
+			parts.append("Buff %s (%d)" % [_stat_name(stat), c.stat_buff_turns[stat]])
+		if c.stat_debuff_turns[stat] > 0:
+			parts.append("Debuff %s (%d)" % [_stat_name(stat), c.stat_debuff_turns[stat]])
 	return ", ".join(parts) if not parts.is_empty() else "-"
+
+static func _stat_name(stat: int) -> String:
+	return ["ATK", "DEF", "SPD"][stat]
 
 # Damage that may bypass shield (DoTs, Detonate, Corruption). Returns HP/shield lost.
 static func deal_direct(target: CombatantState, amount: int) -> int:

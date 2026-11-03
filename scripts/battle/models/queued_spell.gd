@@ -3,8 +3,12 @@ extends RefCounted
 
 var definition: SpellDefinition
 var source_elements: Array[int] = []
+var special_tiles: Array[int] = []
 
-func _init(p_definition: SpellDefinition = null, p_elements: Array = []) -> void:
+func _init(p_definition: SpellDefinition = null, p_elements: Array = [],
+		p_special_tiles: Array = []) -> void:
 	definition = p_definition
 	for e in p_elements:
 		source_elements.append(e)
+	for tile in p_special_tiles:
+		special_tiles.append(tile)

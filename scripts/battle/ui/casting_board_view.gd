@@ -76,11 +76,16 @@ func refresh() -> void:
 			var p := Vector2i(x, y)
 			var cell := _cells[y * w + x]
 			var t := board.get_tile(p)
+			var special := board.special_tile_at(p)
 			var is_ghost: bool = t == CastingBoardModel.EMPTY and ghosts.has(p)
-			var shown: int = t
+			var shown: int = special if t == CastingBoardModel.EMPTY else t
 			if is_ghost:
 				shown = ghosts[p]
 			cell.show_tile(shown, is_ghost)
+			var overlay_tile: int = special if t != CastingBoardModel.EMPTY or is_ghost \
+				else CastingBoardModel.EMPTY
+			cell.set_special_overlay(overlay_tile)
+			cell.tooltip_text = _special_tooltip(special) if special != CastingBoardModel.EMPTY else ""
 			if outlined.has(p):
 				var col: Color = outlined[p]
 				var sides: Array = []
@@ -95,3 +100,11 @@ func refresh() -> void:
 				cell.set_outline(col, sides)
 			else:
 				cell.clear_outline()
+
+func _special_tooltip(tile: int) -> String:
+	if CastingBoardModel.is_heal(tile):
+		return "Heal tile: restores player HP"
+	var stat: String = ["ATK", "DEF", "SPD"][CastingBoardModel.special_stat(tile)]
+	if CastingBoardModel.is_buff(tile):
+		return "Buff %s tile: applies to player" % stat
+	return "Debuff %s tile: applies to spell target" % stat
