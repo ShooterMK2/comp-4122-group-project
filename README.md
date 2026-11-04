@@ -32,9 +32,9 @@
 ## 4. Player Systems
 
 - [x] Implement base stats: HP, damage multipliers, DEF, Speed () - Lok
-- [ ] Implement the charging gauge ()
-- [ ] Implement FEVER mode: trigger, duration, effects ()
-- [ ] Implement the character ultimate ()
+- [x] Implement the charging gauge () - Lok
+- [x] Implement FEVER mode: trigger, duration, effects () - Lok
+- [x] Implement the character ultimate () - Lok
 - [ ] Implement talents (element buffs, stat changes) **[?]** 
 - [ ] Implement levels/progression **[?]** 
 - [ ] Add more selectable characters and a select screen **[?]**
