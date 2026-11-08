@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://crd40wptxpgjy"]
+
+[ext_resource type="Script" uid="uid://bu4t42v5xosjm" path="res://scripts/battle/ui_scene/spell_zone.gd" id="1_15emw"]
+[ext_resource type="PackedScene" uid="uid://cexhn6lk1cibh" path="res://scenes/battle/ui/spell_card.tscn" id="2_w1uva"]
+
+[node name="SpellZone" type="ScrollContainer" unique_id=1374050087]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+script = ExtResource("1_15emw")
+
+[node name="Flow" type="HFlowContainer" parent="." unique_id=631155932]
+theme_override_constants/v_separation = 8
+theme_override_constants/h_separation = 8
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Card01" parent="Flow" unique_id=910000001 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card02" parent="Flow" unique_id=910000002 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card03" parent="Flow" unique_id=910000003 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card04" parent="Flow" unique_id=910000004 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card05" parent="Flow" unique_id=910000005 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card06" parent="Flow" unique_id=910000006 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card07" parent="Flow" unique_id=910000007 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card08" parent="Flow" unique_id=910000008 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card09" parent="Flow" unique_id=910000009 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card10" parent="Flow" unique_id=910000010 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card11" parent="Flow" unique_id=910000011 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card12" parent="Flow" unique_id=910000012 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card13" parent="Flow" unique_id=910000013 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card14" parent="Flow" unique_id=910000014 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card15" parent="Flow" unique_id=910000015 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card16" parent="Flow" unique_id=910000016 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card17" parent="Flow" unique_id=910000017 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card18" parent="Flow" unique_id=910000018 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card19" parent="Flow" unique_id=910000019 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card20" parent="Flow" unique_id=910000020 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card21" parent="Flow" unique_id=910000021 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card22" parent="Flow" unique_id=910000022 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card23" parent="Flow" unique_id=910000023 instance=ExtResource("2_w1uva")]
+layout_mode = 2
+
+[node name="Card24" parent="Flow" unique_id=910000024 instance=ExtResource("2_w1uva")]
+layout_mode = 2

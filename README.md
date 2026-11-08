@@ -137,6 +137,37 @@ The project entry point is:
 res://scenes/battle/battle_scene.tscn
 ```
 
+The reusable battle-template UI is assembled separately in
+`res://scenes/battle/battle_scene_template.tscn`. It is not the project entry
+point and does not replace the original battle scene.
+
+## Battle template UI
+
+The template UI is split into reusable scenes under
+`res://scenes/battle/ui/`:
+
+- `element_chip.tscn` — an elemental weakness/strength chip.
+- `combatant_panel.tscn` — player or enemy combatant presentation.
+- `spell_card.tscn` — a spell card with its 5 x 5 shape grid.
+- `battlefield.tscn` — the player panel and three enemy-panel layout.
+- `spell_zone.tscn` — the scrollable spell-card area.
+- `target_detail.tscn` — scrollable target and spell information.
+- `battle_io.tscn` — the fragments, casting board, spell area, and casting
+  controls.
+- `result_overlay.tscn` and `log_console.tscn` — result and battle-log
+  overlays.
+
+`battle_io.gd` coordinates the two UI periods without owning battle rules:
+**CHANTING** shows the fragment and board areas, while **CASTING** shows the
+target-detail sidebar. Its `cast_pressed`, `reset_pressed`, and
+`end_turn_pressed` signals are intended for the battle controller.
+
+The corresponding presentation scripts are in
+`scripts/battle/ui_scene/`. They update existing scene nodes and emit input
+signals; gameplay rules remain in the battle systems. The template is useful
+for editing and testing the reusable UI without changing the original
+`battle_scene.tscn`.
+
 ## How to play
 
 Combat runs in rounds. Every living combatant acts once per round, ordered by
@@ -302,9 +333,29 @@ not listed individually below.
 │       └── .gitkeep
 ├── scenes/
 │   └── battle/
-│       └── battle_scene.tscn          # Scene entry point
+│       ├── battle_scene.tscn          # Existing scene entry point
+│       ├── battle_scene_template.tscn # Reusable template UI composition
+│       └── ui/                        # Reusable battle UI scenes
+│           ├── element_chip.tscn
+│           ├── combatant_panel.tscn
+│           ├── spell_card.tscn
+│           ├── battlefield.tscn
+│           ├── spell_zone.tscn
+│           ├── target_detail.tscn
+│           ├── battle_io.tscn
+│           ├── result_overlay.tscn
+│           └── log_console.tscn
 ├── scripts/
 │   ├── battle/                       # Main battle prototype
+│   │   ├── ui_scene/                 # Reusable template UI presentation
+│   │   │   ├── element_chip.gd
+│   │   │   ├── combatant_text.gd
+│   │   │   ├── combatant_panel.gd
+│   │   │   ├── spell_card.gd
+│   │   │   ├── spell_zone.gd
+│   │   │   ├── target_detail.gd
+│   │   │   ├── battlefield.gd
+│   │   │   └── battle_io.gd
 │   │   ├── ai/
 │   │   │   └── .gitkeep
 │   │   ├── battle_controller.gd      # Battle setup and interaction flow
@@ -608,6 +659,10 @@ The UI layer is created at runtime by `scripts/battle/battle_controller.gd`.
   battle interaction coordination.
 - `scenes/battle/battle_scene.tscn` — the scene entry point; the controller builds
   the rest of the interface at runtime.
+- `scenes/battle/battle_scene_template.tscn` — reusable template composition for
+  the split battle UI.
+- `scripts/battle/ui_scene/battle_io.gd` — switches the template between
+  Chanting and Casting presentation states and emits UI input signals.
 - `scripts/battle/systems/spell_matcher.gd` — board-pattern and requirement matching.
 - `scripts/battle/systems/spell_resolver.gd` — generic spell and basic-attack resolution.
 - `scripts/battle/data/battle_config.gd` — centralized balance, turn-order,

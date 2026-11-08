@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://dikqsf5svehnl"]
+
+[ext_resource type="Script" uid="uid://loppi4ucc18m" path="res://scripts/battle/ui_scene/target_detail.gd" id="1_5llvf"]
+
+[ext_resource type="PackedScene" path="res://scenes/battle/ui/element_chip.tscn" id="2_chip"]
+
+[node name="TargetDetail" type="PanelContainer" unique_id=1874441736]
+custom_minimum_size = Vector2(280, 0)
+script = ExtResource("1_5llvf")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=2088498703]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=876114159]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Margin/VBox" unique_id=222962345]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Margin/VBox/Header" unique_id=1206655627]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RoleLabel" type="Label" parent="Margin/VBox/Header" unique_id=890188882]
+unique_name_in_owner = true
+layout_mode = 2
+text = "TARGET"
+
+[node name="HpBar" type="ProgressBar" parent="Margin/VBox" unique_id=765430690]
+unique_name_in_owner = true
+layout_mode = 2
+show_percentage = false
+
+[node name="HpLabel" type="Label" parent="Margin/VBox" unique_id=192311475]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="IntentLabel" type="Label" parent="Margin/VBox" unique_id=1935893255]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HSeparator1" type="HSeparator" parent="Margin/VBox" unique_id=871710501]
+layout_mode = 2
+
+[node name="SpellTitle" type="Label" parent="Margin/VBox" unique_id=730166725]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No spell selected. Click a card."
+
+[node name="EffectsLabel" type="Label" parent="Margin/VBox" unique_id=1668812528]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Breakdown" type="RichTextLabel" parent="Margin/VBox" unique_id=1460197410]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+
+[node name="BasicLabel" type="Label" parent="Margin/VBox" unique_id=288918326]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="Margin/VBox" unique_id=1456084428]
+layout_mode = 2
+
+[node name="StatusScroll" type="ScrollContainer" parent="Margin/VBox" unique_id=241005947]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Margin/VBox/StatusScroll" unique_id=896995262]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="WeakRow" type="HFlowContainer" parent="Margin/VBox" unique_id=507230483]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 24)
+theme_override_constants/separation = 3
+
+[node name="StrongRow" type="HFlowContainer" parent="Margin/VBox" unique_id=137386631]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 24)
+theme_override_constants/separation = 3
+
+[node name="WEAKTitle" type="Label" parent="Margin/VBox/WeakRow" unique_id=900000015]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "WEAK"
+
+[node name="Chip1" parent="Margin/VBox/WeakRow" unique_id=900000016 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip2" parent="Margin/VBox/WeakRow" unique_id=900000017 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip3" parent="Margin/VBox/WeakRow" unique_id=900000018 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip4" parent="Margin/VBox/WeakRow" unique_id=900000019 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip5" parent="Margin/VBox/WeakRow" unique_id=900000020 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip6" parent="Margin/VBox/WeakRow" unique_id=900000021 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="STRONGTitle" type="Label" parent="Margin/VBox/StrongRow" unique_id=900000022]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "STRONG"
+
+[node name="Chip1" parent="Margin/VBox/StrongRow" unique_id=900000023 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"StrongChip"
+
+[node name="Chip2" parent="Margin/VBox/StrongRow" unique_id=900000024 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"StrongChip"
+
+[node name="Chip3" parent="Margin/VBox/StrongRow" unique_id=900000025 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"StrongChip"
+
+[node name="Chip4" parent="Margin/VBox/StrongRow" unique_id=900000026 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"StrongChip"
+
+[node name="Chip5" parent="Margin/VBox/StrongRow" unique_id=900000027 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"StrongChip"
+
+[node name="Chip6" parent="Margin/VBox/StrongRow" unique_id=900000028 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"StrongChip"

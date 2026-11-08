@@ -1,0 +1,138 @@
+[gd_scene format=3 uid="uid://bio2il47f8imq"]
+
+[ext_resource type="Script" uid="uid://blefk51blxokv" path="res://scripts/battle/battle_template_controller.gd" id="1_ctrl"]
+[ext_resource type="PackedScene" uid="uid://cnve72bhndf7j" path="res://scenes/battle/ui/result_overlay.tscn" id="2_res"]
+[ext_resource type="PackedScene" uid="uid://by8raoqxf0a4" path="res://scenes/battle/ui/log_console.tscn" id="3_log"]
+[ext_resource type="PackedScene" path="res://scenes/battle/ui/battlefield.tscn" id="4_bf"]
+[ext_resource type="PackedScene" uid="uid://boeyhivkukinj" path="res://scenes/battle/ui/battle_io.tscn" id="5_io"]
+
+[node name="Battle_Scene_Template" type="Control" unique_id=1028392581]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ctrl")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1330161017]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.067, 0.078, 0.11, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=790575499]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="Main" type="VBoxContainer" parent="Margin" unique_id=902301109]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Main" unique_id=1473840061]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TerrainLabel" type="Label" parent="Margin/Main/TopBar" unique_id=444919086]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+clip_text = true
+
+[node name="RoundLabel" type="Label" parent="Margin/Main/TopBar" unique_id=1910508508]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Round 1"
+horizontal_alignment = 1
+
+[node name="OrderBar" type="Label" parent="Margin/Main/TopBar" unique_id=155940486]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Turn order (placeholder)"
+horizontal_alignment = 2
+clip_text = true
+
+[node name="Battlefield" parent="Margin/Main" unique_id=1158048723 instance=ExtResource("4_bf")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+
+[node name="BattleIO" parent="Margin/Main" unique_id=1826411009 instance=ExtResource("5_io")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ResultOverlay" parent="." unique_id=121465001 instance=ExtResource("2_res")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="LogConsole" parent="." unique_id=664332130 instance=ExtResource("3_log")]
+unique_name_in_owner = true
+
+[node name="TargetPrompt" type="PanelContainer" parent="." unique_id=770396191]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -170.0
+offset_top = -60.0
+offset_right = 170.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="TargetPrompt" unique_id=928375916]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PromptTitle" type="Label" parent="TargetPrompt/VBox" unique_id=1520385643]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="PromptTarget" type="Label" parent="TargetPrompt/VBox" unique_id=562626743]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PromptHint" type="Label" parent="TargetPrompt/VBox" unique_id=864079388]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+
+[node name="Row" type="HBoxContainer" parent="TargetPrompt/VBox" unique_id=1332530923]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PromptConfirm" type="Button" parent="TargetPrompt/VBox/Row" unique_id=2057448395]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Continue"
+
+[node name="PromptCancel" type="Button" parent="TargetPrompt/VBox/Row" unique_id=1055586250]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Cancel"

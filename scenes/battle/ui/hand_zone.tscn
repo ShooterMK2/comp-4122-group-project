@@ -1,0 +1,34 @@
+[gd_scene load_steps=3 format=3 uid="uid://dmqn7qkofg1hu"]
+
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/hand_zone.gd" id="1_zone"]
+[ext_resource type="PackedScene" path="res://scenes/battle/ui/hand_card.tscn" id="2_card"]
+
+[node name="HandZone" type="HFlowContainer"]
+size_flags_vertical = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+script = ExtResource("1_zone")
+
+[node name="Card1" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="Card2" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="Card3" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="Card4" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="Card5" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="Card6" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="Card7" parent="." instance=ExtResource("2_card")]
+layout_mode = 2
+
+[node name="Card8" parent="." instance=ExtResource("2_card")]
+layout_mode = 2

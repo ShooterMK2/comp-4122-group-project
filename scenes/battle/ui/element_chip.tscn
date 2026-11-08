@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/element_chip.gd" id="1_chip"]
+
+[node name="ElementChip" type="PanelContainer"]
+custom_minimum_size = Vector2(24, 24)
+mouse_filter = 2
+script = ExtResource("1_chip")
+
+[node name="Icon" type="TextureRect" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Letter" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1

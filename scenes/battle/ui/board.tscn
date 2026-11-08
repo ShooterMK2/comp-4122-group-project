@@ -1,0 +1,310 @@
+[gd_scene load_steps=3 format=3 uid="uid://b5ba1agxjty8v"]
+
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/board_grid.gd" id="1_board"]
+[ext_resource type="PackedScene" path="res://scenes/battle/ui/tile_cell.tscn" id="2_cell"]
+
+[node name="Board" type="GridContainer"]
+columns = 10
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+script = ExtResource("1_board")
+
+[node name="Cell_00" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_01" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_02" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_03" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_04" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_05" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_06" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_07" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_08" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_09" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_10" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_11" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_12" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_13" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_14" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_15" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_16" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_17" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_18" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_19" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_20" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_21" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_22" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_23" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_24" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_25" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_26" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_27" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_28" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_29" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_30" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_31" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_32" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_33" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_34" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_35" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_36" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_37" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_38" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_39" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_40" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_41" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_42" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_43" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_44" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_45" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_46" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_47" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_48" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_49" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_50" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_51" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_52" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_53" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_54" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_55" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_56" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_57" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_58" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_59" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_60" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_61" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_62" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_63" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_64" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_65" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_66" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_67" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_68" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_69" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_70" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_71" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_72" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_73" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_74" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_75" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_76" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_77" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_78" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_79" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_80" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_81" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_82" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_83" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_84" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_85" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_86" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_87" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_88" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_89" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_90" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_91" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_92" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_93" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_94" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_95" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_96" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_97" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_98" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2
+
+[node name="Cell_99" parent="." instance=ExtResource("2_cell")]
+layout_mode = 2

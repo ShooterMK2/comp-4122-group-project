@@ -1,0 +1,75 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/battlefield_panel.gd" id="1_bf"]
+[ext_resource type="PackedScene" path="res://scenes/battle/ui/combatant_panel.tscn" id="2_panel"]
+
+[node name="Battlefield" type="HBoxContainer"]
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+script = ExtResource("1_bf")
+
+[node name="PlayerZone" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+theme_type_variation = &"Zone"
+
+[node name="VBox" type="VBoxContainer" parent="PlayerZone"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="PlayerZone/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 16)
+theme_override_font_sizes/font_size = 11
+text = "PLAYER"
+horizontal_alignment = 1
+
+[node name="Center" type="CenterContainer" parent="PlayerZone/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerPanel" parent="PlayerZone/VBox/Center" instance=ExtResource("2_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+is_player = true
+
+[node name="VSeparator" type="VSeparator" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(4, 0)
+
+[node name="EnemyZone" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Zone"
+
+[node name="VBox" type="VBoxContainer" parent="EnemyZone"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="EnemyZone/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 16)
+theme_override_font_sizes/font_size = 11
+text = "ENEMIES"
+horizontal_alignment = 1
+
+[node name="Center" type="CenterContainer" parent="EnemyZone/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EnemyRow" type="HBoxContainer" parent="EnemyZone/VBox/Center"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="EnemyPanel1" parent="EnemyZone/VBox/Center/EnemyRow" instance=ExtResource("2_panel")]
+layout_mode = 2
+
+[node name="EnemyPanel2" parent="EnemyZone/VBox/Center/EnemyRow" instance=ExtResource("2_panel")]
+layout_mode = 2
+
+[node name="EnemyPanel3" parent="EnemyZone/VBox/Center/EnemyRow" instance=ExtResource("2_panel")]
+layout_mode = 2
