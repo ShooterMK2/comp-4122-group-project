@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bio2il47f8imq"]
 
 [ext_resource type="Script" uid="uid://blefk51blxokv" path="res://scripts/battle/battle_template_controller.gd" id="1_ctrl"]
+[ext_resource type="Texture2D" uid="uid://y0t80tmaggt4" path="res://assets/textures/environments/ComfyUI_temp_zhdlv_00027_.png" id="2_hl4rp"]
 [ext_resource type="PackedScene" uid="uid://cnve72bhndf7j" path="res://scenes/battle/ui/result_overlay.tscn" id="2_res"]
 [ext_resource type="PackedScene" uid="uid://by8raoqxf0a4" path="res://scenes/battle/ui/log_console.tscn" id="3_log"]
 [ext_resource type="PackedScene" path="res://scenes/battle/ui/battlefield.tscn" id="4_bf"]
@@ -23,13 +24,23 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.067, 0.078, 0.11, 1)
+color = Color(0, 0, 0, 1)
+
+[node name="TextureRect" type="TextureRect" parent="Background" unique_id=1254609349]
+custom_minimum_size = Vector2(1280, 360)
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 360.0
+texture = ExtResource("2_hl4rp")
+expand_mode = 1
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=790575499]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = 32.0
+offset_bottom = 30.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 4
@@ -78,6 +89,7 @@ layout_mode = 2
 
 [node name="BattleIO" parent="Margin/Main" unique_id=1826411009 instance=ExtResource("5_io")]
 unique_name_in_owner = true
+custom_maximum_size = Vector2(0, -1)
 layout_mode = 2
 
 [node name="ResultOverlay" parent="." unique_id=121465001 instance=ExtResource("2_res")]

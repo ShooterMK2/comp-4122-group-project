@@ -327,4 +327,3 @@ func _on_tool_requested(request_id: String, tool_name: String, args: Dictionary)
 	else:
 		var error: String = result.get(&"error", "Unknown error")
 		_mcp_client.send_tool_result(request_id, false, result, error)
-
