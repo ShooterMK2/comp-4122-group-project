@@ -1,57 +1,61 @@
 class_name DamageCalculator
 extends RefCounted
 
-# Spell formula: ceil(ATK * 0.25), then
-# ceil(Spell Damage * Effective Spell ATK * ATK multiplier * terrain multiplier),
-# (Base * Other) * Defence * Elemental * random factor.
-static func finalize(raw: int, attacker: CombatantState,
+# Spell base damage is scaled through the full damage formula. Effect bonuses
+# are added as flat damage after that scaling to keep their values predictable.
+static func finalize(raw: float, attacker: CombatantState,
 		defender: CombatantState = null, element: int = Elements.Element.NONE,
 		other_multiplier: float = BattleConfig.OTHER_MULTIPLIER_DEFAULT,
-		terrain: TerrainDefinition = null) -> int:
-	var effective_attack := ceili(maxi(1, attacker.attack)
-		* BattleConfig.SPELL_ATTACK_FACTOR)
-	var base := ceili(raw * effective_attack
-		* attacker.attack_multiplier * _attack_multiplier(attacker, element, terrain))
-	base = ceili(base * attacker.damage_output_multiplier)
-	return _apply_multipliers(base, attacker, defender, element, other_multiplier, terrain)
+		terrain: TerrainDefinition = null, flat_bonus: float = 0.0) -> int:
+	var effective_attack := maxf(1.0, attacker.attack) \
+			* BattleConfig.SPELL_ATTACK_FACTOR
+	var base := raw * effective_attack
+	base *= attacker.attack_multiplier * _attack_multiplier(attacker, element, terrain)
+	base *= attacker.damage_output_multiplier
+	return _apply_multipliers(base, attacker, defender, element, other_multiplier,
+		terrain, flat_bonus)
 
-static func _apply_multipliers(base: int, attacker: CombatantState,
+static func _apply_multipliers(base: float, attacker: CombatantState,
 		defender: CombatantState, element: int,
-		other_multiplier: float, terrain: TerrainDefinition = null) -> int:
+		other_multiplier: float, terrain: TerrainDefinition = null,
+		flat_bonus: float = 0.0) -> int:
 	var defence_multiplier := defence_multiplier_of(attacker, defender, element, terrain)
 	var elemental_multiplier := elemental_multiplier_of(defender, element)
-	var break_multiplier := 1.0 + BattleConfig.BREAK_DAMAGE_BONUS \
-		if defender != null and defender.is_broken() else 1.0
 	var random_multiplier := randf_range(
 		BattleConfig.DAMAGE_RANDOM_MIN, BattleConfig.DAMAGE_RANDOM_MAX)
-	return maxi(0, ceili(base * other_multiplier * defence_multiplier
-		* elemental_multiplier * break_multiplier * random_multiplier))
+	var broken_multiplier := 1.0
+	if defender != null and defender.is_broken():
+		broken_multiplier += BattleConfig.BREAK_DAMAGE_BONUS
+	return maxi(0, ceili((base * other_multiplier * defence_multiplier
+		* elemental_multiplier * random_multiplier + flat_bonus) * broken_multiplier))
 
 static func basic_attack(tile_count: int, attacker: CombatantState,
 		defender: CombatantState = null, terrain: TerrainDefinition = null) -> int:
-	var effective_attack := ceili(maxi(1, attacker.attack) * attacker.attack_multiplier)
+	var effective_attack := maxf(1.0, attacker.attack) * attacker.attack_multiplier
 	var base := tile_count * BattleConfig.BASIC_DAMAGE_PER_TILE * effective_attack
-	base = ceili(base * _attack_multiplier(attacker, Elements.Element.NONE, terrain))
-	base = ceili(base * attacker.damage_output_multiplier)
+	base *= _attack_multiplier(attacker, Elements.Element.NONE, terrain)
+	base *= attacker.damage_output_multiplier
 	return _apply_multipliers(base, attacker, defender, Elements.Element.NONE,
 		BattleConfig.OTHER_MULTIPLIER_DEFAULT, terrain)
 
 static func explain_basic_attack(tile_count: int, attacker: CombatantState,
 		defender: CombatantState, terrain: TerrainDefinition = null) -> Dictionary:
-	var effective_attack := ceili(maxi(1, attacker.attack) * attacker.attack_multiplier)
+	var effective_attack := maxf(1.0, attacker.attack) * attacker.attack_multiplier
 	var attack_terrain: float = _attack_multiplier(attacker, Elements.Element.NONE, terrain)
-	var base := ceili(tile_count * BattleConfig.BASIC_DAMAGE_PER_TILE * effective_attack
-		* attack_terrain)
-	base = ceili(base * attacker.damage_output_multiplier)
+	var base := tile_count * BattleConfig.BASIC_DAMAGE_PER_TILE * effective_attack
+	base *= attack_terrain
+	base *= attacker.damage_output_multiplier
 	var defence: float = defence_multiplier_of(attacker, defender, Elements.Element.NONE, terrain)
 	var elemental: float = elemental_multiplier_of(defender, Elements.Element.NONE)
-	var broken: float = 1.0 + BattleConfig.BREAK_DAMAGE_BONUS \
-		if defender.is_broken() else 1.0
 	var expected_random: float = (BattleConfig.DAMAGE_RANDOM_MIN
 		+ BattleConfig.DAMAGE_RANDOM_MAX) * 0.5
-	var expected := maxi(0, ceili(base * defence * elemental * broken * expected_random))
+	var broken_multiplier := 1.0
+	if defender.is_broken():
+		broken_multiplier += BattleConfig.BREAK_DAMAGE_BONUS
+	var expected := maxi(0, ceili(
+		(base * defence * elemental * expected_random) * broken_multiplier))
 	return {
-		"damage": tile_count * BattleConfig.BASIC_DAMAGE_PER_TILE,
+		"damage": ceili(tile_count * BattleConfig.BASIC_DAMAGE_PER_TILE),
 		"tiles": tile_count,
 		"effective_attack": effective_attack,
 		"attack_factor": 1.0,
@@ -62,28 +66,30 @@ static func explain_basic_attack(tile_count: int, attacker: CombatantState,
 		"other": BattleConfig.OTHER_MULTIPLIER_DEFAULT,
 		"defence": defence,
 		"elemental": elemental,
-		"break": broken,
+		"break": 1.0,
 		"random": expected_random,
 		"expected": expected,
 	}
 
-static func explain_spell(raw: int, attacker: CombatantState,
+static func explain_spell(raw: float, attacker: CombatantState,
 		defender: CombatantState, element: int, other_multiplier: float,
 		terrain: TerrainDefinition = null) -> Dictionary:
-	var effective_attack := ceili(maxi(1, attacker.attack)
-		* BattleConfig.SPELL_ATTACK_FACTOR)
+	var effective_attack := maxf(1.0, attacker.attack) \
+		* BattleConfig.SPELL_ATTACK_FACTOR
 	var attack_terrain: float = _attack_multiplier(attacker, element, terrain)
-	var base := ceili(raw * effective_attack * attacker.attack_multiplier
-		* attack_terrain)
-	base = ceili(base * attacker.damage_output_multiplier)
+	var base := raw * effective_attack * attacker.attack_multiplier
+	base *= attack_terrain
+	base *= attacker.damage_output_multiplier
 	var defence: float = defence_multiplier_of(attacker, defender, element, terrain)
 	var elemental: float = elemental_multiplier_of(defender, element)
-	var broken: float = 1.0 + BattleConfig.BREAK_DAMAGE_BONUS \
-		if defender.is_broken() else 1.0
 	var expected_random: float = (BattleConfig.DAMAGE_RANDOM_MIN
 		+ BattleConfig.DAMAGE_RANDOM_MAX) * 0.5
-	var expected := maxi(0, ceili(base * other_multiplier * defence
-		* elemental * broken * expected_random))
+	var broken_multiplier := 1.0
+	if defender.is_broken():
+		broken_multiplier += BattleConfig.BREAK_DAMAGE_BONUS
+	var expected := maxi(0, ceili(
+		(base * other_multiplier * defence * elemental * expected_random)
+		* broken_multiplier))
 	return {
 		"damage": raw,
 		"base": base,
@@ -95,7 +101,7 @@ static func explain_spell(raw: int, attacker: CombatantState,
 		"other": other_multiplier,
 		"defence": defence,
 		"elemental": elemental,
-		"break": broken,
+		"break": 1.0,
 		"random": expected_random,
 		"expected": expected,
 	}

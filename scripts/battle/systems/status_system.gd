@@ -25,11 +25,14 @@ static func _stat_name(stat: int) -> String:
 static func deal_direct(target: CombatantState, amount: int) -> int:
 	if amount <= 0:
 		return 0
+	var adjusted_amount := amount
+	if target.is_broken():
+		adjusted_amount = ceili(amount * (1.0 + BattleConfig.BREAK_DAMAGE_BONUS))
 	if BattleConfig.DOT_IGNORES_SHIELD:
-		var lost := mini(target.hp, amount)
+		var lost := mini(target.hp, adjusted_amount)
 		target.hp -= lost
 		return lost
-	var r := target.take_damage(amount)
+	var r := target.take_damage(adjusted_amount)
 	return r["hp"] + r["absorbed"]
 
 # Adds stacks, then handles threshold conversions. Returns extra damage dealt.

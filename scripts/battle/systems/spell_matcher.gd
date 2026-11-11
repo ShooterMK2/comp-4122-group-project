@@ -1,8 +1,10 @@
 class_name SpellMatcher
 extends RefCounted
 
-# Returns {spell, cells, elements} for the first match, or {} if none.
-static func find_first_match(board: CastingBoardModel, spells: Array[SpellDefinition]) -> Dictionary:
+# Returns every currently valid match, ordered by largest pattern first.
+static func find_matches(board: CastingBoardModel,
+		spells: Array[SpellDefinition]) -> Array[Dictionary]:
+	var matches: Array[Dictionary] = []
 	var sorted := spells.duplicate()
 	sorted.sort_custom(func(a, b): return a.pattern.cells.size() > b.pattern.cells.size())
 	for spell: SpellDefinition in sorted:
@@ -10,8 +12,13 @@ static func find_first_match(board: CastingBoardModel, spells: Array[SpellDefini
 			for x in board.size.x:
 				var hit := _try_at(board, spell, Vector2i(x, y))
 				if not hit.is_empty():
-					return hit
-	return {}
+					matches.append(hit)
+	return matches
+
+# Returns the first match, or {} if none. Kept for preview/debug callers.
+static func find_first_match(board: CastingBoardModel, spells: Array[SpellDefinition]) -> Dictionary:
+	var matches := find_matches(board, spells)
+	return matches[0] if not matches.is_empty() else {}
 
 static func _try_at(board: CastingBoardModel, spell: SpellDefinition, anchor: Vector2i) -> Dictionary:
 	var cells: Array[Vector2i] = []
