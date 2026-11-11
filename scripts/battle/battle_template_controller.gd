@@ -37,6 +37,8 @@ var _match_choices: Array[Dictionary] = []
 @onready var _result: ResultOverlay = %ResultOverlay
 @onready var _console: LogConsole = %LogConsole
 @onready var _prompt: PanelContainer = %TargetPrompt
+@onready var _deadlock: CanvasLayer  = %DeadlockOverlay
+
 
 func _ready() -> void:
 	randomize()
@@ -49,6 +51,7 @@ func _ready() -> void:
 	_match_popup = PopupMenu.new()
 	add_child(_match_popup)
 	_match_popup.id_pressed.connect(_on_match_selected)
+	_deadlock.visible = false
 	_connect_signals()
 	_advance()
 
@@ -68,7 +71,9 @@ func _connect_signals() -> void:
 	_battlefield.spell_dropped_on.connect(_on_spell_dropped)
 	_result.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	%PromptConfirm.pressed.connect(_on_prompt_confirmed)
-
+	%BacklashButton.pressed.connect(_on_backlash)
+	%FizzleButton.pressed.connect(_on_fizzle)
+	
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
@@ -318,9 +323,42 @@ func _apply_on_queue_effects(spell: SpellDefinition) -> void:
 func _update_deadlock() -> void:
 	var stuck := not state.over and not _casting and _placed_this_turn == 0 \
 			and queue.is_empty() and DeadlockDetector.is_deadlocked(board, hand)
-	if stuck:
-		_io.set_hint("DEADLOCK: no fragment fits the board. (The Backlash / Fizzle overlay is not built yet.)")
+	if not stuck:
+		_deadlock.visible = false
+		return
+	var tiles := board.filled_count()
+	var check := DeadlockResolver.check_backlash(state)
+	if not _deadlock.visible:
+		_io.set_hint("DEADLOCK: no fragment fits the board.")
 		_log_line("system", "Deadlock! No fragment fits the board.")
+	var desc = %DeadlockDescription
+	desc.text = "No fragment in your hand fits the board (%d tile(s) in the way).\nChoose how to clear it. Either choice ends your turn." % tiles
+	var back_btn = %BacklashButton
+	back_btn.text = "Backlash (-%d HP, deal %d dmg)" % [check["cost"], DamageCalculator.basic_attack(tiles, state.player)]
+	back_btn.disabled = not check["ok"]
+	var fizzle_btn = %FizzleButton
+	fizzle_btn.text = "Fizzle (free)"
+	_deadlock.visible = true
+	
+func _on_backlash() -> void:
+	var lines: Array[String] = []
+	if not DeadlockResolver.backlash(state, board, lines):
+		_log_lines(lines)
+		return
+	_deadlock.visible = false
+	_outlined.clear()
+	_ghosts.clear()
+	lines.append("Backlash ends your turn.")
+	_finish_turn(lines)
+
+func _on_fizzle() -> void:
+	var lines: Array[String] = []
+	DeadlockResolver.fizzle(board, lines)
+	_deadlock.visible = false
+	_outlined.clear()
+	_ghosts.clear()
+	lines.append("Fizzle ends your turn.")
+	_finish_turn(lines)
 
 func _on_reset() -> void:
 	if state.over:

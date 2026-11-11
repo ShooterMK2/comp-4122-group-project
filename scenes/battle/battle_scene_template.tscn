@@ -136,3 +136,67 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Cancel"
+
+[node name="DeadlockOverlay" type="CanvasLayer" parent="." unique_id=1816363628]
+unique_name_in_owner = true
+
+[node name="DimBackground" type="ColorRect" parent="DeadlockOverlay" unique_id=248163485]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 435.0
+offset_top = 364.0
+offset_right = -504.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.20392157, 0.19215687, 0.2, 0.8039216)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeadlockOverlay" unique_id=2039040968]
+anchors_preset = -1
+anchor_left = 0.40500003
+anchor_top = 0.69600004
+anchor_right = 0.40500003
+anchor_bottom = 0.69600004
+offset_left = -87.400024
+offset_top = -89.120026
+offset_right = 265.59998
+offset_bottom = 135.87997
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 26
+
+[node name="DeadlockTitle" type="Label" parent="DeadlockOverlay/VBoxContainer" unique_id=1157939743]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "DEADLOCK"
+horizontal_alignment = 1
+
+[node name="DeadlockDescription" type="Label" parent="DeadlockOverlay/VBoxContainer" unique_id=817711067]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "No fragment in your hand fits the board.
+Choose how to clear it.
+Either choice ends your turn."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeadlockOverlay/VBoxContainer" unique_id=712213264]
+layout_mode = 2
+size_flags_horizontal = 4
+alignment = 1
+
+[node name="BacklashButton" type="Button" parent="DeadlockOverlay/VBoxContainer/VBoxContainer" unique_id=1505342676]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Backlash"
+
+[node name="FizzleButton" type="Button" parent="DeadlockOverlay/VBoxContainer/VBoxContainer" unique_id=1121735937]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Fizzle"
