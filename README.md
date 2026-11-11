@@ -522,8 +522,11 @@ executes it through `SpellResolver.cast()`.
 #### `scripts/battle/systems/fragment_generator.gd`
 
 Creates random fragments from the configured shape and element pools and
-draws a requested number for the player's hand. It also provides helpers for
-creating a fragment containing a specific element, which is useful to the
+draws a requested number for the player's hand. Random hand fragments choose
+a dominant element, then mix in secondary elements so they remain useful for
+building spell requirements without being monochromatic. Universal is limited
+to a 5% chance per cell and `NONE` to a 2% chance. It also provides helpers
+for creating a fragment containing a specific element, which is useful to the
 debug panel and deterministic demo content.
 
 #### `scripts/battle/systems/spell_matcher.gd`
