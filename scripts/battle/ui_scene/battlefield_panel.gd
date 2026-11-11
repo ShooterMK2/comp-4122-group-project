@@ -1,13 +1,13 @@
 class_name BattlefieldPanel
-extends HBoxContainer
-# Player zone and enemy zone. Shows data, reports clicks and drops.
+extends VBoxContainer
+# Player zone, enemy zone and the floor strip. Shows data, reports clicks and drops.
 
 signal enemy_clicked(index: int)
 signal player_clicked
 signal ultimate_pressed
 signal spell_dropped_on(target_index: int, definition: SpellDefinition)   # -1 = the player
 
-@onready var _player: CombatantPanel = %PlayerPanel
+@onready var _player: PlayerPanel = %PlayerPanel
 @onready var _panels: Array = %EnemyRow.get_children()
 
 func _ready() -> void:
@@ -29,6 +29,11 @@ func setup(state: BattleState) -> void:
 			var def: EnemyDefinition = state.enemy_defs[i]
 			panel.setup(def.art_name, def.placeholder_color, "DUMMY")
 	refresh(state)
+
+# The floor strip under both sides. Pass null to show the placeholder colour.
+func set_floor(texture: Texture2D) -> void:
+	%Floor.texture = texture
+	%FloorPlaceholder.visible = texture == null
 
 func set_drop_enabled(on: bool) -> void:
 	_player.drop_enabled = on

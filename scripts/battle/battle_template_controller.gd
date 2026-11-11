@@ -54,7 +54,6 @@ func _ready() -> void:
 
 func _connect_signals() -> void:
 	_io.cast_pressed.connect(_on_cast)
-	_io.reset_pressed.connect(_on_reset)
 	_io.end_turn_pressed.connect(_on_end_turn)
 	_io.spell_zone.card_clicked.connect(_on_card_clicked)
 	_io.board_view.cell_clicked.connect(_on_cell_clicked)
@@ -268,20 +267,47 @@ func _try_place(index: int, anchor: Vector2i) -> void:
 	_refresh_hand.call_deferred()
 
 func _resolve_matches() -> void:
-	_match_choices = SpellMatcher.find_matches(board, spells)
-	if _match_choices.is_empty():
-		_refresh_board()
-		_refresh_spells()
-		_update_deadlock()
-		return
-	_match_popup.clear()
-	for i in _match_choices.size():
-		var hit: Dictionary = _match_choices[i]
+	var match_index := 0
+	while true:
+		var choices: Array = SpellMatcher.find_matches(board, spells)
+		if choices.is_empty():
+			break
+		_commit_match(_best_match(choices), match_index)
+		match_index += 1
+	_refresh_board()
+	_refresh_spells()
+	_update_deadlock()
+
+# Best = highest base damage, then most tiles, then earlier in the library.
+func _best_match(choices: Array) -> Dictionary:
+	var best: Dictionary = {}
+	var best_key: Array = []
+	for hit: Dictionary in choices:
 		var spell: SpellDefinition = hit["spell"]
-		var anchor: Vector2i = hit["cells"][0]
-		_match_popup.add_item("%s (%d tiles, anchor %d,%d)" % [
-			spell.display_name, spell.pattern.cells.size(), anchor.x, anchor.y], i)
-	_match_popup.popup_centered(Vector2i(520, 360))
+		var key: Array = [spell.base_damage, (hit["cells"] as Array).size(), -spells.find(spell)]
+		if best.is_empty() or key > best_key:
+			best = hit
+			best_key = key
+	return best
+
+func _commit_match(hit: Dictionary, match_index: int) -> void:
+	var color := Color.from_hsv(float(match_index % 12) / 12.0, 0.8, 1.0)
+	var hit_cells: Array = hit["cells"]
+	var hit_elems: Array = hit["elements"]
+	var hit_special_tiles: Array = hit["special_tiles"]
+	for i in hit_cells.size():
+		var cell: Vector2i = hit_cells[i]
+		_outlined[cell] = color
+		_ghosts[cell] = hit_elems[i]
+	board.clear_cells(hit_cells)
+	var elems: Array[int] = []
+	for e in hit_elems:
+		elems.append(e)
+	var spell: SpellDefinition = hit["spell"]
+	queue.append(QueuedSpell.new(spell, elems, hit_special_tiles))
+	_apply_on_queue_effects(spell)
+	_io.set_hint("Matched: %s" % spell.display_name)
+	_log_line("player", "Formed %s." % spell.display_name)
 
 func _on_match_selected(id: int) -> void:
 	if id < 0 or id >= _match_choices.size():

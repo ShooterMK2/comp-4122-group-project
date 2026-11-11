@@ -6,93 +6,89 @@
 [ext_resource type="PackedScene" uid="uid://crd40wptxpgjy" path="res://scenes/battle/ui/spell_zone.tscn" id="4_zone"]
 [ext_resource type="PackedScene" uid="uid://dikqsf5svehnl" path="res://scenes/battle/ui/target_detail.tscn" id="5_detail"]
 
-[node name="BattleIO" type="PanelContainer" unique_id=2099322496]
+[node name="BattleIO" type="PanelContainer" unique_id=872563254]
 custom_minimum_size = Vector2(0, 360)
+clip_contents = true
 size_flags_horizontal = 3
 script = ExtResource("1_io")
 
-[node name="Margin" type="MarginContainer" parent="." unique_id=1474643880]
+[node name="Margin" type="MarginContainer" parent="." unique_id=5157322]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="Row" type="HBoxContainer" parent="Margin" unique_id=916937255]
+[node name="Row" type="HBoxContainer" parent="Margin" unique_id=522751019]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="FragmentColumn" type="VBoxContainer" parent="Margin/Row" unique_id=888425745]
+[node name="FragmentColumn" type="VBoxContainer" parent="Margin/Row" unique_id=957295666]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 0)
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 6
 
-[node name="Title" type="Label" parent="Margin/Row/FragmentColumn" unique_id=522138953]
+[node name="Title" type="Label" parent="Margin/Row/FragmentColumn" unique_id=738208352]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "FRAGMENTS"
 
-[node name="FragmentZone" parent="Margin/Row/FragmentColumn" unique_id=44696453 instance=ExtResource("2_hand")]
+[node name="FragmentZone" parent="Margin/Row/FragmentColumn" unique_id=2101580730 instance=ExtResource("2_hand")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="BoardFrame" type="MarginContainer" parent="Margin/Row" unique_id=912798536]
+[node name="BoardFrame" type="MarginContainer" parent="Margin/Row" unique_id=542567628]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 340)
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="CastingBoard" parent="Margin/Row/BoardFrame" unique_id=983190927 instance=ExtResource("3_board")]
+[node name="CastingBoard" parent="Margin/Row/BoardFrame" unique_id=321392552 instance=ExtResource("3_board")]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 
-[node name="CenterColumn" type="VBoxContainer" parent="Margin/Row" unique_id=358808969]
+[node name="CenterColumn" type="VBoxContainer" parent="Margin/Row" unique_id=156617260]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 6
 
-[node name="Header" type="HBoxContainer" parent="Margin/Row/CenterColumn" unique_id=2099742173]
-custom_minimum_size = Vector2(426, 32)
+[node name="Header" type="HBoxContainer" parent="Margin/Row/CenterColumn" unique_id=1835728981]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PhaseLabel" type="Label" parent="Margin/Row/CenterColumn/Header" unique_id=1144811911]
+[node name="PhaseLabel" type="Label" parent="Margin/Row/CenterColumn/Header" unique_id=1821846826]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 text = "CHANTING"
 
-[node name="ResetButton" type="Button" parent="Margin/Row/CenterColumn/Header" unique_id=1382896355]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 32)
-layout_mode = 2
-text = "Reset"
-
-[node name="CastButton" type="Button" parent="Margin/Row/CenterColumn/Header" unique_id=1719300955]
+[node name="CastButton" type="Button" parent="Margin/Row/CenterColumn/Header" unique_id=265176408]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(110, 32)
 layout_mode = 2
 text = "CAST"
 
-[node name="SpellZone" parent="Margin/Row/CenterColumn" unique_id=1156982279 instance=ExtResource("4_zone")]
+[node name="SpellZone" parent="Margin/Row/CenterColumn" unique_id=1869866819 instance=ExtResource("4_zone")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HintLabel" type="Label" parent="Margin/Row/CenterColumn" unique_id=1240383635]
+[node name="HintLabel" type="Label" parent="Margin/Row/CenterColumn" unique_id=1597254836]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 clip_text = true
 
-[node name="CastSidebar" type="VBoxContainer" parent="Margin/Row" unique_id=1178377112]
+[node name="CastSidebar" type="VBoxContainer" parent="Margin/Row" unique_id=934672144]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(280, 0)
@@ -100,12 +96,17 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 6
 
-[node name="TargetDetail" parent="Margin/Row/CastSidebar" unique_id=164358165 instance=ExtResource("5_detail")]
-unique_name_in_owner = true
+[node name="TargetScroll" type="ScrollContainer" parent="Margin/Row/CastSidebar" unique_id=1564665860]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="EndTurnButton" type="Button" parent="Margin/Row/CastSidebar" unique_id=1442305625]
+[node name="TargetDetail" parent="Margin/Row/CastSidebar/TargetScroll" unique_id=782265693 instance=ExtResource("5_detail")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EndTurnButton" type="Button" parent="Margin/Row/CastSidebar" unique_id=1210770791]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
