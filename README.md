@@ -179,21 +179,22 @@ On the player's turn:
 
 1. Draw a hand of elemental fragments.
 2. Place fragments on the 10 x 10 casting board and rotate them to fit.
-3. Match the board against spell patterns and reorder the matched spell queue
-   if needed.
+3. Match the board against spell patterns. If multiple matches are available,
+   choose the spell and board position from the match menu, then reorder the
+   matched spell queue if needed.
 4. Press **Cast**. Each queued spell is presented in order, followed by one
    basic attack when the board is not empty.
 5. Confirm a target for each step. The last target is remembered; the prompt
    is skipped when only one enemy is alive. Confirm with Enter or Space, or
    cancel with Esc before the first spell resolves.
 6. Continue placing and casting while the board's unmatched tiles remain
-   between turns. The basic attack counts every tile on the board each time it
-   is cast.
+   between turns. The basic attack uses `0.25` base damage per occupied tile
+   each time it is cast.
 
 If no fragment has been placed this turn and no hand fragment fits the board in
 any rotation, a deadlock overlay offers **Backlash** and **Fizzle**. Backlash
-costs HP, clears the board, deals base damage per cleared tile, and ends the
-turn. Its cost and minimum remaining HP are configured in
+costs HP, clears the board, deals `0.25` base damage per cleared tile, and
+ends the turn. Its cost and minimum remaining HP are configured in
 `scripts/battle/data/battle_config.gd`; Fizzle clears the board for free
 without dealing damage and also ends the turn. Either choice can be refused or
 cancelled only according to the controls shown by the overlay.
@@ -219,15 +220,17 @@ Chill reduces effective Speed by 0.25 per stack, down to 0.50 of base Speed,
 and loses one stack at the end of the unit's turn. Three Chill converts to one
 Freeze; Freeze skips an enemy action and loses one stack on each skipped
 action. Shatter consumes Freeze on a damaging Fire, Earth, or Wind spell for
-bonus damage. Fortify adds persistent Shield. Smite spends the required Shield
-and adds its configured damage per point. Tailwind adds a bonus to the next
-eligible damaging core-element spell, while Conductive adds Lightning damage
-and can spread half of that hit to adjacent enemies. Overload draws extra
-fragments immediately and adds a next-turn hand-size penalty. Decay deals
-end-of-turn damage and converts to Corruption. Corruption triggers damage
-before an enemy acts and restores player HP through life steal. The numeric
-values and thresholds come from `scripts/battle/data/battle_config.gd` and
-the current spell definitions.
+bonus damage. Fortify adds its configured Shield amount without a max-HP cap.
+Shield reduces one normal incoming attack by 40%, then consumes exactly 1
+Shield. Smite spends the required Shield and adds its configured
+damage per point. Tailwind adds a bonus to the next eligible damaging
+core-element spell, while Conductive adds Lightning damage and recalculates
+half-strength splash damage independently for adjacent enemies. Overload draws
+extra fragments immediately and adds a next-turn hand-size penalty. Decay
+deals end-of-turn damage and converts to Corruption. Corruption triggers
+damage before an enemy acts and restores player HP through life steal. The
+numeric values and thresholds come from `scripts/battle/data/battle_config.gd`
+and the current spell definitions.
 
 ## Controls
 
@@ -494,14 +497,20 @@ in models or systems; UI scripts should present state and emit input events.
 
 #### `scripts/battle/systems/damage_calculator.gd`
 
-Calculates spell damage using `ceil(Spell Damage * (ATK * 0.25))`, then applies
-`(Base * Other Multiplier) * Defence Multiplier * Elemental Multiplier` and a
-random 90%-115% factor before rounding up. Basic board attacks use their
-tile-based base damage and also receive the final multipliers and randomness.
+Calculates scaled spell base damage using `Spell Damage * (ATK * 0.40)`,
+then applies the ATK, terrain, Ultimate, Other, defence, elemental, and
+random multipliers. Tailwind, Shatter, Conductive, Detonate, and Smite are
+added as flat bonuses after the scaled damage. Broken then multiplies the
+complete result by `2.45x`; damage is rounded only at the final result.
+Basic board attacks use `0.25` base damage per occupied tile and also receive
+the defence, elemental, random, Ultimate, terrain, and Broken multipliers.
+Direct status damage uses its configured base amount and Broken, and bypasses
+Shield when `DOT_IGNORES_SHIELD` is enabled.
 The default Other Multiplier is 100%; the available default tier values are
 Low 20%, Medium 45%, and High 90%. Enemy weaknesses apply a 175% Countered
-multiplier, strengths apply a 65% Countering multiplier, and unmatched elements
-use 100%. Chill is not a damage modifier; it reduces effective Speed in
+multiplier, strengths apply a 65% Countering multiplier, and unmatched
+elements use 100%. Effect bonuses are added before the Broken multiplier.
+Chill is not a damage modifier; it reduces effective Speed in
 `turn_order_system.gd`.
 
 #### `scripts/battle/systems/enemy_intent_system.gd`
@@ -521,14 +530,17 @@ debug panel and deterministic demo content.
 
 Scans the casting board for spell patterns. It tests possible anchors,
 compares occupied cells and element requirements, accounts for Universal
-tiles, and returns matched spell information for the spell queue.
+tiles, and returns all valid matches so the player can choose which match to
+consume.
 
 #### `scripts/battle/systems/spell_resolver.gd`
 
 Provides generic `cast()` resolution for player and enemy spells, resolves
 queued player spells in order, and resolves the filled-board basic attack.
 It handles base damage, Tailwind, Shatter, Conductive, Detonate, Smite,
-status application, Conductive splash, shields, and combat logging. Its
+status application, Conductive splash, shields, and combat logging. Shield has
+no max-HP cap, reduces one normal incoming attack by 40%, and consumes exactly
+one Shield. Its
 preview function duplicates the battle state so the UI can show projected
 results without mutating the real encounter.
 

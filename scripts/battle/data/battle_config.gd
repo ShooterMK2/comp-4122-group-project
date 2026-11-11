@@ -7,14 +7,14 @@ const BOARD_SIZE := Vector2i(10, 10)
 
 # ---------- General ----------
 const HAND_SIZE := 4                    # fragments drawn at the start of each turn
-const BASIC_DAMAGE_PER_TILE := 1        # damage per tile left on the board when you Cast
+const BASIC_DAMAGE_PER_TILE := 0.25     # damage per tile left on the board when you Cast
 const DOT_IGNORES_SHIELD := true        # Burn / Decay / Detonate bypass shield if true
 const CONFIRM_ENEMY_ACTIONS := false    # Require confirmation before enemy actions
 const OTHER_MULTIPLIER_DEFAULT := 1.0
 const OTHER_MULTIPLIER_LOW := 0.20
 const OTHER_MULTIPLIER_MEDIUM := 0.45
 const OTHER_MULTIPLIER_HIGH := 0.90
-const SPELL_ATTACK_FACTOR := 0.25
+const SPELL_ATTACK_FACTOR := 0.40
 const DAMAGE_RANDOM_MIN := 0.90
 const DAMAGE_RANDOM_MAX := 1.15
 const ELEMENTAL_MULTIPLIER_DEFAULT := 1.0
@@ -26,7 +26,7 @@ const BREAK_MINOR_HITS_MIN := 3
 const BREAK_MINOR_HITS_MAX := 5
 const BREAK_ELITE_HITS_MIN := 6
 const BREAK_ELITE_HITS_MAX := 9
-const BREAK_DAMAGE_BONUS := 1.45
+const BREAK_DAMAGE_BONUS := 1.45        # Broken all-damage multiplier = 2.45x
 const BREAK_TURNS := 2
 const SPECIAL_TILE_APPEAR_CHANCE := 0.25
 const SPECIAL_TILE_STAT_MULTIPLIER := 0.60
@@ -39,8 +39,8 @@ const CHARGE_LEVEL_3 := 15.0
 const CHARGE_BASIC_ATTACK := 3.0
 const CHARGE_SPECIAL_TILE := 6.0
 const CHARGE_BREAK := 20.0
-const ULTIMATE_MIN_MULTIPLIER := 4.65
-const ULTIMATE_MAX_MULTIPLIER := 6.30
+const ULTIMATE_MIN_MULTIPLIER := 2.75
+const ULTIMATE_MAX_MULTIPLIER := 3.50
 
 # ---------- Fire ----------
 const BURN_DAMAGE_PER_STACK := 2        # end of turn: stacks * this
@@ -86,3 +86,4 @@ const BACKLASH_MIN_HP_AFTER := 1            # Backlash is refused if it would le
 
 # ---------- Speed / turn order ----------
 const DUMMY_HEAL_PER_TURN := 10    # Mend: HP a dummy heals on each of its actions
+const SHIELD_DAMAGE_REDUCTION := 0.40 # Shield reduces one incoming attack by 40%

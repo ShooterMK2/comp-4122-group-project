@@ -65,9 +65,13 @@ func consume_status(s: int, n: int = -1) -> int:
 	return take
 
 func take_damage(amount: int) -> Dictionary:
-	var absorbed := mini(shield, amount)
-	shield -= absorbed
-	var lost := mini(hp, amount - absorbed)
+	var incoming := amount
+	var absorbed := 0
+	if shield > 0:
+		incoming = ceili(amount * (1.0 - BattleConfig.SHIELD_DAMAGE_REDUCTION))
+		absorbed = amount - incoming
+		shield -= 1
+	var lost := mini(hp, incoming)
 	hp -= lost
 	return {"absorbed": absorbed, "hp": lost}
 

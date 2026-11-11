@@ -26,6 +26,8 @@ var _inspect_player := false
 var _awaiting_enemy := -1
 var _cast_spell_total := 0
 var _cast_basic_total := 0
+var _match_popup: PopupMenu
+var _match_choices: Array[Dictionary] = []
 
 @onready var _battlefield: BattlefieldPanel = %Battlefield
 @onready var _io: BattleIO = %BattleIO
@@ -44,6 +46,9 @@ func _ready() -> void:
 		state.terrain.display_name, state.terrain.description().replace("\n", "  ")]
 	_battlefield.setup(state)
 	_io.board_view.bind(board, _fragment_at)
+	_match_popup = PopupMenu.new()
+	add_child(_match_popup)
+	_match_popup.id_pressed.connect(_on_match_selected)
 	_connect_signals()
 	_advance()
 
@@ -263,32 +268,43 @@ func _try_place(index: int, anchor: Vector2i) -> void:
 	_refresh_hand.call_deferred()
 
 func _resolve_matches() -> void:
-	var match_index := 0
-	while true:
-		var hit := SpellMatcher.find_first_match(board, spells)
-		if hit.is_empty():
-			break
-		var color := Color.from_hsv(float(match_index % 12) / 12.0, 0.8, 1.0)
-		var hit_cells: Array = hit["cells"]
-		var hit_elems: Array = hit["elements"]
-		var hit_special_tiles: Array = hit["special_tiles"]
-		for i in hit_cells.size():
-			var cell: Vector2i = hit_cells[i]
-			_outlined[cell] = color
-			_ghosts[cell] = hit_elems[i]
-		board.clear_cells(hit_cells)
-		var elems: Array[int] = []
-		for e in hit_elems:
-			elems.append(e)
+	_match_choices = SpellMatcher.find_matches(board, spells)
+	if _match_choices.is_empty():
+		_refresh_board()
+		_refresh_spells()
+		_update_deadlock()
+		return
+	_match_popup.clear()
+	for i in _match_choices.size():
+		var hit: Dictionary = _match_choices[i]
 		var spell: SpellDefinition = hit["spell"]
-		queue.append(QueuedSpell.new(spell, elems, hit_special_tiles))
-		_apply_on_queue_effects(spell)
-		_io.set_hint("Matched: %s" % spell.display_name)
-		_log_line("player", "Formed %s." % spell.display_name)
-		match_index += 1
-	_refresh_board()
-	_refresh_spells()
-	_update_deadlock()
+		var anchor: Vector2i = hit["cells"][0]
+		_match_popup.add_item("%s (%d tiles, anchor %d,%d)" % [
+			spell.display_name, spell.pattern.cells.size(), anchor.x, anchor.y], i)
+	_match_popup.popup_centered(Vector2i(520, 360))
+
+func _on_match_selected(id: int) -> void:
+	if id < 0 or id >= _match_choices.size():
+		return
+	var hit := _match_choices[id]
+	_match_choices.clear()
+	var hit_cells: Array = hit["cells"]
+	var hit_elems: Array = hit["elements"]
+	var hit_special_tiles: Array = hit["special_tiles"]
+	for i in hit_cells.size():
+		var cell: Vector2i = hit_cells[i]
+		_outlined[cell] = Color.from_hsv(float(i % 12) / 12.0, 0.8, 1.0)
+		_ghosts[cell] = hit_elems[i]
+	board.clear_cells(hit_cells)
+	var elems: Array[int] = []
+	for e in hit_elems:
+		elems.append(e)
+	var spell: SpellDefinition = hit["spell"]
+	queue.append(QueuedSpell.new(spell, elems, hit_special_tiles))
+	_apply_on_queue_effects(spell)
+	_io.set_hint("Matched: %s" % spell.display_name)
+	_log_line("player", "Formed %s." % spell.display_name)
+	_resolve_matches()
 
 func _apply_on_queue_effects(spell: SpellDefinition) -> void:
 	for fx in spell.effects:

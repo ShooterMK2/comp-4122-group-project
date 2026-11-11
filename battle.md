@@ -1,8 +1,7 @@
 # Current Battle Mechanics
 
-This is a human-readable reference for mechanics that currently function in
-the playable Godot battle prototype. It describes the implementation, not
-planned features.
+This is a reference for mechanics that currently function in
+the playable Godot battle prototype. It describes the implementation, not planned features.
 
 ## 1. Battle overview
 
@@ -16,7 +15,10 @@ planned features.
 | Defeat | Player reaches 0 HP |
 | Test encounter | Player plus three Wooden Dummies |
 | Player defaults | 100 HP, 5 ATK, 3 DEF, 4 SPD |
-| Wooden Dummy defaults | 60 HP, 1 ATK, 1 DEF, 0 SPD |
+| Test enemies | Wooden Dummy A, B, and C use separate resources |
+| Dummy A | 500 HP, 1 ATK, 2 DEF, 6 SPD; Fire variant |
+| Dummy B | 750 HP, 1 ATK, 4 DEF, 2 SPD; Ice variant |
+| Dummy C | 630 HP, 1 ATK, 6 DEF, 0.5 SPD; Lightning variant |
 | Dummy action | **Mend**: heals itself for 10 HP |
 
 ### Effective Speed
@@ -24,9 +26,11 @@ planned features.
 For each combatant:
 
 ```text
+Temporary Speed =
+    ceil(Base Speed × temporary Speed multiplier)
+
 Effective Speed =
-    Base Speed
-    × temporary Speed multiplier
+    Temporary Speed
     × max(1 - Chill stacks × 0.25, 0.50)
     × terrain Speed multiplier
 ```
@@ -88,7 +92,9 @@ Each element has 3 patterns, using 3, 5, or 8 cells:
 | Dark | Wither | Plague | Eclipse |
 
 The spell's base damage is its matched pattern size (`3`, `5`, or `8`).
-Effects are applied in addition to the base damage.
+When multiple valid matches exist, the player selects which spell and board
+position to consume from a match menu. The menu is shown again after each
+selection while another match remains.
 
 ### Cast sequence
 
@@ -107,29 +113,39 @@ alive. Casting can be cancelled only before the first step resolves.
 
 ### Spell damage formula
 
-For a damaging spell, `raw` is the spell base damage plus applicable direct
-bonus damage such as Tailwind, Shatter, Conductive, Detonate, or Smite:
+The damage model separates the spell's base damage from effect bonuses:
+
+- The spell base damage uses the full multiplicative formula.
+- Tailwind, Shatter, Conductive, Detonate, and Smite bonuses are added as
+  flat damage after the scaled base result.
+- Weakness and Broken multipliers can combine with the other direct-damage
+  modifiers. Broken affects every damage source, including direct status
+  damage. Damage is intentionally uncapped for now; a final cap may be added
+  later.
 
 ```text
-Effective Spell ATK = ceil(max(1, ATK) × 0.25)
+Effective Spell ATK = max(1, ATK) × 0.40
 
-Base =
-  ceil(raw × Effective Spell ATK
-       × ATK multiplier
-       × terrain element ATK multiplier)
-
-Base = ceil(Base × ultimate damage multiplier)
+Scaled base =
+  spell base damage × Effective Spell ATK
+  × ATK multiplier
+  × terrain element ATK multiplier
+  × ultimate damage multiplier
 
 Defence multiplier =
   100 / (100 + effective DEF × 100 / effective ATK)
 
 Final damage =
-  max(0, ceil(Base
-       × Other multiplier
-       × Defence multiplier
-       × Elemental multiplier
-       × Break multiplier
-       × random multiplier))
+  ceil(max(0,
+    (
+      Scaled base
+      × Other multiplier
+      × Defence multiplier
+      × Elemental multiplier
+      × random multiplier
+      + flat effect bonus
+    )
+    × Broken multiplier))
 ```
 
 Where:
@@ -137,7 +153,10 @@ Where:
 - `effective ATK = max(1, ATK × ATK multiplier)`.
 - `effective DEF = max(0, DEF × DEF multiplier)`, additionally multiplied by
   the terrain DEF modifier for the spell element.
-- `Break multiplier` is `1.45` while the target is Broken, otherwise `1.00`.
+- Broken multiplies every damage source by `2.45`, including direct spells,
+  basic attacks, Conductive splash, Burn, Decay, Detonate, and Corruption.
+- `Broken multiplier` is `2.45` while Broken, otherwise `1.00`. It is applied
+  after flat bonuses so all damage sources receive the same Broken increase.
 - `random multiplier` is uniformly selected from `0.90` to `1.15`.
 - The default `Other multiplier` is `1.00`. Defined tier values are Low
   `0.20`, Medium `0.45`, and High `0.90`.
@@ -145,14 +164,24 @@ Where:
 ### Basic board attack
 
 ```text
-Base = ceil(board tiles × 1 × effective ATK
-            × terrain neutral-element ATK multiplier)
-Base = ceil(Base × ultimate damage multiplier)
-Final damage = the same defence, elemental, Break, and random calculation
+Base = board tiles × 0.25 × effective ATK
+       × terrain neutral-element ATK multiplier
+       × ultimate damage multiplier
+Final damage = ceil(Base × defence × elemental × random × Broken multiplier)
 ```
 
 The basic attack uses element `NONE`, so it normally receives the default
 elemental multiplier of `1.00`.
+
+### Direct status damage
+
+```text
+Final status damage =
+  ceil(max(0, status base damage × Broken multiplier))
+```
+
+Status damage uses its configured base value and the Broken multiplier. It
+does not use spell ATK, defence, elemental, terrain, or random modifiers.
 
 ### Elemental multipliers
 
@@ -162,8 +191,10 @@ elemental multiplier of `1.00`.
 | Target strength (Countering) | 0.65× |
 | No weakness/strength match | 1.00× |
 
-Normal damage removes Shield first, then HP. Burn, Decay, and Detonate are
-direct damage and currently bypass Shield.
+If the defender has at least 1 Shield, one normal incoming attack is reduced
+by 40% and exactly 1 Shield is consumed. Shield has no maximum based on max HP
+and does not absorb the full attack. Burn, Decay, Detonate, and Corruption
+remain direct damage and bypass Shield.
 
 ## 5. Status effects
 
@@ -174,11 +205,11 @@ direct damage and currently bypass Shield.
 | **Chill** | Reduce Speed by 25% per stack, capped at 50% of base; remove 1 at end of turn |
 | **Freeze** | Every 3 Chill converts to 1 Freeze; Frozen enemy skips its action and loses 1 Freeze |
 | **Shatter** | Fire, Earth, or Wind damaging spell consumes Freeze and adds `Freeze stacks × 12` bonus damage |
-| **Fortify** | Adds the spell's configured Shield amount to the caster |
+| **Fortify** | Adds the spell's configured Shield amount with no max-HP cap |
 | **Smite** | Spend 4 Shield; if available, add `4 × 2 = 8` bonus damage |
 | **Tailwind** | Eligible next core-element spell consumes 1 stack and adds `stacks × 3` damage |
 | **Conductive** | Lightning hit consumes 1 stack and adds `stacks × 4` damage |
-| **Conductive splash** | Adjacent living enemies take `50%` of the final hit and gain 1 Conductive |
+| **Conductive splash** | Adjacent living enemies receive an independently calculated hit using `50%` of the primary raw damage, then gain 1 Conductive |
 | **Decay** | End of turn: `stacks × 2` direct damage; stacks persist |
 | **Corruption conversion** | Every 4 Decay converts to 1 Corruption |
 | **Corruption trigger** | Before an enemy acts: `stacks × 6` Dark damage; consume 1 Corruption |
@@ -190,7 +221,7 @@ direct damage and currently bypass Shield.
 |---|---|
 | Hellfire | Applies 4 Burn to the target and 2 Self Burn to the player |
 | Chain Bolt | Applies 2 Conductive and triggers Overload |
-| Three-cell Fire/Ice/Earth/Wind/Lightning/Dark spells | Apply their configured status or defensive effect |
+| Each Fire/Ice/Earth/Wind/Lightning/Dark spell | Applies its configured status, defensive, or utility effect |
 
 ## 6. Break, charge, and ultimate
 
@@ -201,7 +232,9 @@ direct damage and currently bypass Shield.
    thresholds are configured as **6–9 hits**.
 3. Breaking applies Broken for **2 turns**.
 4. A Broken enemy skips its action.
-5. A Broken target takes `1.45×` damage.
+5. A Broken target takes `2.45×` damage from every damage source, including
+   spells, basic attacks, Conductive splash, Burn, Decay, Detonate, and
+   Corruption.
 6. After the Broken period ends, the hit counter resets when the Break status
    has cleared.
 
@@ -212,9 +245,9 @@ direct damage and currently bypass Shield.
 | 3-cell matched spell | 5 |
 | 5-cell matched spell | 8 |
 | 8-cell matched spell | 15 |
-| Each special tile included in a matched spell | 6 |
+| Each special tile included in a matched spell | `6` |
 | Basic board attack | 3 |
-| Player hit on an elemental weakness | 20 |
+| Successful Break from an elemental weakness | 20 |
 | Gauge maximum | 150 |
 
 Charge is not added while an ultimate is active.
@@ -226,7 +259,7 @@ The ultimate is available at **100 or more charge**. On activation:
 ```text
 spent charge = current gauge
 ratio = clamp((spent charge - 100) / 50, 0, 1)
-damage multiplier = lerp(4.65, 6.30, ratio)
+damage multiplier = lerp(2.75, 3.50, ratio)
 ```
 
 The gauge is reset to `0`, and the multiplier applies to the player's damage
@@ -256,8 +289,8 @@ player-turn advances unless consumed by a match.
 | ATK/DEF/SPD buff | Increases the selected player stat by `60%` for 3 turns |
 | ATK/DEF/SPD debuff | Decreases the selected target stat by `60%` for 3 turns |
 
-Special tiles are consumed with the matched spell. A special tile included in
-a spell also grants **6 charge**.
+Special tiles are consumed with the matched spell. Each one grants **6**
+charge, regardless of the matched pattern's cell count.
 
 ## 9. Overload
 
@@ -322,4 +355,3 @@ resolution.
 | **Cast** | Resolve queued spells, then the board attack |
 | **Reset** | Restore the current turn; after battle, reload the encounter |
 | **Reroll hand** | Draw a replacement hand in the debug panel |
-

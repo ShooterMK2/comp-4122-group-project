@@ -103,8 +103,8 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 				else:
 					notes.append("Smite fizzled (needs %d Shield)" % fx.amount)
 
-	var final := DamageCalculator.finalize(d.base_damage + bonus, caster, target, elem,
-		d.other_multiplier, state.terrain)
+	var final := DamageCalculator.finalize(d.base_damage, caster, target, elem,
+		d.other_multiplier, state.terrain, bonus)
 	var dealt := 0
 	if final > 0:
 		var res := target.take_damage(final)
@@ -113,7 +113,10 @@ static func cast(d: SpellDefinition, caster: CombatantState, chosen: CombatantSt
 
 	if conductive_hit:
 		for adj in state.adjacent_to(target):
-			var splash := roundi(final * BattleConfig.CONDUCTIVE_SPLASH_RATIO)
+			var splash_raw := d.base_damage * BattleConfig.CONDUCTIVE_SPLASH_RATIO
+			var splash_bonus := bonus * BattleConfig.CONDUCTIVE_SPLASH_RATIO
+			var splash := DamageCalculator.finalize(splash_raw, caster, adj,
+				E.LIGHTNING, d.other_multiplier, state.terrain, splash_bonus)
 			var r2 := adj.take_damage(splash)
 			if splash > 0:
 				_register_weakness_hit(adj, E.LIGHTNING, notes, caster, state)
