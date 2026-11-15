@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://ci4eembihci1s"
+path="res://.godot/imported/Quadlet.fnt-96cdf693230ed274186e86cd17295fd5.fontdata"
+
+[deps]
+
+source_file="res://assets/fonts/Quadlet/Quadlet.fnt"
+dest_files=["res://.godot/imported/Quadlet.fnt-96cdf693230ed274186e86cd17295fd5.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

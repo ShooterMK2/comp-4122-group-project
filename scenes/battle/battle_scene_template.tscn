@@ -6,6 +6,9 @@
 [ext_resource type="PackedScene" uid="uid://by8raoqxf0a4" path="res://scenes/battle/ui/log_console.tscn" id="3_log"]
 [ext_resource type="PackedScene" uid="uid://bktse2uli5q2k" path="res://scenes/battle/ui/battlefield.tscn" id="4_bf"]
 [ext_resource type="PackedScene" uid="uid://boeyhivkukinj" path="res://scenes/battle/ui/battle_io.tscn" id="5_io"]
+[ext_resource type="PackedScene" path="res://scenes/battle/ui/deadlock_overlay.tscn" id="5_unwm5"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_ghomo"]
 
 [node name="Battle_Scene_Template" type="Control" unique_id=1804430392]
 layout_mode = 3
@@ -51,6 +54,7 @@ layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="TopBar" type="HBoxContainer" parent="Margin/Main" unique_id=244220191]
+material = SubResource("CanvasItemMaterial_ghomo")
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 theme_override_constants/separation = 12
@@ -86,6 +90,19 @@ layout_mode = 2
 [node name="BattleIO" parent="Margin/Main" unique_id=893007832 instance=ExtResource("5_io")]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="DeadlockOverlay" parent="." unique_id=1669383627 instance=ExtResource("5_unwm5")]
+unique_name_in_owner = true
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 470.0
+offset_top = 300.0
+offset_right = 470.0
+offset_bottom = 300.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="ResultOverlay" parent="." unique_id=1094423970 instance=ExtResource("2_res")]
 unique_name_in_owner = true

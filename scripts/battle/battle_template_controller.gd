@@ -13,12 +13,8 @@ var selected := -1                          # selected hand index, -1 = none
 
 var _outlined: Dictionary = {}
 var _ghosts: Dictionary = {}
-var _snapshot_hand: Array[FragmentData] = []
-var _snapshot_board: Dictionary = {}
-var _snapshot_charge_gauge := 0.0
-var _snapshot_ultimate_active := false
-var _snapshot_damage_multiplier := 1.0
-var _placed_this_turn := 0                  # used to detect a deadlock (nothing placed yet this turn)
+var _placed_this_turn := 0
+var _deadlock_open := false                 # true while the Backlash / Fizzle choice is on screen
 
 var _casting := false                       # true during the Casting Period
 var _selected_spell: SpellDefinition = null
@@ -26,8 +22,6 @@ var _inspect_player := false
 var _awaiting_enemy := -1
 var _cast_spell_total := 0
 var _cast_basic_total := 0
-var _match_popup: PopupMenu
-var _match_choices: Array[Dictionary] = []
 
 @onready var _battlefield: BattlefieldPanel = %Battlefield
 @onready var _io: BattleIO = %BattleIO
@@ -37,6 +31,7 @@ var _match_choices: Array[Dictionary] = []
 @onready var _result: ResultOverlay = %ResultOverlay
 @onready var _console: LogConsole = %LogConsole
 @onready var _prompt: PanelContainer = %TargetPrompt
+@onready var _deadlock: _DeadlockOverlay = %DeadlockOverlay
 
 func _ready() -> void:
 	randomize()
@@ -46,15 +41,14 @@ func _ready() -> void:
 		state.terrain.display_name, state.terrain.description().replace("\n", "  ")]
 	_battlefield.setup(state)
 	_io.board_view.bind(board, _fragment_at)
-	_match_popup = PopupMenu.new()
-	add_child(_match_popup)
-	_match_popup.id_pressed.connect(_on_match_selected)
 	_connect_signals()
 	_advance()
 
 func _connect_signals() -> void:
 	_io.cast_pressed.connect(_on_cast)
 	_io.end_turn_pressed.connect(_on_end_turn)
+	_deadlock.backlash_chosen.connect(_on_backlash)
+	_deadlock.fizzle_chosen.connect(_on_fizzle)
 	_io.spell_zone.card_clicked.connect(_on_card_clicked)
 	_io.board_view.cell_clicked.connect(_on_cell_clicked)
 	_io.board_view.fragment_dropped.connect(_try_place)
@@ -162,11 +156,6 @@ func _start_turn() -> void:
 		_log_line("system", "Overload: you draw %d fewer fragment(s) this turn." % state.overload_debt)
 	state.overload_debt = 0
 	hand = FragmentGenerator.draw(n)
-	_snapshot_hand = _copy_hand(hand)
-	_snapshot_board = board.snapshot()
-	_snapshot_charge_gauge = state.charge_gauge
-	_snapshot_ultimate_active = state.ultimate_active
-	_snapshot_damage_multiplier = state.player.damage_output_multiplier
 	_placed_this_turn = 0
 	selected = -1
 	_outlined.clear()
@@ -251,7 +240,7 @@ func _on_cell_clicked(anchor: Vector2i) -> void:
 	_try_place(selected, anchor)
 
 func _try_place(index: int, anchor: Vector2i) -> void:
-	if state.over or _casting or _awaiting_enemy >= 0 or index < 0 or index >= hand.size():
+	if state.over or _casting or _deadlock_open or _awaiting_enemy >= 0 or index < 0 or index >= hand.size():
 		return
 	var frag := hand[index]
 	if not board.place(frag, anchor):
@@ -309,29 +298,6 @@ func _commit_match(hit: Dictionary, match_index: int) -> void:
 	_io.set_hint("Matched: %s" % spell.display_name)
 	_log_line("player", "Formed %s." % spell.display_name)
 
-func _on_match_selected(id: int) -> void:
-	if id < 0 or id >= _match_choices.size():
-		return
-	var hit := _match_choices[id]
-	_match_choices.clear()
-	var hit_cells: Array = hit["cells"]
-	var hit_elems: Array = hit["elements"]
-	var hit_special_tiles: Array = hit["special_tiles"]
-	for i in hit_cells.size():
-		var cell: Vector2i = hit_cells[i]
-		_outlined[cell] = Color.from_hsv(float(i % 12) / 12.0, 0.8, 1.0)
-		_ghosts[cell] = hit_elems[i]
-	board.clear_cells(hit_cells)
-	var elems: Array[int] = []
-	for e in hit_elems:
-		elems.append(e)
-	var spell: SpellDefinition = hit["spell"]
-	queue.append(QueuedSpell.new(spell, elems, hit_special_tiles))
-	_apply_on_queue_effects(spell)
-	_io.set_hint("Matched: %s" % spell.display_name)
-	_log_line("player", "Formed %s." % spell.display_name)
-	_resolve_matches()
-
 func _apply_on_queue_effects(spell: SpellDefinition) -> void:
 	for fx in spell.effects:
 		if fx.kind == SpellEffect.Kind.OVERLOAD:
@@ -342,35 +308,35 @@ func _apply_on_queue_effects(spell: SpellDefinition) -> void:
 				fx.amount, fx.amount2])
 
 func _update_deadlock() -> void:
-	var stuck := not state.over and not _casting and _placed_this_turn == 0 \
-			and queue.is_empty() and DeadlockDetector.is_deadlocked(board, hand)
-	if stuck:
-		_io.set_hint("DEADLOCK: no fragment fits the board. (The Backlash / Fizzle overlay is not built yet.)")
-		_log_line("system", "Deadlock! No fragment fits the board.")
+	if state.over or _casting or _deadlock_open:
+		return
+	if not DeadlockDetector.is_deadlocked(board, hand):
+		return
+	_deadlock_open = true
+	var check := DeadlockResolver.check_backlash(state)
+	_log_line("system", "Deadlock! No fragment fits the board.")
+	_deadlock.show_choice(check["cost"], check["ok"], state.player.hp)
 
-func _on_reset() -> void:
-	if state.over:
-		get_tree().reload_current_scene()
+func _on_backlash() -> void:
+	var lines: Array[String] = []
+	if not DeadlockResolver.backlash(state, board, lines):
+		_log_lines(lines)                       # refused: not enough HP
 		return
-	if _casting or _awaiting_enemy >= 0:
-		return
-	board.restore(_snapshot_board)
-	queue.clear()
+	_close_deadlock()
+	_finish_turn(lines)                         # logs the lines and ends the turn
+
+func _on_fizzle() -> void:
+	var lines: Array[String] = []
+	DeadlockResolver.fizzle(board, lines)
+	_close_deadlock()
+	_finish_turn(lines)
+
+func _close_deadlock() -> void:
+	_deadlock.close()
+	_deadlock_open = false
 	_outlined.clear()
 	_ghosts.clear()
-	hand = _copy_hand(_snapshot_hand)
-	selected = -1
-	_placed_this_turn = 0
-	state.overload_debt = 0
-	state.charge_gauge = _snapshot_charge_gauge
-	state.ultimate_active = _snapshot_ultimate_active
-	state.player.set_damage_output_multiplier(_snapshot_damage_multiplier)
-	state.player.clear_stat_tiles()
-	for enemy in state.enemies:
-		enemy.clear_stat_tiles()
-	_io.set_hint("Turn reset.")
 	_refresh_all()
-	_update_deadlock()
 
 func _debug_grant_spells() -> void:
 	if _casting or state.over:
@@ -382,7 +348,7 @@ func _debug_grant_spells() -> void:
 
 # ---------- casting period ----------
 func _on_cast() -> void:                    # one-way: no way back to chanting this turn
-	if state.over or _casting or _awaiting_enemy >= 0:
+	if state.over or _casting or _deadlock_open or _awaiting_enemy >= 0:
 		return
 	_cast_spell_total = 0
 	_cast_basic_total = 0
