@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://cjohkwt37k7cw"]
+
+[node name="MapNode" type="Control" unique_id=562395490]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="NodePanel" type="Panel" parent="." unique_id=1514336058]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 3.0
+offset_top = 2.0
+offset_right = 103.0
+offset_bottom = 102.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="NodeNameLabel" type="Label" parent="NodePanel" unique_id=1210646344]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -21.0
+offset_top = -11.5
+offset_right = 21.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Node"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NodeIcon" type="TextureRect" parent="NodePanel" unique_id=202414373]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
