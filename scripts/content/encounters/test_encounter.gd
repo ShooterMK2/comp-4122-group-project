@@ -2,7 +2,8 @@ class_name TestEncounter
 extends RefCounted
 
 static func enemies() -> Array[EnemyDefinition]:
-	var out: Array[EnemyDefinition] = []
-	for i in 3:
-		out.append(EnemyDefinition.wooden_dummy_variant(i))
-	return out
+	return [
+		EnemyDefinition.ash_hound(),
+		EnemyDefinition.wooden_dummy_variant(0),
+		EnemyDefinition.wooden_dummy_variant(1),
+	]

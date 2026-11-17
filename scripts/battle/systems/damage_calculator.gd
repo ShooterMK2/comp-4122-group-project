@@ -26,8 +26,10 @@ static func _apply_multipliers(base: float, attacker: CombatantState,
 	var broken_multiplier := 1.0
 	if defender != null and defender.is_broken():
 		broken_multiplier += BattleConfig.BREAK_DAMAGE_BONUS
+	var weaken_multiplier := attacker.outgoing_ailment_multiplier()
 	return maxi(0, ceili((base * other_multiplier * defence_multiplier
-		* elemental_multiplier * random_multiplier + flat_bonus) * broken_multiplier))
+		* elemental_multiplier * random_multiplier * weaken_multiplier
+		+ flat_bonus) * broken_multiplier))
 
 static func basic_attack(tile_count: int, attacker: CombatantState,
 		defender: CombatantState = null, terrain: TerrainDefinition = null) -> int:

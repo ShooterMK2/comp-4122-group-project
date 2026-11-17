@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/battle/data/enemy_definition.gd" id="1_enemy"]
+[ext_resource type="Resource" path="res://resources/skills/enemies/mend.tres" id="2_mend"]
 
 [resource]
 script = ExtResource("1_enemy")
@@ -14,3 +15,5 @@ elemental_weaknesses = [6]
 elemental_strengths = [7]
 art_name = "enemy_wooden_dummy.png"
 placeholder_color = Color(0.55, 0.4, 0.25, 1)
+rank = 0
+skills = [ExtResource("2_mend")]

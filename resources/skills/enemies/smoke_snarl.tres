@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/data/skill_definition.gd" id="1_skill"]
+[ext_resource type="Script" path="res://scripts/battle/data/skill_effect.gd" id="2_fx"]
+
+[sub_resource type="Resource" id="SkillEffect_def_debuff"]
+script = ExtResource("2_fx")
+kind = 1
+amount = 1
+amount2 = 3
+
+[resource]
+script = ExtResource("1_skill")
+id = &"smoke_snarl"
+display_name = "Smoke Snarl"
+kind = 2
+target_kind = 0
+attack_tier = 1
+heal_amount = 0
+effects = [SubResource("SkillEffect_def_debuff")]

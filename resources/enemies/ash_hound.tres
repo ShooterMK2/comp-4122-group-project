@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/data/enemy_definition.gd" id="1_enemy"]
+[ext_resource type="Resource" path="res://resources/skills/enemies/cinder_bite.tres" id="2_cinder"]
+[ext_resource type="Resource" path="res://resources/skills/enemies/smoke_snarl.tres" id="3_snarl"]
+[ext_resource type="Resource" path="res://resources/skills/enemies/ember_fever.tres" id="4_fever"]
+[ext_resource type="Resource" path="res://resources/skills/enemies/lick_wounds.tres" id="5_lick"]
+
+[resource]
+script = ExtResource("1_enemy")
+display_name = "Ash Hound"
+max_hp = 100
+level = 2
+attack = 5
+defence = 2
+speed = 4.0
+elemental_weaknesses = [3]
+elemental_strengths = [2]
+art_name = "enemy_wooden_dummy.png"
+placeholder_color = Color(0.75, 0.35, 0.2, 1)
+rank = 0
+skills = [ExtResource("2_cinder"), ExtResource("3_snarl"), ExtResource("4_fever"), ExtResource("5_lick")]

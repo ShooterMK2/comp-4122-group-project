@@ -14,15 +14,15 @@
 
 - [x] Build the battle state machine: player turn, enemy turn, resolve, end — Jimmy
 - [x] Build the casting board and grid data structure — Jimmy
-- [ ] Implement the element system and weakness table ()
-- [ ] Implement damage multiplier modification ()
+- [x] Implement the element system and weakness table ()
+- [x] Implement damage multiplier modification ()
 - [ ] Implement board buffs to elements (damage +/−)
-- [ ] Implement special grids on the board ()
+- [x] Implement special grids on the board ()
 - [x] Implement turn order based on the Speed stat — Jimmy
 - [ ] Implement the turn timer and its timeout behaviour ()
-- [ ] Build the status effect framework: duration, stacking, removal ()
+- [x] Build the status effect framework: duration, stacking, removal ()
 - [x] Implement knock-down status: weakness trigger, enemy disabled for x turns, ×1.5 damage (to be tuned) () - Lok
-- [] Add win/lose conditions and a result screen ()
+- [x] Add win/lose conditions and a result screen ()
 
 ## 3. Spells and Fragments
 
@@ -41,16 +41,16 @@
 
 ## 5. Enemy and Boss AI
 
-- [ ] Build the enemy base class and stats ()
-- [ ] Implement minion AI with fixed damage ()
-- [ ] Add minion effects **[?]**
+- [x] Build the enemy base class and stats ()
+- [x] Implement minion AI with fixed damage ()
+- [x] Add minion effects **[?]**
 - [ ] Implement elite AI: multiple spells, one per attack, forming a combo ()
 - [x] Show enemy intent (telegraphing) — Jimmy
 - [ ] Implement boss AI built on the elite framework with higher damage ()
 - [ ] Add boss ultimate spells on the set interval ()
 - [ ] Add the boss ability to ban grids on the board ()
 - [ ] Add boss terrain-change status **[?]**
-- [ ] Add more enemies ()
+- [x] Add more enemies ()
 
 ## 6. Equipment, Inventory and Economy
 

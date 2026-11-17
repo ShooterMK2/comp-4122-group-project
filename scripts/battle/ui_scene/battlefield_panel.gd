@@ -57,5 +57,7 @@ func refresh(state: BattleState) -> void:
 		else:
 			var info := EnemyIntentSystem.get_intent(state.enemy_defs[i], state.turn)
 			intent = str(info["name"])
+			if str(info.get("kind", "")) != "":
+				intent = "%s [%s]" % [intent, info["kind"]]
 		var panel: CombatantPanel = _panels[i]
 		panel.refresh(e, intent, i == state.target_index)

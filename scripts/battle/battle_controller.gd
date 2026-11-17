@@ -204,14 +204,14 @@ func _run_enemy_actor(actor: int) -> bool:
 func _enemy_will_cast(i: int) -> bool:
 	return not state.enemies[i].is_broken() \
 		and state.enemies[i].get_status(StatusTypes.Status.FREEZE) <= 0 \
-			and EnemyIntentSystem.pick_spell(state.enemy_defs[i], state.turn) != null
+		and EnemyIntentSystem.pick_skill(state.enemy_defs[i], state.turn) != null
 
 func _show_enemy_prompt(i: int) -> void:
-	var spell := EnemyIntentSystem.pick_spell(state.enemy_defs[i], state.turn)
+	var skill := EnemyIntentSystem.pick_skill(state.enemy_defs[i], state.turn)
 	var caster := state.enemies[i]
-	var hit := caster if spell.target_kind == SpellDefinition.TargetKind.SELF else state.player
+	var hit := caster if skill.target_kind == SkillDefinition.TargetKind.SELF else state.player
 	_target_prompt.show_step({
-		"title": "%s casts %s" % [caster.display_name, spell.display_name],
+		"title": "%s uses %s" % [caster.display_name, skill.display_name],
 		"target_label": "Hits",
 		"target_name": hit.display_name,
 		"confirm_text": "Continue",
@@ -227,6 +227,11 @@ func _start_turn() -> void:
 		enemy.advance_stat_tile_turn()
 	state.ensure_valid_target()
 	_log.add_line("--- Your turn (round %d) ---" % state.turn)
+	if SkillResolver.should_shock_skip(state.player):
+		_log.add_line("You are Shocked and fail to act.")
+		var shock_lines: Array[String] = []
+		_finish_turn(shock_lines)
+		return
 	var special_tiles := board.spawn_special_tiles()
 	if not special_tiles.is_empty():
 		var labels: Array[String] = []

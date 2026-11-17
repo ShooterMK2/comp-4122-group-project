@@ -16,6 +16,9 @@ static func describe(c: CombatantState) -> String:
 			parts.append("Buff %s (%d)" % [_stat_name(stat), c.stat_buff_turns[stat]])
 		if c.stat_debuff_turns[stat] > 0:
 			parts.append("Debuff %s (%d)" % [_stat_name(stat), c.stat_debuff_turns[stat]])
+	var ailment_text := AilmentSystem.describe(c)
+	if not ailment_text.is_empty():
+		parts.append(ailment_text)
 	return ", ".join(parts) if not parts.is_empty() else "-"
 
 static func _stat_name(stat: int) -> String:
@@ -28,6 +31,7 @@ static func deal_direct(target: CombatantState, amount: int) -> int:
 	var adjusted_amount := amount
 	if target.is_broken():
 		adjusted_amount = ceili(amount * (1.0 + BattleConfig.BREAK_DAMAGE_BONUS))
+	adjusted_amount = ceili(adjusted_amount * target.incoming_ailment_multiplier())
 	if BattleConfig.DOT_IGNORES_SHIELD:
 		var lost := mini(target.hp, adjusted_amount)
 		target.hp -= lost

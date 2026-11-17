@@ -58,6 +58,8 @@ func refresh(state: BattleState, tile_count: int = 0,
 		else:
 			var info := EnemyIntentSystem.get_intent(state.enemy_defs[i], state.turn)
 			intent = str(info["name"])
+			if str(info.get("kind", "")) != "":
+				intent = "%s [%s]" % [intent, info["kind"]]
 		_enemy_views[i].refresh(e, intent, i == state.target_index)
 		_damage_previews[i].show_preview(
 			_build_damage_actions(state, i, tile_count, queue))
