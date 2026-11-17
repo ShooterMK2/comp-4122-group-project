@@ -30,17 +30,10 @@ window/stretch/aspect="expand"
 
 project/assembly_name="COMP4122_GroupProject"
 
-<<<<<<< HEAD
-=======
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
-
 [gui]
 
 theme/custom_font="uid://ddn1lswv0ikau"
 
->>>>>>> 539148725a132c27f5a73bf26fab423b7e3a3862
 [physics]
 
 3d/physics_engine="Jolt Physics"
