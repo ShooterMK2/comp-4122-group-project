@@ -19,10 +19,9 @@
 - [ ] Implement board buffs to elements (damage +/−)
 - [x] Implement special grids on the board ()
 - [x] Implement turn order based on the Speed stat — Jimmy
-- [ ] Implement the turn timer and its timeout behaviour ()
 - [x] Build the status effect framework: duration, stacking, removal ()
 - [x] Implement knock-down status: weakness trigger, enemy disabled for x turns, ×1.5 damage (to be tuned) () - Lok
-- [x] Add win/lose conditions and a result screen ()
+- [ ] Add win/lose conditions and a result screen ()
 
 ## 3. Spells and Fragments
 
