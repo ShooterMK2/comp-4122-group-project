@@ -11,13 +11,14 @@ config_version=5
 [application]
 
 config/name="COMP4122_GroupProject"
-run/main_scene="res://scenes/battle/battle_scene.tscn"
+run/main_scene="res://scenes/exploration/exploration_scene.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
 MCPRuntime="*uid://vm45gif4yrcf"
+RunState="*res://scripts/run/run_state.gd"
 
 [display]
 

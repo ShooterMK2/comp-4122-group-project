@@ -22,6 +22,7 @@ var _inspect_player := false
 var _awaiting_enemy := -1
 var _cast_spell_total := 0
 var _cast_basic_total := 0
+var _deck_draw: FragmentDeckDraw
 
 @onready var _battlefield: BattlefieldPanel = %Battlefield
 @onready var _io: BattleIO = %BattleIO
@@ -31,12 +32,15 @@ var _cast_basic_total := 0
 @onready var _result: ResultOverlay = %ResultOverlay
 @onready var _console: LogConsole = %LogConsole
 @onready var _prompt: PanelContainer = %TargetPrompt
-@onready var _deadlock: CanvasLayer  = %DeadlockOverlay
+@onready var _deadlock: Control = %DeadlockOverlay
 
 
 func _ready() -> void:
 	randomize()
-	spells = DemoSpellLibrary.build()
+	if RunState.fragment_deck_count() <= 0:
+		RunState.autofill_fragment_deck()
+	spells = RunState.spell_deck()
+	_deck_draw = RunState.create_battle_draw()
 	state = BattleState.new(TestEncounter.enemies(), TerrainSystem.random_terrain())
 	_terrain_label.text = "TERRAIN: %s  |  %s" % [
 		state.terrain.display_name, state.terrain.description().replace("\n", "  ")]
@@ -59,10 +63,19 @@ func _connect_signals() -> void:
 	_battlefield.player_clicked.connect(_on_player_clicked)
 	_battlefield.ultimate_pressed.connect(_on_ultimate_pressed)
 	_battlefield.spell_dropped_on.connect(_on_spell_dropped)
-	_result.restart_pressed.connect(func(): get_tree().reload_current_scene())
+	_result.restart_pressed.connect(_on_return_to_map)
 	%PromptConfirm.pressed.connect(_on_prompt_confirmed)
 	%BacklashButton.pressed.connect(_on_backlash)
 	%FizzleButton.pressed.connect(_on_fizzle)
+
+func _on_return_to_map() -> void:
+	_sync_run_after_battle()
+	get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
+
+func _sync_run_after_battle() -> void:
+	if state != null and state.player != null:
+		RunState.set_run_hp(state.player.hp)
+	RunState.clear_pending_after_battle()
 	
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -162,7 +175,8 @@ func _start_turn() -> void:
 	if state.overload_debt > 0:
 		_log_line("system", "Overload: you draw %d fewer fragment(s) this turn." % state.overload_debt)
 	state.overload_debt = 0
-	hand = FragmentGenerator.draw(n)
+	_discard_hand()
+	hand = _deck_draw.draw(n)
 	_placed_this_turn = 0
 	selected = -1
 	_outlined.clear()
@@ -201,6 +215,7 @@ func _finish(won: bool) -> void:
 	_awaiting_enemy = -1
 	_prompt.visible = false
 	_battlefield.set_drop_enabled(false)
+	_sync_run_after_battle()
 	_log_line("system", "VICTORY! All enemies are down." if won else "DEFEAT... you ran out of HP.")
 	_result.show_result(won,
 		"All enemies are down." if won else "You ran out of HP.",
@@ -254,6 +269,7 @@ func _try_place(index: int, anchor: Vector2i) -> void:
 		_io.set_hint("Can't place there.")
 		return
 	hand.remove_at(index)
+	_deck_draw.discard(frag)
 	selected = -1
 	_placed_this_turn += frag.cells.size()
 	_outlined.clear()
@@ -308,11 +324,17 @@ func _commit_match(hit: Dictionary, match_index: int) -> void:
 func _apply_on_queue_effects(spell: SpellDefinition) -> void:
 	for fx in spell.effects:
 		if fx.kind == SpellEffect.Kind.OVERLOAD:
-			for i in fx.amount:
-				hand.append(FragmentGenerator.random_fragment())
+			var drawn := _deck_draw.draw(fx.amount)
+			for f in drawn:
+				hand.append(f)
 			state.overload_debt += fx.amount2
 			_log_line("system", "Overload! Drew %d extra fragment(s); next turn -%d." % [
-				fx.amount, fx.amount2])
+				drawn.size(), fx.amount2])
+
+func _discard_hand() -> void:
+	_deck_draw.discard_many(hand)
+	hand.clear()
+	selected = -1
 
 func _update_deadlock() -> void:
 	var stuck := not state.over and not _casting and _placed_this_turn == 0 \

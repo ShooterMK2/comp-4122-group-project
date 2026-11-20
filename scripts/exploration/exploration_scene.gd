@@ -14,15 +14,43 @@ func _ready() -> void:
 		if child.name.begins_with("MapNode"):
 			map_nodes.append(child)
 	gen_node_types()
+	_ensure_hud()
+
+func _ensure_hud() -> void:
+	if has_node("RunHud"):
+		return
+	var hud := HBoxContainer.new()
+	hud.name = "RunHud"
+	hud.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	hud.offset_left = 12
+	hud.offset_top = 8
+	hud.offset_right = -12
+	hud.offset_bottom = 48
+	add_child(hud)
+	var gold := Label.new()
+	gold.name = "GoldLabel"
+	gold.text = "$%d" % RunState.gold
+	hud.add_child(gold)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hud.add_child(spacer)
+	var inv := Button.new()
+	inv.text = "Inventory"
+	inv.pressed.connect(func():
+		get_tree().change_scene_to_file("res://scenes/run/inventory_screen.tscn"))
+	hud.add_child(inv)
+	RunState.changed.connect(func():
+		if is_instance_valid(gold):
+			gold.text = "$%d" % RunState.gold)
 
 func gen_node_types() -> void:
 	var type_keys = NODE_TYPES.keys()
 	var total_nodes = map_nodes.size()
-	
+
 	for i in range(total_nodes):
 		var current_node = map_nodes[i]
 		var random_type = ""
-		
+
 		# First and Last Nodes are Battle Node
 		if i == total_nodes - 1 or i == 0:
 			random_type = "BATTLE"
@@ -34,12 +62,12 @@ func gen_node_types() -> void:
 		var icon_rect = current_node.get_node("NodePanel/NodeIcon")
 		var panel = current_node.get_node("NodePanel")
 		var label = current_node.get_node("NodePanel/NodeNameLabel")
-		
+
 		var icon_path = NODE_TYPES[random_type]["icon"]
 		if ResourceLoader.exists(icon_path):
 			icon_rect.texture = load(icon_path)
 		label.text = NODE_TYPES[random_type]["name"]
-		
+
 		if not panel.gui_input.is_connected(_on_node_clicked):
 			panel.gui_input.connect(_on_node_clicked.bind(current_node))
 
@@ -48,7 +76,9 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 		var type = node.get_meta("node_type")
 
 		if type == "BATTLE":
-			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn") 
+			if RunState.fragment_deck_count() <= 0:
+				RunState.autofill_fragment_deck()
+			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")
 		else:
 			# Testing
 			var dialog = AcceptDialog.new()
