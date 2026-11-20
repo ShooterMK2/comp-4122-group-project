@@ -2,6 +2,7 @@ extends Node
 # Autoload: persists gold, inventory, decks, and pre-battle modifiers for a run.
 
 signal changed
+signal level_up_pending_changed
 
 var gold: int = 0
 var loadout := EquipmentLoadout.new()
@@ -15,9 +16,26 @@ var _spell_deck: Array[StringName] = []  # battle loadout (subset of owned)
 var _fragments: Dictionary = {}  # StringName -> FragmentDefinition (bag)
 var _fragment_acquired: Dictionary = {}  # StringName -> int
 var _fragment_deck: Array[StringName] = []  # ordered deck ids (max RunConfig.FRAGMENT_DECK_SIZE)
+var _ultimates: Dictionary = {}  # StringName -> UltimateDefinition
+var _ultimate_acquired: Dictionary = {}  # StringName -> int
+var equipped_ultimate_id: StringName = &""
 var run_hp: int = 100
 var _base_player: PlayerDefinition
 var _acquire_seq: int = 0
+
+# ---------- leveling (run-scoped) ----------
+var player_level: int = RunConfig.PLAYER_LEVEL_MIN
+var player_xp: int = 0
+var level_bonus_max_hp: int = 0
+var level_bonus_attack: int = 0
+var level_bonus_defence: int = 0
+var level_bonus_speed: float = 0.0
+var zone_id: int = 1
+var zone_exit_claimed: bool = false
+## early | mid | late — set by exploration before entering battle
+var pending_encounter_band: StringName = &"mid"
+## Queue of {level, stat_label, stat_text, offers: Array[LevelUpOffer]}
+var _pending_level_ups: Array[Dictionary] = []
 
 func _ready() -> void:
 	reset_run()
@@ -34,11 +52,25 @@ func reset_run() -> void:
 	_fragments.clear()
 	_fragment_acquired.clear()
 	_fragment_deck.clear()
+	_ultimates.clear()
+	_ultimate_acquired.clear()
+	equipped_ultimate_id = &""
 	_acquire_seq = 0
+	player_level = RunConfig.PLAYER_LEVEL_MIN
+	player_xp = 0
+	level_bonus_max_hp = 0
+	level_bonus_attack = 0
+	level_bonus_defence = 0
+	level_bonus_speed = 0.0
+	zone_id = 1
+	zone_exit_claimed = false
+	pending_encounter_band = &"mid"
+	_pending_level_ups.clear()
 	_base_player = PlayerDefinition.default_player()
 	_seed_starter()
 	_sync_run_hp_to_max()
 	changed.emit()
+	level_up_pending_changed.emit()
 
 func _next_acquire_seq() -> int:
 	_acquire_seq += 1
@@ -61,6 +93,10 @@ func _seed_starter() -> void:
 	_add_entry(&"warding_charm", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.warding_charm())
 	_add_entry(&"sealed_letter", ItemCategory.Kind.IMPORTANT, 1, StarterContent.sealed_letter())
 	_add_entry(&"blessed_sigil", ItemCategory.Kind.IMPORTANT, 1, StarterContent.blessed_sigil())
+	for ult in UltimateLibrary.all():
+		_ultimates[ult.id] = ult
+		_ultimate_acquired[ult.id] = _next_acquire_seq()
+	equipped_ultimate_id = UltimateLibrary.damage_burst().id
 
 func _add_entry(id: StringName, category: int, qty: int, ref: Resource) -> void:
 	var seq := _next_acquire_seq()
@@ -78,10 +114,155 @@ func run_max_hp() -> int:
 	return snapshot().max_hp()
 
 func snapshot() -> PlayerStatSnapshot:
-	return StatCalculator.build_snapshot(_base_player, loadout, pending)
+	return StatCalculator.build_snapshot(_base_player, loadout, pending, level_bonuses(), player_level)
+
+func level_bonuses() -> Dictionary:
+	return {
+		"max_hp": level_bonus_max_hp,
+		"attack": level_bonus_attack,
+		"defence": level_bonus_defence,
+		"speed": level_bonus_speed,
+	}
+
+func xp_to_next() -> int:
+	if player_level >= RunConfig.PLAYER_LEVEL_MAX:
+		return 0
+	return LevelProgression.xp_to_next(player_level)
 
 func base_player() -> PlayerDefinition:
 	return _base_player
+
+# ---------- XP / level-up ----------
+func add_xp(amount: int) -> int:
+	if amount <= 0 or player_level >= RunConfig.PLAYER_LEVEL_MAX:
+		return 0
+	player_xp += amount
+	var levels_gained := 0
+	while player_level < RunConfig.PLAYER_LEVEL_MAX:
+		var need := LevelProgression.xp_to_next(player_level)
+		if player_xp < need:
+			break
+		player_xp -= need
+		player_level += 1
+		levels_gained += 1
+		_queue_level_up(player_level)
+	if player_level >= RunConfig.PLAYER_LEVEL_MAX:
+		player_xp = 0
+	if levels_gained > 0:
+		_clamp_run_hp()
+		level_up_pending_changed.emit()
+	changed.emit()
+	return levels_gained
+
+func grant_battle_xp(enemy_defs: Array) -> int:
+	return add_xp(LevelProgression.battle_xp_for_enemies(enemy_defs))
+
+func grant_milestone_xp(amount: int = RunConfig.MILESTONE_NODE_XP) -> int:
+	return add_xp(amount)
+
+func claim_zone_exit_xp() -> int:
+	if zone_exit_claimed:
+		return 0
+	zone_exit_claimed = true
+	return grant_milestone_xp(RunConfig.MILESTONE_ZONE_EXIT_XP)
+
+func has_pending_level_ups() -> bool:
+	return not _pending_level_ups.is_empty()
+
+func peek_pending_level_up() -> Dictionary:
+	if _pending_level_ups.is_empty():
+		return {}
+	return _pending_level_ups[0]
+
+func _queue_level_up(new_level: int) -> void:
+	var stat := LevelProgression.pick_guaranteed_stat(new_level)
+	_apply_guaranteed_stat(stat)
+	var offers := LevelProgression.roll_non_stat_offers(self, 3)
+	var stat_text := "+%d %s" % [stat["amount_i"], stat["label"]]
+	if int(stat["kind"]) == LevelProgression.StatKind.SPEED:
+		stat_text = "+%.2f %s" % [float(stat["amount_f"]), stat["label"]]
+	_pending_level_ups.append({
+		"level": new_level,
+		"stat_label": str(stat["label"]),
+		"stat_text": stat_text,
+		"offers": offers,
+	})
+
+func _apply_guaranteed_stat(stat: Dictionary) -> void:
+	match int(stat["kind"]):
+		LevelProgression.StatKind.MAX_HP:
+			level_bonus_max_hp += int(stat["amount_i"])
+		LevelProgression.StatKind.ATTACK:
+			level_bonus_attack += int(stat["amount_i"])
+		LevelProgression.StatKind.DEFENCE:
+			level_bonus_defence += int(stat["amount_i"])
+		LevelProgression.StatKind.SPEED:
+			level_bonus_speed += float(stat["amount_f"])
+
+func choose_level_up_offer(offer_index: int) -> String:
+	if _pending_level_ups.is_empty():
+		return "No pending level-up."
+	var entry: Dictionary = _pending_level_ups[0]
+	var offers: Array = entry.get("offers", [])
+	if offer_index < 0 or offer_index >= offers.size():
+		return "Invalid offer."
+	var offer: LevelUpOffer = offers[offer_index]
+	var err := _apply_level_up_offer(offer)
+	if err != "":
+		return err
+	_pending_level_ups.remove_at(0)
+	_clamp_run_hp()
+	changed.emit()
+	level_up_pending_changed.emit()
+	return ""
+
+func _apply_level_up_offer(offer: LevelUpOffer) -> String:
+	match offer.kind:
+		LevelUpOffer.Kind.GOLD:
+			add_gold(offer.amount)
+		LevelUpOffer.Kind.HEAL:
+			heal_run_hp(offer.amount)
+		LevelUpOffer.Kind.CONSUMABLE:
+			if offer.item_id == &"minor_tonic":
+				_add_entry(&"minor_tonic", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.minor_tonic())
+			elif offer.item_id == &"warding_charm":
+				_add_entry(&"warding_charm", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.warding_charm())
+			else:
+				return "Unknown consumable."
+		LevelUpOffer.Kind.FRAGMENT:
+			var frag := _reward_fragment_by_id(offer.item_id)
+			if frag == null:
+				return "Unknown fragment."
+			if _fragments.has(frag.id):
+				return "Fragment already owned."
+			_fragments[frag.id] = frag
+			_fragment_acquired[frag.id] = _next_acquire_seq()
+		LevelUpOffer.Kind.SPELL:
+			var spell := _reward_spell_by_id(offer.item_id)
+			if spell == null:
+				return "Unknown spell."
+			if _spells.has(spell.id):
+				return "Spell already owned."
+			_spells[spell.id] = spell
+			_spell_acquired[spell.id] = _next_acquire_seq()
+		_:
+			return "Unknown offer."
+	return ""
+
+func _reward_fragment_by_id(id: StringName) -> FragmentDefinition:
+	for f in StarterContent.reward_fragments():
+		if f.id == id:
+			return f
+	return null
+
+func _reward_spell_by_id(id: StringName) -> SpellDefinition:
+	for s in StarterContent.reward_spells():
+		if s.id == id:
+			return s
+	return null
+
+func owns_fragment(id: StringName) -> bool:
+	return _fragments.has(id)
 
 # ---------- gold ----------
 func add_gold(amount: int) -> void:
@@ -128,6 +309,11 @@ func list_entries(filter: int = -1) -> Array[InventoryEntry]:
 			var f: FragmentDefinition = _fragments[frag_id]
 			var seq: int = int(_fragment_acquired.get(frag_id, 0))
 			out.append(InventoryEntry.new(f.id, ItemCategory.Kind.FRAGMENT, 1, f, seq))
+	if filter < 0 or filter == ItemCategory.Kind.ULTIMATE:
+		for ult_id in _ultimates.keys():
+			var u: UltimateDefinition = _ultimates[ult_id]
+			var seq: int = int(_ultimate_acquired.get(ult_id, 0))
+			out.append(InventoryEntry.new(u.id, ItemCategory.Kind.ULTIMATE, 1, u, seq))
 	out.sort_custom(_sort_entries)
 	return out
 
@@ -287,6 +473,30 @@ func create_battle_draw() -> FragmentDeckDraw:
 	var draw := FragmentDeckDraw.new()
 	draw.setup_from_definitions(fragment_deck_defs())
 	return draw
+
+# ---------- ultimates ----------
+func owns_ultimate(id: StringName) -> bool:
+	return _ultimates.has(id)
+
+func is_ultimate_equipped(id: StringName) -> bool:
+	return equipped_ultimate_id == id
+
+func equipped_ultimate() -> UltimateDefinition:
+	if _ultimates.has(equipped_ultimate_id):
+		return _ultimates[equipped_ultimate_id]
+	# Fallback to classic Overdrive if somehow unequipped.
+	var fallback := UltimateLibrary.damage_burst()
+	if _ultimates.has(fallback.id):
+		equipped_ultimate_id = fallback.id
+		return _ultimates[fallback.id]
+	return fallback
+
+func equip_ultimate(id: StringName) -> String:
+	if not _ultimates.has(id):
+		return "Ultimate not owned."
+	equipped_ultimate_id = id
+	changed.emit()
+	return ""
 
 func clear_pending_after_battle() -> void:
 	pending.clear()

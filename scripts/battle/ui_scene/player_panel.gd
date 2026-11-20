@@ -45,7 +45,8 @@ func setup(art_name: String, color: Color, placeholder_text: String) -> void:
 
 # Same signature as CombatantPanel.refresh so BattlefieldPanel keeps working.
 func refresh(c: CombatantState, _intent_text: String, _is_target: bool,
-		charge: float = 0.0, can_ultimate: bool = false) -> void:
+		charge: float = 0.0, can_ultimate: bool = false,
+		ultimate_label: String = "ULTIMATE") -> void:
 	var dead := c.is_dead()
 	%NameLabel.text = c.display_name
 	%HpBar.max_value = c.max_hp
@@ -54,6 +55,7 @@ func refresh(c: CombatantState, _intent_text: String, _is_target: bool,
 	%StatusLabel.text = CombatantText.status_line(c)
 	%ChargeBar.value = charge
 	%ChargeLabel.text = "Charge %.0f%% / %.0f%%" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
+	%UltimateButton.text = ultimate_label if not ultimate_label.is_empty() else "ULTIMATE"
 	%UltimateButton.disabled = not can_ultimate
 	_set_glow(can_ultimate and not dead)
 	modulate = Color(0.45, 0.45, 0.45) if dead else Color.WHITE

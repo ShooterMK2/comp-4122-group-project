@@ -7,7 +7,7 @@
 - [x] Define base damage and the damage formula () - Lok
 - [ ] Decide whether special grids are random or fixed ()
 - [ ] Decide the boss ultimate interval ()
-- [ ] Decide whether levels and talents exist ()
+- [x] Decide whether levels and talents exist (levels: yes, light run XP; talents: deferred)
 - [x] Create the autoload singleton for run state ()
 
 ## 2. Core Battle System
@@ -33,9 +33,9 @@
 - [x] Implement base stats: HP, damage multipliers, DEF, Speed () - Lok
 - [x] Implement the charging gauge () - Lok
 - [x] Implement FEVER mode: trigger, duration, effects () - Lok
-- [x] Implement the character ultimate () - Lok
-- [ ] Implement talents (element buffs, stat changes) **[?]** 
-- [ ] Implement levels/progression **[?]** 
+- [x] Implement the character ultimate (selectable ultimates; Overdrive = original charge damage burst)
+- [ ] Implement talents (element buffs, stat changes) **[deferred]** 
+- [x] Implement levels/progression (run Lv 1–120, battle+milestone XP, guaranteed stat + 1-of-3 non-stat pick; zone enemy levels; overlevel soft gap ~18; level HUD deferred) 
 - [ ] Add more selectable characters and a select screen **[?]**
 
 ## 5. Enemy and Boss AI
@@ -143,13 +143,24 @@ queue for the next fight) → battle node →
 
 Autoload `RunState` (`scripts/run/run_state.gd`) holds gold (starts at 0),
 equipment loadout (Weapon / Armour / Alt Armour / Accessory), owned items,
-spell deck (= all owned demo spells), fragment bag (unlimited) and fragment
-deck (size 12), plus pending next-battle modifiers from used items.
+spell bag + spell deck (cap 18), fragment bag and fragment deck (size 12),
+pending next-battle modifiers, and **run leveling** (Lv 1–120).
+
+**Leveling (locked):**
+- XP from battle wins and milestones (map nodes / zone exit).
+- Each level-up: **guaranteed** permanent stat-up, then pick **1 of 3** non-stat rewards.
+- Zone 1 encounters are authored by band (early/mid/late, enemy Lv 1–20); stats suggested in the 1–500 band.
+- Overlevel soft combat penalty (deal less / take more); harsh around **gap 18**.
+- Talents and on-HUD level display are **deferred**.
 
 - Inventory UI: `scenes/run/inventory_screen.tscn`
+- Level-up modal: `scripts/run/ui/level_up_modal.gd`
 - Starter content: `scripts/content/items/starter_content.gd`
+- Zone encounters: `scripts/content/encounters/zone_encounters.gd`
+- Ultimates: `scripts/content/ultimates/ultimate_library.gd` — own several; equip from the exploration **Player Card** only (not Inventory). Battle button uses the active skill (`Overdrive` = original charge-scaled damage burst).
+- Player Card: map icon → `scripts/run/ui/player_card_overlay.gd` — HP/Lv/XP/stats/gear/ultimate; Details expands breakdown, start shield, pending modifiers.
 - Battle draws fragments from the fragment deck only (reshuffle discard when empty).
-- Stats display as `ATK = total (base + [equip] + {item})` via `StatCalculator`.
+- Stats display as `ATK = total (base + [equip] + {item} + <level>)` via `StatCalculator`.
 
 ## Battle template UI
 

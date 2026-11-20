@@ -6,11 +6,11 @@
 [resource]
 script = ExtResource("1_enemy")
 display_name = "Wooden Dummy"
-max_hp = 630
-level = 1
-attack = 1
-defence = 6
-speed = 0.5
+max_hp = 70
+level = 3
+attack = 4
+defence = 2
+speed = 3.0
 elemental_weaknesses = [6]
 elemental_strengths = [7]
 art_name = "enemy_wooden_dummy.png"

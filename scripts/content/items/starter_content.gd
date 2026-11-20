@@ -139,3 +139,21 @@ static func all_consumables() -> Array[ConsumableDefinition]:
 
 static func all_importants() -> Array[ImportantDefinition]:
 	return [sealed_letter(), blessed_sigil()]
+
+## Extra fragments only available via level-up rewards (not starter-owned).
+static func reward_fragments() -> Array[FragmentDefinition]:
+	return [
+		_frag(&"reward_solar_arc", "Solar Arc",
+			[V(0,0), V(1,0), V(2,0), V(1,1)], [E.FIRE, E.FIRE, E.FIRE, E.UNIVERSAL]),
+		_frag(&"reward_tide_coil", "Tide Coil",
+			[V(0,0), V(0,1), V(1,1), V(1,2)], [E.ICE, E.ICE, E.ICE, E.WIND]),
+	]
+
+## Extra spells only available via level-up rewards.
+static func reward_spells() -> Array[SpellDefinition]:
+	var out: Array[SpellDefinition] = []
+	out.append(SpellDefinition.make(&"reward_spark_lash", "Spark Lash",
+		SpellPattern.make([V(0,0), V(1,0), V(1,1)]),
+		[ElementRequirement.make(E.LIGHTNING, 3)], 3,
+		[SpellEffect.make(SpellEffect.Kind.CONDUCTIVE, 1)]))
+	return out

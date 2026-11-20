@@ -13,6 +13,7 @@ static func attack_damage(skill: SkillDefinition, caster: CombatantState,
 	raw *= caster.outgoing_ailment_multiplier()
 	if defender != null:
 		raw *= DamageCalculator.defence_multiplier_of(caster, defender)
+	raw *= DamageCalculator.overlevel_multiplier_of(caster, defender)
 	raw *= randf_range(BattleConfig.DAMAGE_RANDOM_MIN, BattleConfig.DAMAGE_RANDOM_MAX)
 	return maxi(0, ceili(raw))
 

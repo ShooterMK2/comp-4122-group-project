@@ -27,9 +27,23 @@ static func _apply_multipliers(base: float, attacker: CombatantState,
 	if defender != null and defender.is_broken():
 		broken_multiplier += BattleConfig.BREAK_DAMAGE_BONUS
 	var weaken_multiplier := attacker.outgoing_ailment_multiplier()
+	var overlevel_multiplier := overlevel_multiplier_of(attacker, defender)
 	return maxi(0, ceili((base * other_multiplier * defence_multiplier
 		* elemental_multiplier * random_multiplier * weaken_multiplier
-		+ flat_bonus) * broken_multiplier))
+		* overlevel_multiplier + flat_bonus) * broken_multiplier))
+
+## Soft combat penalty when fighting above your level (gap harsh ~18).
+## Uses encounter level stored on the player as compare_level.
+static func overlevel_multiplier_of(attacker: CombatantState, defender: CombatantState) -> float:
+	if attacker == null or defender == null:
+		return 1.0
+	if attacker.is_player and not defender.is_player:
+		var gap := LevelProgression.overlevel_gap(attacker.level, attacker.compare_level)
+		return LevelProgression.player_damage_mult(gap)
+	if not attacker.is_player and defender.is_player:
+		var gap2 := LevelProgression.overlevel_gap(defender.level, defender.compare_level)
+		return LevelProgression.damage_taken_mult(gap2)
+	return 1.0
 
 static func basic_attack(tile_count: int, attacker: CombatantState,
 		defender: CombatantState = null, terrain: TerrainDefinition = null) -> int:

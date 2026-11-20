@@ -3,6 +3,7 @@ extends Control
 # TODO: deadlock overlay scene, debug panel scene, turn-order bar scene.
 
 const DEBUG_GRANT_KEY := KEY_F3     # TUNABLE: debug key; grants one copy of every spell
+const LevelUpModalScript = preload("res://scripts/run/ui/level_up_modal.gd")
 
 var state: BattleState
 var board := CastingBoardModel.new()
@@ -23,6 +24,9 @@ var _awaiting_enemy := -1
 var _cast_spell_total := 0
 var _cast_basic_total := 0
 var _deck_draw: FragmentDeckDraw
+var _level_up_modal: CanvasLayer
+var _won_battle := false
+var _xp_granted := false
 
 @onready var _battlefield: BattlefieldPanel = %Battlefield
 @onready var _io: BattleIO = %BattleIO
@@ -41,12 +45,16 @@ func _ready() -> void:
 		RunState.autofill_fragment_deck()
 	spells = RunState.spell_deck()
 	_deck_draw = RunState.create_battle_draw()
-	state = BattleState.new(TestEncounter.enemies(), TerrainSystem.random_terrain())
+	var encounter := ZoneEncounters.for_zone(RunState.zone_id, RunState.pending_encounter_band)
+	state = BattleState.new(encounter, TerrainSystem.random_terrain())
 	_terrain_label.text = "TERRAIN: %s  |  %s" % [
 		state.terrain.display_name, state.terrain.description().replace("\n", "  ")]
 	_battlefield.setup(state)
 	_io.board_view.bind(board, _fragment_at)
 	_deadlock.visible = false
+	_level_up_modal = LevelUpModalScript.new()
+	add_child(_level_up_modal)
+	_level_up_modal.offer_chosen.connect(_on_level_up_offer_chosen)
 	_connect_signals()
 	_advance()
 
@@ -70,7 +78,29 @@ func _connect_signals() -> void:
 
 func _on_return_to_map() -> void:
 	_sync_run_after_battle()
+	if _won_battle and RunState.has_pending_level_ups():
+		_present_next_level_up()
+		return
 	get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
+
+func _present_next_level_up() -> void:
+	if not RunState.has_pending_level_ups():
+		get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
+		return
+	if _result != null:
+		_result.visible = false
+	_level_up_modal.present(RunState.peek_pending_level_up())
+
+func _on_level_up_offer_chosen(index: int) -> void:
+	var err := RunState.choose_level_up_offer(index)
+	if err != "":
+		_log_line("system", err)
+		return
+	_level_up_modal.dismiss()
+	if RunState.has_pending_level_ups():
+		_present_next_level_up()
+	else:
+		get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
 
 func _sync_run_after_battle() -> void:
 	if state != null and state.player != null:
@@ -213,13 +243,21 @@ func _finish(won: bool) -> void:
 	state.over = true
 	_casting = false
 	_awaiting_enemy = -1
+	_won_battle = won
 	_prompt.visible = false
 	_battlefield.set_drop_enabled(false)
+	var xp_line := ""
+	if won and not _xp_granted:
+		_xp_granted = true
+		var gained := RunState.grant_battle_xp(state.enemy_defs)
+		xp_line = "  |  +%d XP (Lv %d)" % [LevelProgression.battle_xp_for_enemies(state.enemy_defs), RunState.player_level]
+		if gained > 0:
+			xp_line += "  |  %d level-up(s) pending" % gained
 	_sync_run_after_battle()
-	_log_line("system", "VICTORY! All enemies are down." if won else "DEFEAT... you ran out of HP.")
+	_log_line("system", ("VICTORY! All enemies are down." if won else "DEFEAT... you ran out of HP.") + xp_line)
 	_result.show_result(won,
 		"All enemies are down." if won else "You ran out of HP.",
-		"Rounds: %d" % state.turn)
+		"Rounds: %d%s" % [state.turn, xp_line])
 	_refresh_all()
 
 # ---------- chanting period: hand and board ----------
@@ -493,14 +531,19 @@ func _on_player_clicked() -> void:
 func _on_ultimate_pressed() -> void:
 	if state.over or _casting or _awaiting_enemy >= 0 or state.charge_gauge < 100.0:
 		return
+	var ult: UltimateDefinition = RunState.equipped_ultimate()
+	if ult == null:
+		_log_line("system", "No ultimate equipped.")
+		return
 	var spent: float = state.charge_gauge
-	var ratio: float = (spent - 100.0) / 50.0
-	var multiplier: float = lerpf(BattleConfig.ULTIMATE_MIN_MULTIPLIER,
-		BattleConfig.ULTIMATE_MAX_MULTIPLIER, clampf(ratio, 0.0, 1.0))
 	state.charge_gauge = 0.0
-	state.ultimate_active = true
-	state.player.set_damage_output_multiplier(multiplier)
-	_log_line("player", "Ultimate activated: %.2fx damage this turn." % multiplier)
+	var lines: Array[String] = []
+	UltimateResolver.activate(state, ult, spent, lines)
+	for line in lines:
+		_log_line("player", line)
+	if state.all_enemies_dead():
+		_finish(true)
+		return
 	_refresh_all()
 
 func _add_charge(amount: float, _lines: Array[String]) -> void:

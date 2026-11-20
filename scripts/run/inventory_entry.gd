@@ -24,6 +24,8 @@ func display_name() -> String:
 		return (ref as FragmentDefinition).display_name
 	if ref is SpellDefinition:
 		return (ref as SpellDefinition).display_name
+	if ref is UltimateDefinition:
+		return (ref as UltimateDefinition).display_name
 	return String(id)
 
 func description() -> String:
@@ -42,6 +44,8 @@ func description() -> String:
 		return "%s\n%s" % [blurb, shape]
 	if ref is SpellDefinition:
 		return (ref as SpellDefinition).inventory_preview_text()
+	if ref is UltimateDefinition:
+		return (ref as UltimateDefinition).inventory_preview_text()
 	return ""
 
 func icon() -> Texture2D:
@@ -49,4 +53,6 @@ func icon() -> Texture2D:
 		return (ref as ItemDefinition).icon
 	if ref is FragmentDefinition:
 		return (ref as FragmentDefinition).icon
+	if ref is UltimateDefinition:
+		return (ref as UltimateDefinition).icon
 	return null

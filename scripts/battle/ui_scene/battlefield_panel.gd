@@ -41,8 +41,12 @@ func set_drop_enabled(on: bool) -> void:
 		panel.drop_enabled = on
 
 func refresh(state: BattleState) -> void:
+	var ult_name := "ULTIMATE"
+	var ult: UltimateDefinition = RunState.equipped_ultimate()
+	if ult != null:
+		ult_name = ult.display_name.to_upper()
 	_player.refresh(state.player, "", false, state.charge_gauge,
-		state.charge_gauge >= 100.0 and not state.ultimate_active)
+		state.charge_gauge >= 100.0 and not state.ultimate_active, ult_name)
 	for i in _panels.size():
 		if i >= state.enemies.size():
 			continue

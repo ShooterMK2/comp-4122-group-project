@@ -1,7 +1,7 @@
 class_name ItemCategory
 extends RefCounted
 
-enum Kind { CONSUMABLE, EQUIPMENT, IMPORTANT, SPELL, FRAGMENT }
+enum Kind { CONSUMABLE, EQUIPMENT, IMPORTANT, SPELL, FRAGMENT, ULTIMATE }
 
 # Display / All-tab grouping order (Equipments before Consumables).
 const ALL_GROUP_ORDER := [
@@ -9,6 +9,7 @@ const ALL_GROUP_ORDER := [
 	Kind.CONSUMABLE,
 	Kind.SPELL,
 	Kind.FRAGMENT,
+	Kind.ULTIMATE,
 	Kind.IMPORTANT,
 ]
 
@@ -22,6 +23,8 @@ static func display_name(kind: int) -> String:
 			return "Spells"
 		Kind.FRAGMENT:
 			return "Fragments"
+		Kind.ULTIMATE:
+			return "Ultimates"
 		Kind.IMPORTANT:
 			return "Importants"
 		_:

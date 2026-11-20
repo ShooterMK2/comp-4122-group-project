@@ -340,7 +340,11 @@ Charge is not added while an ultimate is active.
 
 ### Ultimate
 
-The ultimate is available at **100 or more charge**. On activation:
+The player equips one ultimate from Inventory → Ultimates (default **Overdrive**).
+The ultimate is available at **100 or more charge**. On activation the gauge
+resets to `0` and the equipped skill resolves:
+
+**Overdrive** (original damage burst):
 
 ```text
 spent charge = current gauge
@@ -348,8 +352,9 @@ ratio = clamp((spent charge - 100) / 50, 0, 1)
 damage multiplier = lerp(2.75, 3.50, ratio)
 ```
 
-The gauge is reset to `0`, and the multiplier applies to the player's damage
-for the current turn.
+Other skills (Second Wind, Iron Ward, Bloodlust, Shockwave) use the same charge
+spend / threshold but apply heal, shield, ATK buff, or AoE hit instead. See
+`UltimateLibrary` / `UltimateResolver`.
 
 ## 7. Terrain
 

@@ -19,6 +19,7 @@ var enemy_speeds: Array[float] = []
 var pending_actors: Array[int] = []
 var acted_actors: Array[int] = []
 var current_actor := -1
+var encounter_level: int = 1
 
 func _init(defs: Array[EnemyDefinition] = [], p_terrain: TerrainDefinition = null,
 		from_run: bool = true) -> void:
@@ -28,11 +29,14 @@ func _init(defs: Array[EnemyDefinition] = [], p_terrain: TerrainDefinition = nul
 		_init_player_from_run(Engine.get_main_loop().root.get_node("RunState"))
 	else:
 		_init_player_from_definition(PlayerDefinition.default_player())
+	encounter_level = 1
 	for i in defs.size():
 		enemy_defs.append(defs[i])
 		enemy_speeds.append(defs[i].speed)
+		encounter_level = maxi(encounter_level, defs[i].level)
 		enemies.append(CombatantState.from_definition(defs[i],
 			"%s %s" % [defs[i].display_name, char(65 + i)]))
+	_apply_overlevel_compare_levels()
 
 func _init_player_from_run(run: Node) -> void:
 	var snap: PlayerStatSnapshot = run.snapshot()
@@ -42,11 +46,34 @@ func _init_player_from_run(run: Node) -> void:
 	player.elemental_weaknesses = snap.elemental_weaknesses.duplicate()
 	player.elemental_strengths = snap.elemental_strengths.duplicate()
 	player.shield = snap.start_shield
+	player.is_player = true
+	player.compare_level = player.level
 	player_speed = snap.speed()
 
 func _init_player_from_definition(player_definition: PlayerDefinition) -> void:
 	player = CombatantState.from_definition(player_definition)
+	player.is_player = true
+	player.compare_level = player.level
 	player_speed = player_definition.speed
+
+func _apply_overlevel_compare_levels() -> void:
+	if player == null:
+		return
+	player.is_player = true
+	player.compare_level = encounter_level
+	for e in enemies:
+		e.is_player = false
+		e.compare_level = player.level
+
+func living_encounter_level() -> int:
+	var lv := 1
+	var any := false
+	for e in enemies:
+		if e.is_dead():
+			continue
+		any = true
+		lv = maxi(lv, e.level)
+	return lv if any else encounter_level
 
 func all_enemies_dead() -> bool:
 	for e in enemies:
@@ -86,6 +113,7 @@ func duplicate_state() -> BattleState:
 	s.ultimate_active = ultimate_active
 	s.player_speed = player_speed
 	s.terrain = terrain
+	s.encounter_level = encounter_level
 	for a in pending_actors:
 		s.pending_actors.append(a)
 	for a in acted_actors:

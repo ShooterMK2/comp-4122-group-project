@@ -7,6 +7,9 @@ var hp := 1
 var level := 1
 var attack := 1
 var defence := 0
+## Player side uses encounter max level for overlevel gap; enemies use player level.
+var is_player := false
+var compare_level := 1
 var attack_multiplier := 1.0
 var defence_multiplier := 1.0
 var speed_multiplier := 1.0
@@ -103,6 +106,8 @@ func duplicate_state() -> CombatantState:
 	c.break_hits = break_hits
 	c.break_threshold = break_threshold
 	c.break_last_processed_turn = break_last_processed_turn
+	c.is_player = is_player
+	c.compare_level = compare_level
 	return c
 
 func get_ailment(a: int) -> int:

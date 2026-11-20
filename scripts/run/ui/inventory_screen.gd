@@ -489,6 +489,9 @@ func _refresh_list() -> void:
 	var keep_cat := _selected.category if _selected != null else -1
 	var new_index := -1
 	for entry in RunState.list_entries(filter):
+		# Ultimates are managed on the exploration Player Card only.
+		if entry.category == ItemCategory.Kind.ULTIMATE:
+			continue
 		if filter < 0 and entry.category != last_group:
 			last_group = entry.category
 			var header := Label.new()
@@ -534,6 +537,9 @@ func _update_deck_footer(filter: int) -> void:
 		_deck_footer.visible = true
 		_deck_footer.text = "Deck %d / Owned %d" % [
 			RunState.spell_deck_count(), RunState.list_entries(ItemCategory.Kind.SPELL).size()]
+	elif filter < 0:
+		_deck_footer.visible = true
+		_deck_footer.text = "Equip ultimate from Player Card on the map"
 	else:
 		_deck_footer.visible = false
 
@@ -589,6 +595,7 @@ func _refresh_float_and_actions() -> void:
 	var show_deck := _selected.category == ItemCategory.Kind.FRAGMENT \
 			or _selected.category == ItemCategory.Kind.SPELL
 	_deck_btn.visible = show_deck
+	_deck_btn.disabled = false
 	if _selected.category == ItemCategory.Kind.FRAGMENT:
 		_deck_btn.text = "Remove Deck" if RunState.is_in_fragment_deck(_selected.id) else "Add Deck"
 	elif _selected.category == ItemCategory.Kind.SPELL:

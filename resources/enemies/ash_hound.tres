@@ -9,11 +9,11 @@
 [resource]
 script = ExtResource("1_enemy")
 display_name = "Ash Hound"
-max_hp = 100
-level = 2
-attack = 5
-defence = 2
-speed = 4.0
+max_hp = 120
+level = 8
+attack = 12
+defence = 6
+speed = 4.5
 elemental_weaknesses = [3]
 elemental_strengths = [2]
 art_name = "enemy_wooden_dummy.png"
