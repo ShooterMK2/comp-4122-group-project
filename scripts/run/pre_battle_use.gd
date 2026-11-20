@@ -3,20 +3,24 @@ extends RefCounted
 
 ## Usable anytime from inventory; battle-bound effects apply on the next fight.
 
-static func can_use(entry: InventoryEntry, run: Node, _unused: bool = true) -> String:
+static func is_usable_kind(entry: InventoryEntry) -> bool:
 	if entry == null or entry.ref == null:
-		return "Nothing selected."
+		return false
 	if entry.category == ItemCategory.Kind.CONSUMABLE:
-		var c := entry.ref as ConsumableDefinition
-		if c == null:
-			return "Invalid consumable."
-		return _can_apply(c.use_effect, c.use_amount, run)
+		return entry.ref is ConsumableDefinition
 	if entry.category == ItemCategory.Kind.IMPORTANT:
 		var imp := entry.ref as ImportantDefinition
-		if imp == null or not imp.usable:
-			return "This item cannot be used."
-		return _can_apply(imp.use_effect, imp.use_amount, run)
-	return "This item cannot be used."
+		return imp != null and imp.usable
+	return false
+
+static func can_use(entry: InventoryEntry, run: Node, _unused: bool = true) -> String:
+	if not is_usable_kind(entry):
+		return "—"
+	if entry.category == ItemCategory.Kind.CONSUMABLE:
+		var c := entry.ref as ConsumableDefinition
+		return _can_apply(c.use_effect, c.use_amount, run)
+	var imp := entry.ref as ImportantDefinition
+	return _can_apply(imp.use_effect, imp.use_amount, run)
 
 static func _can_apply(effect: int, amount: int, run: Node) -> String:
 	match effect:
@@ -24,13 +28,13 @@ static func _can_apply(effect: int, amount: int, run: Node) -> String:
 			if run.run_hp >= run.run_max_hp():
 				return "HP is already full."
 			if amount <= 0:
-				return "Invalid heal."
+				return "—"
 			return ""
 		UseEffect.Kind.START_SHIELD, UseEffect.Kind.TEMP_MAX_HP, \
 		UseEffect.Kind.TEMP_ATK, UseEffect.Kind.TEMP_DEF, UseEffect.Kind.TEMP_SPD:
 			return ""
 		_:
-			return "No usable effect."
+			return "—"
 
 static func use(entry: InventoryEntry, run: Node) -> String:
 	var err := can_use(entry, run)
@@ -49,7 +53,7 @@ static func use(entry: InventoryEntry, run: Node) -> String:
 		if imp.consumed_on_use:
 			run.remove_item(entry.id, ItemCategory.Kind.IMPORTANT, 1)
 		return ""
-	return "Cannot use."
+	return "—"
 
 static func _apply(effect: int, amount: int, run: Node) -> void:
 	match effect:

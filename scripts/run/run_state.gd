@@ -9,8 +9,9 @@ var pending := PendingBattleModifiers.new()
 var story_flags: Dictionary = {}
 
 var _items: Dictionary = {}  # StringName -> InventoryEntry for consumable/equipment/important
-var _spells: Dictionary = {}  # StringName -> SpellDefinition (owned = deck)
+var _spells: Dictionary = {}  # StringName -> SpellDefinition (owned bag)
 var _spell_acquired: Dictionary = {}  # StringName -> int
+var _spell_deck: Array[StringName] = []  # battle loadout (subset of owned)
 var _fragments: Dictionary = {}  # StringName -> FragmentDefinition (bag)
 var _fragment_acquired: Dictionary = {}  # StringName -> int
 var _fragment_deck: Array[StringName] = []  # ordered deck ids (max RunConfig.FRAGMENT_DECK_SIZE)
@@ -29,6 +30,7 @@ func reset_run() -> void:
 	_items.clear()
 	_spells.clear()
 	_spell_acquired.clear()
+	_spell_deck.clear()
 	_fragments.clear()
 	_fragment_acquired.clear()
 	_fragment_deck.clear()
@@ -46,6 +48,8 @@ func _seed_starter() -> void:
 	for spell in DemoSpellLibrary.build():
 		_spells[spell.id] = spell
 		_spell_acquired[spell.id] = _next_acquire_seq()
+		if _spell_deck.size() < RunConfig.SPELL_DECK_SIZE:
+			_spell_deck.append(spell.id)
 	for frag in StarterContent.fragments():
 		_fragments[frag.id] = frag
 		_fragment_acquired[frag.id] = _next_acquire_seq()
@@ -193,17 +197,40 @@ func _clamp_run_hp() -> void:
 # ---------- spells ----------
 func spell_deck() -> Array[SpellDefinition]:
 	var out: Array[SpellDefinition] = []
-	for spell in DemoSpellLibrary.build():
-		# Preserve demo order while only including owned.
-		if _spells.has(spell.id):
-			out.append(_spells[spell.id])
-	if out.is_empty():
-		for spell in _spells.values():
-			out.append(spell)
+	for id in _spell_deck:
+		if _spells.has(id):
+			out.append(_spells[id])
 	return out
+
+func spell_deck_count() -> int:
+	return _spell_deck.size()
 
 func owns_spell(id: StringName) -> bool:
 	return _spells.has(id)
+
+func is_in_spell_deck(id: StringName) -> bool:
+	return _spell_deck.has(id)
+
+func add_to_spell_deck(id: StringName) -> String:
+	if not _spells.has(id):
+		return "Spell not owned."
+	if _spell_deck.has(id):
+		return "Already in deck."
+	if _spell_deck.size() >= RunConfig.SPELL_DECK_SIZE:
+		return "Deck is full (%d)." % RunConfig.SPELL_DECK_SIZE
+	_spell_deck.append(id)
+	changed.emit()
+	return ""
+
+func remove_from_spell_deck(id: StringName) -> String:
+	var idx := _spell_deck.find(id)
+	if idx < 0:
+		return "Not in deck."
+	if _spell_deck.size() <= 1:
+		return "Keep at least one spell in the deck."
+	_spell_deck.remove_at(idx)
+	changed.emit()
+	return ""
 
 # ---------- fragments ----------
 func fragment_bag() -> Array[FragmentDefinition]:

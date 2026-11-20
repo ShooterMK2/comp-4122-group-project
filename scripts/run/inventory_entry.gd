@@ -30,9 +30,18 @@ func description() -> String:
 	if ref is ItemDefinition:
 		return (ref as ItemDefinition).description
 	if ref is FragmentDefinition:
-		return (ref as FragmentDefinition).description
+		var frag_def := ref as FragmentDefinition
+		var shape := ""
+		if frag_def.fragment != null:
+			shape = frag_def.fragment.preview_text()
+		var blurb := frag_def.description.strip_edges()
+		if blurb.is_empty():
+			return shape
+		if shape.is_empty():
+			return blurb
+		return "%s\n%s" % [blurb, shape]
 	if ref is SpellDefinition:
-		return (ref as SpellDefinition).requirement_text()
+		return (ref as SpellDefinition).inventory_preview_text()
 	return ""
 
 func icon() -> Texture2D:

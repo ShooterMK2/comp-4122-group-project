@@ -31,6 +31,14 @@ func requirement_text() -> String:
 		parts.append("%d %s" % [r.min_count, Elements.name_of(r.element)])
 	return "%s \u00b7 %d tiles" % [", ".join(parts), pattern.cells.size()]
 
+func inventory_preview_text() -> String:
+	var shape := ""
+	if pattern != null:
+		shape = pattern.preview_text()
+	if shape.is_empty():
+		return requirement_text()
+	return "%s\n%s" % [requirement_text(), shape]
+
 func primary_element() -> int:
 	if requirements.is_empty():
 		return Elements.Element.NONE

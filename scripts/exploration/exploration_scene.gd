@@ -19,26 +19,41 @@ func _ready() -> void:
 func _ensure_hud() -> void:
 	if has_node("RunHud"):
 		return
-	var hud := HBoxContainer.new()
+	# Gold stays top-left; backpack opens inventory from bottom-right.
+	var hud := Control.new()
 	hud.name = "RunHud"
-	hud.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	hud.offset_left = 12
-	hud.offset_top = 8
-	hud.offset_right = -12
-	hud.offset_bottom = 48
+	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(hud)
+
 	var gold := Label.new()
 	gold.name = "GoldLabel"
 	gold.text = "$%d" % RunState.gold
+	gold.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	gold.offset_left = 12
+	gold.offset_top = 8
+	gold.offset_right = 160
+	gold.offset_bottom = 40
+	gold.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(gold)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hud.add_child(spacer)
-	var inv := Button.new()
-	inv.text = "Inventory"
+
+	var inv := TextureButton.new()
+	inv.name = "InventoryButton"
+	inv.texture_normal = load("res://assets/ui/inventory/backpack.png")
+	inv.ignore_texture_size = true
+	inv.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	inv.custom_minimum_size = Vector2(96, 96)
+	inv.focus_mode = Control.FOCUS_NONE
+	inv.tooltip_text = "Inventory"
+	inv.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	inv.offset_left = -116
+	inv.offset_top = -116
+	inv.offset_right = -20
+	inv.offset_bottom = -20
 	inv.pressed.connect(func():
 		get_tree().change_scene_to_file("res://scenes/run/inventory_screen.tscn"))
 	hud.add_child(inv)
+
 	RunState.changed.connect(func():
 		if is_instance_valid(gold):
 			gold.text = "$%d" % RunState.gold)
