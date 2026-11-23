@@ -7,7 +7,7 @@ const ZONE_1 := 1
 
 static func current_zone_id() -> int:
 	if Engine.get_main_loop() != null and Engine.get_main_loop().root != null:
-		var run := Engine.get_main_loop().root.get_node_or_null("RunState")
+		var run: Node= Engine.get_main_loop().root.get_node_or_null("RunState")
 		if run != null:
 			return int(run.zone_id)
 	return ZONE_1

@@ -22,6 +22,11 @@ var equipped_ultimate_id: StringName = &""
 var run_hp: int = 100
 var _base_player: PlayerDefinition
 var _acquire_seq: int = 0
+var current_layer: int = -1 # records the Node (layer) currently on
+var current_node_index: int = 0
+var cleared_nodes: Array[String] = []
+var pending_node_to_clear: String = ""
+var map_seed: int = 0 # for Node generation
 
 # ---------- leveling (run-scoped) ----------
 var player_level: int = RunConfig.PLAYER_LEVEL_MIN
@@ -71,6 +76,7 @@ func reset_run() -> void:
 	_sync_run_hp_to_max()
 	changed.emit()
 	level_up_pending_changed.emit()
+	map_seed = randi()
 
 func _next_acquire_seq() -> int:
 	_acquire_seq += 1

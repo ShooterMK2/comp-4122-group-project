@@ -1,7 +1,10 @@
 extends Control
 
+const MAP_NODE_SCENE = preload("res://scenes/exploration/map_node.tscn")
 const LevelUpModalScript = preload("res://scripts/run/ui/level_up_modal.gd")
 const PlayerCardOverlayScript = preload("res://scripts/run/ui/player_card_overlay.gd")
+
+@onready var camera = $Camera2D
 
 const NODE_TYPES = {
 	"BATTLE": { "name": "Battle", "icon": "res://assets/exploration/battle.png" },
@@ -10,15 +13,43 @@ const NODE_TYPES = {
 	"TRADE": { "name": "Trade", "icon": "res://assets/exploration/trade.png" }
 }
 
+const MAP_LAYOUT = [1, 2, 3, 2, 3, 2, 3, 2, 1, 2, 3, 2, 1]
+
+const LAYER_Y_POSITIONS = [
+	2100, 1900,			# Layer 0 - 1: Woods
+	1750, 1600, 1450,	# Layer 2 - 4: Snow
+	1300, 1150, 1000,	# Layer 5 - 7: Forest
+	850, 700, 550,		# Layer 8 - 10: Desert
+	400, 250			# Layer 11 - 12: Volcano
+]
+
+const FIXED_TYPES = {
+	"0_0": "BATTLE",	# Tutorial Level
+	"8_0": "BATTLE",	# Mini Boss
+	"12_0": "BATTLE",	# Final Boss
+}
+
+# Determines the terrain for battle
+func get_terrain(y_pos: float) -> String:
+	if y_pos >= 1900: return "None"			# 1900~2276 (Woods, Starting Area)
+	elif y_pos >= 1500: return "Snow"		# 1500~1900 (Snow Mountain)
+	elif y_pos >= 1000: return "Forest"		# 1000~1500 (Forest)
+	elif y_pos >= 500: return "Desert"		# 500~1000 (Desert)
+	else: return "Volcano"					# 0~500 (Volcano)
+
+
 var map_nodes: Array = []
+var connections: Dictionary = {}			# Format: { "Next_Node": ["Last_Node_1", "Last_Node_2"] }
 var _level_up_modal: CanvasLayer
 var _player_card: CanvasLayer
+var start_layer = 0
 
 func _ready() -> void:
-	for child in get_children():
-		if child.name.begins_with("MapNode"):
-			map_nodes.append(child)
-	gen_node_types()
+	if RunState.pending_node_to_clear != "":
+		if RunState.pending_node_to_clear not in RunState.cleared_nodes:
+			RunState.cleared_nodes.append(RunState.pending_node_to_clear)
+		RunState.pending_node_to_clear = ""
+	generate_map_graph()
 	_ensure_hud()
 	_player_card = PlayerCardOverlayScript.new()
 	add_child(_player_card)
@@ -27,16 +58,37 @@ func _ready() -> void:
 	_level_up_modal.offer_chosen.connect(_on_level_up_offer_chosen)
 	if RunState.has_pending_level_ups():
 		_present_next_level_up()
+	if "current_layer" in RunState:
+		start_layer = RunState.current_layer
+	start_layer = maxi(0, start_layer)
+	_move_camera(start_layer)
+	
+func _unhandled_input(event: InputEvent) -> void:
+	# Mouse wheel events: scroll the camera
+	if event is InputEventMouseButton and event.pressed:
+		var scroll_speed := 20.0
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			camera.position.y -= scroll_speed
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			camera.position.y += scroll_speed
+		var viewport_half_height = get_viewport_rect().size.y / 2.0
+		var map_height = 2276.0
+		camera.position.y = clampf(camera.position.y, viewport_half_height, map_height - viewport_half_height)	
 
 func _ensure_hud() -> void:
 	if has_node("RunHud"):
 		return
 	# Gold + Zone Exit top-left; Player Card bottom-left; backpack bottom-right.
+	var hud_layer := CanvasLayer.new()
+	hud_layer.name = "RunHudLayer"
+	hud_layer.layer = 1
+	add_child(hud_layer)
+
 	var hud := Control.new()
 	hud.name = "RunHud"
 	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(hud)
+	hud_layer.add_child(hud)
 
 	var gold := Label.new()
 	gold.name = "GoldLabel"
@@ -140,34 +192,102 @@ func _on_level_up_offer_chosen(index: int) -> void:
 	if RunState.has_pending_level_ups():
 		_present_next_level_up()
 
-func gen_node_types() -> void:
+func generate_map_graph() -> void:
+	seed(RunState.map_seed)
 	var type_keys = NODE_TYPES.keys()
-	var total_nodes = map_nodes.size()
+	var screen_width = get_viewport_rect().size.x
+	var x_offset = 50.0
+	for layer_idx in range(MAP_LAYOUT.size()):
+		var nodes_in_layer = MAP_LAYOUT[layer_idx]
+		var layer_array: Array = []
+		for node_idx in range(nodes_in_layer):
+			var new_node = MAP_NODE_SCENE.instantiate()
+			add_child(new_node)
+			# Calculate Position
+			var y_pos = LAYER_Y_POSITIONS[layer_idx]
+			var spacing = 250
+			var total_width = (nodes_in_layer - 1) * spacing
+			var start_x = (screen_width - total_width) / 2.0 - x_offset
+			var x_pos = start_x + (node_idx * spacing)
+			new_node.position = Vector2(x_pos, y_pos)
+			# Determine Node Type
+			var type_key = "%d_%d" % [layer_idx, node_idx]
+			var random_type = ""
+			if FIXED_TYPES.has(type_key):
+				random_type = FIXED_TYPES[type_key]
+			else:
+				random_type = type_keys.pick_random()
+			new_node.set_meta("node_type", random_type)
+			new_node.set_meta("layer", layer_idx)
+			new_node.set_meta("index", node_idx)
+			# Set Visuals
+			var icon_rect = new_node.get_node("NodePanel/NodeIcon")
+			var panel = new_node.get_node("NodePanel")
+			var label = new_node.get_node("NodePanel/NodeNameLabel")
+			var icon_path = NODE_TYPES[random_type]["icon"]
+			if ResourceLoader.exists(icon_path):
+				icon_rect.texture = load(icon_path)
+			label.text = NODE_TYPES[random_type]["name"]
+			if not panel.gui_input.is_connected(_on_node_clicked):
+				panel.gui_input.connect(_on_node_clicked.bind(new_node))
+			# Visuals for cleared Nodes
+			var node_key = "%d_%d" % [layer_idx, node_idx]
+			if node_key in RunState.cleared_nodes:
+				var overlay = ColorRect.new()
+				overlay.color = Color(0.2, 0.2, 0.2, 0.7)
+				overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+				overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE # Let clicks pass through
+				panel.add_child(overlay)
+			layer_array.append(new_node)
+		map_nodes.append(layer_array)
+	build_connections()
+	draw_connections()
 
-	for i in range(total_nodes):
-		var current_node = map_nodes[i]
-		var random_type = ""
+func build_connections() -> void:
+	connections.clear()
+	for layer_idx in range(map_nodes.size() - 1):
+		var current_layer = map_nodes[layer_idx]
+		var next_layer = map_nodes[layer_idx + 1]
+		# Connect each parent to its closest child
+		for node in current_layer:
+			var closest_child = _get_closest_node(node, next_layer)
+			if closest_child != null:
+				_add_connection(closest_child, node)
+		# Ensure no unreachable nodes
+		for next_node in next_layer:
+			var closest_parent = _get_closest_node(next_node, current_layer)
+			if closest_parent != null:
+				_add_connection(next_node, closest_parent)
 
-		# First and Last Nodes are Battle Node
-		if i == total_nodes - 1 or i == 0:
-			random_type = "BATTLE"
-		else:
-			random_type = type_keys.pick_random()
+func _get_closest_node(target_node: Control, candidates: Array) -> Control:
+	var closest_node = null
+	var min_dist = 99999.0
+	for c in candidates:
+		var dist = abs(target_node.position.x - c.position.x)
+		if dist < min_dist:
+			min_dist = dist
+			closest_node = c
+	return closest_node
 
-		current_node.set_meta("node_type", random_type)
-		current_node.set_meta("node_index", i)
-
-		var icon_rect = current_node.get_node("NodePanel/NodeIcon")
-		var panel = current_node.get_node("NodePanel")
-		var label = current_node.get_node("NodePanel/NodeNameLabel")
-
-		var icon_path = NODE_TYPES[random_type]["icon"]
-		if ResourceLoader.exists(icon_path):
-			icon_rect.texture = load(icon_path)
-		label.text = NODE_TYPES[random_type]["name"]
-
-		if not panel.gui_input.is_connected(_on_node_clicked):
-			panel.gui_input.connect(_on_node_clicked.bind(current_node))
+func _add_connection(child_node: Control, parent_node: Control) -> void:
+	if not connections.has(child_node):
+		connections[child_node] = []
+	if parent_node not in connections[child_node]:
+		connections[child_node].append(parent_node)
+		
+func draw_connections() -> void:
+	var line_layer = Node2D.new()
+	line_layer.z_index = -1
+	add_child(line_layer)
+	for child_node in connections.keys():
+		for parent_node in connections[child_node]:
+			var line = Line2D.new()
+			var start_pos = parent_node.position + Vector2(50, 50)
+			var end_pos = child_node.position + Vector2(50, 50)
+			line.points = [start_pos, end_pos]
+			line.width = 8
+			line.default_color = Color(0.971, 0.82, 0.727, 0.8)
+			line_layer.add_child(line)
 
 func _band_for_index(index: int) -> StringName:
 	var total := maxi(1, map_nodes.size() - 1)
@@ -181,12 +301,30 @@ func _band_for_index(index: int) -> StringName:
 func _on_node_clicked(event: InputEvent, node: Control) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var type = node.get_meta("node_type")
-		var index: int = int(node.get_meta("node_index", 0))
+		var layer_idx = node.get_meta("layer")
+		var node_idx = node.get_meta("index")
+		if layer_idx < RunState.current_layer: return  # Can move within same layer, not going back
+		if RunState.current_layer == -1:
+			if layer_idx != 0:  # Starting: Can only click the first layer
+				return
+		else:
+			if layer_idx == RunState.current_layer:
+				if node_idx == RunState.current_node_index: return
+				pass 
+			else: 
+				var current_node = map_nodes[RunState.current_layer][RunState.current_node_index]
+				if connections.has(node):
+					if current_node not in connections[node]: return  # Not connected with current node
+				else: return  # Not recorded in dictionary
+		RunState.current_layer = layer_idx
+		RunState.current_node_index = node_idx
+		RunState.pending_node_to_clear = "%d_%d" % [layer_idx, node_idx]
+		_move_camera(layer_idx)
 
 		if type == "BATTLE":
 			if RunState.fragment_deck_count() <= 0:
 				RunState.autofill_fragment_deck()
-			RunState.pending_encounter_band = _band_for_index(index)
+			RunState.pending_encounter_band = _band_for_index(node_idx)
 			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")
 		else:
 			var levels := RunState.grant_milestone_xp(RunConfig.MILESTONE_NODE_XP)
@@ -205,3 +343,9 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 					_present_next_level_up()
 				dialog.queue_free())
 			dialog.popup_centered()
+
+func _move_camera(layer_idx: int) -> void:
+	if layer_idx < 0 or layer_idx >= LAYER_Y_POSITIONS.size():
+		return
+	var target_y = LAYER_Y_POSITIONS[layer_idx] + 50
+	camera.position.y = target_y
