@@ -122,6 +122,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if event.keycode == DEBUG_GRANT_KEY:
 		_debug_grant_spells()
+	if event.keycode == KEY_K:
+		_debug_kill_all_enemies()
+		return
 
 # ---------- round flow ----------
 func _advance() -> void:
@@ -430,6 +433,15 @@ func _debug_grant_spells() -> void:
 		queue.append(QueuedSpell.new(d, [], []))
 	_log_line("system", "DEBUG: granted one copy of every spell.")
 	_refresh_all()
+	
+func _debug_kill_all_enemies() -> void:
+	if state == null or state.over:
+		return
+	for enemy in state.enemies:
+		enemy.hp = 0
+	_refresh_all()
+	if state.all_enemies_dead():
+		_finish(true)
 
 # ---------- casting period ----------
 func _on_cast() -> void:                    # one-way: no way back to chanting this turn

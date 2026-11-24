@@ -3,6 +3,7 @@ extends Control
 const MAP_NODE_SCENE = preload("res://scenes/exploration/map_node.tscn")
 const LevelUpModalScript = preload("res://scripts/run/ui/level_up_modal.gd")
 const PlayerCardOverlayScript = preload("res://scripts/run/ui/player_card_overlay.gd")
+const EventModalScript = preload("res://scenes/exploration/event_scene.tscn")
 
 @onready var camera = $Camera2D
 
@@ -42,6 +43,7 @@ var map_nodes: Array = []
 var connections: Dictionary = {}			# Format: { "Next_Node": ["Last_Node_1", "Last_Node_2"] }
 var _level_up_modal: CanvasLayer
 var _player_card: CanvasLayer
+var _event_scene: CanvasLayer
 var start_layer = 0
 
 func _ready() -> void:
@@ -62,6 +64,10 @@ func _ready() -> void:
 		start_layer = RunState.current_layer
 	start_layer = maxi(0, start_layer)
 	_move_camera(start_layer)
+	_event_scene = EventModalScript.instantiate()
+	_event_scene.visible = false
+	add_child(_event_scene)
+	_event_scene.choice_made.connect(_on_event_choice_made)
 	
 func _unhandled_input(event: InputEvent) -> void:
 	# Mouse wheel events: scroll the camera
@@ -233,11 +239,7 @@ func generate_map_graph() -> void:
 			# Visuals for cleared Nodes
 			var node_key = "%d_%d" % [layer_idx, node_idx]
 			if node_key in RunState.cleared_nodes:
-				var overlay = ColorRect.new()
-				overlay.color = Color(0.2, 0.2, 0.2, 0.7)
-				overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-				overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE # Let clicks pass through
-				panel.add_child(overlay)
+				_visual_for_cleared_node(new_node)
 			layer_array.append(new_node)
 		map_nodes.append(layer_array)
 	build_connections()
@@ -289,6 +291,26 @@ func draw_connections() -> void:
 			line.default_color = Color(0.971, 0.82, 0.727, 0.8)
 			line_layer.add_child(line)
 
+func _mark_node_as_cleared() -> void:
+	if RunState.pending_node_to_clear == "":
+		return
+	if RunState.pending_node_to_clear not in RunState.cleared_nodes:
+		RunState.cleared_nodes.append(RunState.pending_node_to_clear)
+	var parts = RunState.pending_node_to_clear.split("_")
+	var l = int(parts[0])
+	var n = int(parts[1])
+	var target_node = map_nodes[l][n]
+	_visual_for_cleared_node(target_node)
+	RunState.pending_node_to_clear = ""
+	
+func _visual_for_cleared_node(target_node: Control) -> void:
+	var panel = target_node.get_node("NodePanel")
+	var overlay = ColorRect.new()
+	overlay.color = Color(0.2, 0.2, 0.2, 0.7)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(overlay)
+
 func _band_for_index(index: int) -> StringName:
 	var total := maxi(1, map_nodes.size() - 1)
 	var t := float(index) / float(total)
@@ -297,6 +319,27 @@ func _band_for_index(index: int) -> StringName:
 	if t < 0.67:
 		return &"mid"
 	return &"late"
+
+func _on_event_choice_made(effect: String) -> void:
+	match effect:
+		"monolith_touch":
+			RunState.add_gold(50)
+			RunState.set_run_hp(RunState.run_hp - 20)
+		"monolith_pray":
+			RunState.heal_run_hp(30)
+		"spring_rest":
+			RunState.heal_run_hp(30)
+		"spring_bottle":
+			RunState.add_gold(10)
+		"merchant_help":
+			RunState.add_gold(30)
+		"merchant_rob":
+			RunState.add_gold(80)
+			RunState.set_run_hp(RunState.run_hp - 30)
+		"leave":
+			pass
+	_mark_node_as_cleared()
+
 
 func _on_node_clicked(event: InputEvent, node: Control) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -326,6 +369,10 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 				RunState.autofill_fragment_deck()
 			RunState.pending_encounter_band = _band_for_index(node_idx)
 			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")
+		elif type == "EVENT":
+			var event_data = EventDatabase.get_random_event()
+			_event_scene.show_event(event_data)
+			RunState.pending_node_to_clear = "%d_%d" % [layer_idx, node_idx]
 		else:
 			var levels := RunState.grant_milestone_xp(RunConfig.MILESTONE_NODE_XP)
 			var dialog = AcceptDialog.new()

@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://ck21srcyel5j4"]
+
+[ext_resource type="Script" uid="uid://bj2r8emmv3d1k" path="res://scripts/exploration/event_scene.gd" id="1_3722c"]
+[ext_resource type="Texture2D" uid="uid://c6xkj44j663uf" path="res://assets/exploration/event_background.png" id="2_efkh8"]
+
+[node name="EventScene" type="CanvasLayer" unique_id=1714353784]
+script = ExtResource("1_3722c")
+
+[node name="DimBackground" type="ColorRect" parent="." unique_id=352307388]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.70000005)
+
+[node name="Background" type="NinePatchRect" parent="." unique_id=323724867]
+texture_filter = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_efkh8")
+
+[node name="ContentBox" type="VBoxContainer" parent="Background" unique_id=1997818190]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -330.0
+offset_top = -120.0
+offset_right = 328.0
+offset_bottom = 145.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="Background/ContentBox" unique_id=2107627297]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.37017795, 0.2103047, 0.02695606, 1)
+theme_override_font_sizes/font_size = 50
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DescLabel" type="Label" parent="Background/ContentBox" unique_id=1126410936]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36862746, 0.21176471, 0.02745098, 1)
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ChoiceContainer" type="VBoxContainer" parent="Background/ContentBox" unique_id=1717491289]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
