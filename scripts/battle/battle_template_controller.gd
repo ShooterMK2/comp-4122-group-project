@@ -3,6 +3,7 @@ extends Control
 # TODO: deadlock overlay scene, debug panel scene, turn-order bar scene.
 
 const DEBUG_GRANT_KEY := KEY_F3     # TUNABLE: debug key; grants one copy of every spell
+const LevelUpModalScript = preload("res://scripts/run/ui/level_up_modal.gd")
 
 var state: BattleState
 var board := CastingBoardModel.new()
@@ -21,6 +22,10 @@ var _inspect_player := false
 var _awaiting_enemy := -1
 var _cast_spell_total := 0
 var _cast_basic_total := 0
+var _deck_draw: FragmentDeckDraw
+var _level_up_modal: CanvasLayer
+var _won_battle := false
+var _xp_granted := false
 
 @onready var _battlefield: BattlefieldPanel = %Battlefield
 @onready var _io: BattleIO = %BattleIO
@@ -30,17 +35,25 @@ var _cast_basic_total := 0
 @onready var _result: ResultOverlay = %ResultOverlay
 @onready var _console: LogConsole = %LogConsole
 @onready var _prompt: PanelContainer = %TargetPrompt
-@onready var _deadlock = %DeadlockOverlay   # inline overlay in the template (untyped on purpose)
+@onready var _deadlock: Control = %DeadlockOverlay
+
 
 func _ready() -> void:
 	randomize()
-	spells = DemoSpellLibrary.build()
-	state = BattleState.new(TestEncounter.enemies(), TerrainSystem.random_terrain())
+	if RunState.fragment_deck_count() <= 0:
+		RunState.autofill_fragment_deck()
+	spells = RunState.spell_deck()
+	_deck_draw = RunState.create_battle_draw()
+	var encounter := ZoneEncounters.for_zone(RunState.zone_id, RunState.pending_encounter_band)
+	state = BattleState.new(encounter, TerrainSystem.random_terrain())
 	_terrain_label.text = "TERRAIN: %s  |  %s" % [
 		state.terrain.display_name, state.terrain.description().replace("\n", "  ")]
 	_battlefield.setup(state)
 	_io.board_view.bind(board, _fragment_at)
 	_deadlock.visible = false
+	_level_up_modal = LevelUpModalScript.new()
+	add_child(_level_up_modal)
+	_level_up_modal.offer_chosen.connect(_on_level_up_offer_chosen)
 	_connect_signals()
 	_advance()
 
@@ -57,11 +70,42 @@ func _connect_signals() -> void:
 	_battlefield.player_clicked.connect(_on_player_clicked)
 	_battlefield.ultimate_pressed.connect(_on_ultimate_pressed)
 	_battlefield.spell_dropped_on.connect(_on_spell_dropped)
-	_result.restart_pressed.connect(func(): get_tree().reload_current_scene())
+	_result.restart_pressed.connect(_on_return_to_map)
 	%PromptConfirm.pressed.connect(_on_prompt_confirmed)
 	%BacklashButton.pressed.connect(_on_backlash)
 	%FizzleButton.pressed.connect(_on_fizzle)
 
+func _on_return_to_map() -> void:
+	_sync_run_after_battle()
+	if _won_battle and RunState.has_pending_level_ups():
+		_present_next_level_up()
+		return
+	get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
+
+func _present_next_level_up() -> void:
+	if not RunState.has_pending_level_ups():
+		get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
+		return
+	if _result != null:
+		_result.visible = false
+	_level_up_modal.present(RunState.peek_pending_level_up())
+
+func _on_level_up_offer_chosen(index: int) -> void:
+	var err := RunState.choose_level_up_offer(index)
+	if err != "":
+		_log_line("system", err)
+		return
+	_level_up_modal.dismiss()
+	if RunState.has_pending_level_ups():
+		_present_next_level_up()
+	else:
+		get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
+
+func _sync_run_after_battle() -> void:
+	if state != null and state.player != null:
+		RunState.set_run_hp(state.player.hp)
+	RunState.clear_pending_after_battle()
+	
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
@@ -77,6 +121,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if event.keycode == DEBUG_GRANT_KEY:
 		_debug_grant_spells()
+	if event.keycode == KEY_K:
+		_debug_kill_all_enemies()
+		return
 
 # ---------- round flow ----------
 func _advance() -> void:
@@ -111,13 +158,13 @@ func _run_enemy_actor(actor: int) -> bool:        # returns false if the battle 
 func _enemy_will_cast(i: int) -> bool:
 	return not state.enemies[i].is_broken() \
 		and state.enemies[i].get_status(StatusTypes.Status.FREEZE) <= 0 \
-		and EnemyIntentSystem.pick_spell(state.enemy_defs[i], state.turn) != null
+		and EnemyIntentSystem.pick_skill(state.enemy_defs[i], state.turn) != null
 
 func _show_enemy_prompt(i: int) -> void:
-	var spell := EnemyIntentSystem.pick_spell(state.enemy_defs[i], state.turn)
+	var skill := EnemyIntentSystem.pick_skill(state.enemy_defs[i], state.turn)
 	var caster := state.enemies[i]
-	var hit := caster if spell.target_kind == SpellDefinition.TargetKind.SELF else state.player
-	%PromptTitle.text = "%s casts %s" % [caster.display_name, spell.display_name]
+	var hit := caster if skill.target_kind == SkillDefinition.TargetKind.SELF else state.player
+	%PromptTitle.text = "%s uses %s" % [caster.display_name, skill.display_name]
 	%PromptTarget.text = "Hits: %s" % hit.display_name
 	%PromptHint.text = ""
 	%PromptCancel.visible = false
@@ -145,6 +192,11 @@ func _start_turn() -> void:
 	_selected_spell = null
 	_inspect_player = false
 	_log_line("round", "--- Your turn (round %d) ---" % state.turn)
+	if SkillResolver.should_shock_skip(state.player):
+		_log_line("system", "You are Shocked and fail to act.")
+		var shock_lines: Array[String] = []
+		_finish_turn(shock_lines)
+		return
 	var special_tiles := board.spawn_special_tiles()
 	if not special_tiles.is_empty():
 		var labels: Array[String] = []
@@ -155,7 +207,8 @@ func _start_turn() -> void:
 	if state.overload_debt > 0:
 		_log_line("system", "Overload: you draw %d fewer fragment(s) this turn." % state.overload_debt)
 	state.overload_debt = 0
-	hand = FragmentGenerator.draw(n)
+	_discard_hand()
+	hand = _deck_draw.draw(n)
 	_placed_this_turn = 0
 	selected = -1
 	_outlined.clear()
@@ -192,12 +245,21 @@ func _finish(won: bool) -> void:
 	state.over = true
 	_casting = false
 	_awaiting_enemy = -1
+	_won_battle = won
 	_prompt.visible = false
 	_battlefield.set_drop_enabled(false)
-	_log_line("system", "VICTORY! All enemies are down." if won else "DEFEAT... you ran out of HP.")
+	var xp_line := ""
+	if won and not _xp_granted:
+		_xp_granted = true
+		var gained := RunState.grant_battle_xp(state.enemy_defs)
+		xp_line = "  |  +%d XP (Lv %d)" % [LevelProgression.battle_xp_for_enemies(state.enemy_defs), RunState.player_level]
+		if gained > 0:
+			xp_line += "  |  %d level-up(s) pending" % gained
+	_sync_run_after_battle()
+	_log_line("system", ("VICTORY! All enemies are down." if won else "DEFEAT... you ran out of HP.") + xp_line)
 	_result.show_result(won,
 		"All enemies are down." if won else "You ran out of HP.",
-		"Rounds: %d" % state.turn)
+		"Rounds: %d%s" % [state.turn, xp_line])
 	_refresh_all()
 
 # ---------- chanting period: hand and board ----------
@@ -247,6 +309,7 @@ func _try_place(index: int, anchor: Vector2i) -> void:
 		_io.set_hint("Can't place there.")
 		return
 	hand.remove_at(index)
+	_deck_draw.discard(frag)
 	selected = -1
 	_placed_this_turn += frag.cells.size()
 	_outlined.clear()
@@ -301,19 +364,23 @@ func _commit_match(hit: Dictionary, match_index: int) -> void:
 func _apply_on_queue_effects(spell: SpellDefinition) -> void:
 	for fx in spell.effects:
 		if fx.kind == SpellEffect.Kind.OVERLOAD:
-			for i in fx.amount:
-				hand.append(FragmentGenerator.random_fragment())
+			var drawn := _deck_draw.draw(fx.amount)
+			for f in drawn:
+				hand.append(f)
 			state.overload_debt += fx.amount2
 			_log_line("system", "Overload! Drew %d extra fragment(s); next turn -%d." % [
-				fx.amount, fx.amount2])
+				drawn.size(), fx.amount2])
 
-# ---------- deadlock ----------
+func _discard_hand() -> void:
+	_deck_draw.discard_many(hand)
+	hand.clear()
+	selected = -1
+
 func _update_deadlock() -> void:
 	var stuck := not state.over and not _casting and _placed_this_turn == 0 \
 			and queue.is_empty() and DeadlockDetector.is_deadlocked(board, hand)
 	if not stuck:
-		_deadlock.visible = false
-		_deadlock_open = false
+		_close_deadlock()
 		return
 	var tiles := board.filled_count()
 	var check := DeadlockResolver.check_backlash(state)
@@ -323,34 +390,41 @@ func _update_deadlock() -> void:
 	_deadlock_open = true
 	var desc: Label = %DeadlockDescription
 	desc.text = "No fragment in your hand fits the board (%d tile(s) in the way).\nChoose how to clear it. Either choice ends your turn." % tiles
-	var back_btn: Button = %BacklashButton
-	back_btn.text = "Backlash (-%d HP, deal %d dmg)" % [check["cost"], DamageCalculator.basic_attack(tiles, state.player)]
+	var back_btn = %BacklashButton
+	state.ensure_valid_target()
+	var backlash_target: CombatantState = null
+	if not state.enemies.is_empty():
+		backlash_target = state.enemies[state.target_index]
+	back_btn.text = "Backlash (-%d HP, deal %d dmg)" % [
+		check["cost"],
+		DamageCalculator.basic_attack(tiles, state.player, backlash_target, state.terrain)]
 	back_btn.disabled = not check["ok"]
 	var fizzle_btn: Button = %FizzleButton
 	fizzle_btn.text = "Fizzle (free)"
 	_deadlock.visible = true
+	_deadlock_open = true
 
 func _on_backlash() -> void:
 	var lines: Array[String] = []
 	if not DeadlockResolver.backlash(state, board, lines):
 		_log_lines(lines)
 		return
-	_deadlock.visible = false
-	_deadlock_open = false
-	_outlined.clear()
-	_ghosts.clear()
+	_close_deadlock()
 	lines.append("Backlash ends your turn.")
 	_finish_turn(lines)
 
 func _on_fizzle() -> void:
 	var lines: Array[String] = []
 	DeadlockResolver.fizzle(board, lines)
+	_close_deadlock()
+	lines.append("Fizzle ends your turn.")
+	_finish_turn(lines)
+
+func _close_deadlock() -> void:
 	_deadlock.visible = false
 	_deadlock_open = false
 	_outlined.clear()
 	_ghosts.clear()
-	lines.append("Fizzle ends your turn.")
-	_finish_turn(lines)
 
 func _debug_grant_spells() -> void:
 	if _casting or state.over:
@@ -359,6 +433,15 @@ func _debug_grant_spells() -> void:
 		queue.append(QueuedSpell.new(d, [], []))
 	_log_line("system", "DEBUG: granted one copy of every spell.")
 	_refresh_all()
+	
+func _debug_kill_all_enemies() -> void:
+	if state == null or state.over:
+		return
+	for enemy in state.enemies:
+		enemy.hp = 0
+	_refresh_all()
+	if state.all_enemies_dead():
+		_finish(true)
 
 # ---------- casting period ----------
 func _on_cast() -> void:                    # one-way: no way back to chanting this turn
@@ -460,14 +543,19 @@ func _on_player_clicked() -> void:
 func _on_ultimate_pressed() -> void:
 	if state.over or _casting or _awaiting_enemy >= 0 or state.charge_gauge < 100.0:
 		return
+	var ult: UltimateDefinition = RunState.equipped_ultimate()
+	if ult == null:
+		_log_line("system", "No ultimate equipped.")
+		return
 	var spent: float = state.charge_gauge
-	var ratio: float = (spent - 100.0) / 50.0
-	var multiplier: float = lerpf(BattleConfig.ULTIMATE_MIN_MULTIPLIER,
-		BattleConfig.ULTIMATE_MAX_MULTIPLIER, clampf(ratio, 0.0, 1.0))
 	state.charge_gauge = 0.0
-	state.ultimate_active = true
-	state.player.set_damage_output_multiplier(multiplier)
-	_log_line("player", "Ultimate activated: %.2fx damage this turn." % multiplier)
+	var lines: Array[String] = []
+	UltimateResolver.activate(state, ult, spent, lines)
+	for line in lines:
+		_log_line("player", line)
+	if state.all_enemies_dead():
+		_finish(true)
+		return
 	_refresh_all()
 
 func _add_charge(amount: float, _lines: Array[String]) -> void:

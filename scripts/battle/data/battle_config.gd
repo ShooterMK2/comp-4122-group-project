@@ -87,3 +87,22 @@ const BACKLASH_MIN_HP_AFTER := 1            # Backlash is refused if it would le
 # ---------- Speed / turn order ----------
 const DUMMY_HEAL_PER_TURN := 10    # Mend: HP a dummy heals on each of its actions
 const SHIELD_DAMAGE_REDUCTION := 0.40 # Shield reduces one incoming attack by 40%
+
+# ---------- Enemy skill attack tiers (ATK-only) ----------
+const SKILL_ATTACK_POWER_LIGHT := 2
+const SKILL_ATTACK_POWER_MEDIUM := 4
+const SKILL_ATTACK_POWER_HEAVY := 7
+const SKILL_ATTACK_POWER_VERY_HEAVY := 10
+
+# ---------- Enemy ailments (duration-only, not StatusTypes) ----------
+const AILMENT_POISON_DAMAGE := 4
+const AILMENT_POISON_DEFAULT_TURNS := 3
+const AILMENT_SHOCK_CHANCE := 0.40
+const AILMENT_SHOCK_DEFAULT_TURNS := 2
+const AILMENT_WEAKEN_MULTIPLIER := 0.70   # outgoing damage while Weakened
+const AILMENT_WEAKEN_DEFAULT_TURNS := 3
+const AILMENT_SLOW_MULTIPLIER := 0.70     # effective Speed while Slowed
+const AILMENT_SLOW_DEFAULT_TURNS := 3
+const AILMENT_EXPOSE_MULTIPLIER := 1.30   # incoming damage while Exposed
+const AILMENT_EXPOSE_DEFAULT_TURNS := 3
+const SKILL_STAT_MOD_TURNS_DEFAULT := 3

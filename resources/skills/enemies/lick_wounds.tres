@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/data/skill_definition.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"lick_wounds"
+display_name = "Lick Wounds"
+kind = 1
+target_kind = 1
+attack_tier = 1
+heal_amount = 12

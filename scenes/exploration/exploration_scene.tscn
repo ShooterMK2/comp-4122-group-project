@@ -1,77 +1,28 @@
 [gd_scene format=3 uid="uid://bfqryiikxr4ib"]
 
-[ext_resource type="Texture2D" uid="uid://dstdx6nfbcqgg" path="res://assets/exploration/map.png" id="1_e2moa"]
 [ext_resource type="Script" uid="uid://b5e7hrqaan5ys" path="res://scripts/exploration/exploration_scene.gd" id="1_yi0u7"]
-[ext_resource type="PackedScene" uid="uid://cjohkwt37k7cw" path="res://scenes/exploration/map_node.tscn" id="2_yi0u7"]
+[ext_resource type="Texture2D" uid="uid://bisnqmk3h4wvp" path="res://assets/exploration/HorMap.png" id="2_ndq5p"]
 
 [node name="ExplorationSceneTemplate" type="Control" unique_id=2004036859]
-custom_minimum_size = Vector2(1280, 720)
+custom_minimum_size = Vector2(1280, 2276)
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_yi0u7")
 
 [node name="Map" type="TextureRect" parent="." unique_id=2033012195]
+z_index = -10
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("1_e2moa")
+texture = ExtResource("2_ndq5p")
 expand_mode = 1
 
-[node name="MapNode" parent="." unique_id=562395490 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 1105.0
-offset_top = 58.0
-offset_right = 1105.0
-offset_bottom = 58.0
-
-[node name="MapNode2" parent="." unique_id=1780533693 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 878.0
-offset_top = 560.0
-offset_right = 878.0
-offset_bottom = 560.0
-
-[node name="MapNode3" parent="." unique_id=46174522 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 556.0
-offset_top = 62.0
-offset_right = 556.0
-offset_bottom = 62.0
-
-[node name="MapNode4" parent="." unique_id=1385210806 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 381.0
-offset_top = 310.0
-offset_right = 381.0
-offset_bottom = 310.0
-
-[node name="MapNode5" parent="." unique_id=2038226011 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 460.0
-offset_top = 533.0
-offset_right = 460.0
-offset_bottom = 533.0
-
-[node name="MapNode6" parent="." unique_id=1503591153 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 1065.0
-offset_top = 254.0
-offset_right = 1065.0
-offset_bottom = 254.0
-
-[node name="MapNode7" parent="." unique_id=1583843147 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 688.0
-offset_top = 256.0
-offset_right = 688.0
-offset_bottom = 256.0
-
-[node name="MapNode8" parent="." unique_id=821362930 instance=ExtResource("2_yi0u7")]
-layout_mode = 0
-offset_left = 116.0
-offset_top = 510.0
-offset_right = 116.0
-offset_bottom = 510.0
+[node name="Camera2D" type="Camera2D" parent="." unique_id=628148107]
+position = Vector2(640, 0)
+limit_left = 0
+limit_top = 0
+limit_right = 1280
+limit_bottom = 2276

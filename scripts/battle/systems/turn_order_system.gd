@@ -22,6 +22,8 @@ static func effective_speed(state: BattleState, actor: int) -> float:
 	var chill := c.get_status(StatusTypes.Status.CHILL)
 	var mult := maxf(1.0 - chill * BattleConfig.CHILL_SPEED_REDUCTION_PER_STACK,
 			BattleConfig.CHILL_MIN_SPEED_FRACTION)
+	if c.has_ailment(AilmentTypes.Ailment.SLOW):
+		mult *= BattleConfig.AILMENT_SLOW_MULTIPLIER
 	return base * mult * state.terrain.speed_multiplier_for(actor == PLAYER)
 
 static func _sorted(state: BattleState, ids: Array[int]) -> Array[int]:

@@ -57,73 +57,27 @@ func set_drop_enabled(on: bool) -> void:
 
 
 func refresh(state: BattleState) -> void:
-	_player_panel.refresh(state.player, state.charge_gauge,
-		not state.over and state.charge_gauge >= 100.0)
-	_world.player_actor.set_dead(state.player.is_dead())
-
-	for i in _world.enemy_actors.size():
-		var actor := _world.enemy_actors[i]
+	var ult_name := "ULTIMATE"
+	var ult: UltimateDefinition = RunState.equipped_ultimate()
+	if ult != null:
+		ult_name = ult.display_name.to_upper()
+	_player.refresh(state.player, "", false, state.charge_gauge,
+		state.charge_gauge >= 100.0 and not state.ultimate_active, ult_name)
+	for i in _panels.size():
+		if i >= state.enemies.size():
+			continue
 		var e: CombatantState = state.enemies[i]
-		if actor.has_method("refresh"):
-			actor.refresh(e, _intent_text(state, i), i == state.target_index)
-		if actor.has_method("set_dead"):
-			actor.set_dead(e.is_dead())
-
-
-# ---------- layout ----------
-func _layout() -> void:
-	if not is_node_ready():
-		return
-	_world.layout(_world_view.size, _zone_rect(_player_zone), _zone_rect(_enemy_zone))
-
-
-func _zone_rect(zone: Control) -> Rect2:
-	return Rect2(zone.global_position - _world_view.global_position, zone.size)
-
-
-# ---------- clicks and spell drops over the world ----------
-# Returns an enemy index, -1 for the player, or NO_TARGET.
-func _target_at(pos: Vector2) -> int:
-	if pos.y > _world.ground_y:
-		return NO_TARGET
-	var half := _world.enemy_spacing * 0.5
-	for i in _world.enemy_actors.size():
-		if absf(pos.x - _world.enemy_actors[i].position.x) <= half:
-			return i
-	if absf(pos.x - _world.player_actor.position.x) <= PLAYER_HIT_HALF_WIDTH:
-		return -1
-	return NO_TARGET
-
-
-func _on_hit_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
-		return
-	var t := _target_at(event.position - _world_view.position)
-	if t >= 0:
-		enemy_clicked.emit(t)
-	elif t == -1:
-		player_clicked.emit()
-
-
-func _hit_can_drop(at_position: Vector2, data: Variant) -> bool:
-	return _drop_enabled and data is Dictionary and data.has("definition") \
-		and _target_at(at_position - _world_view.position) != NO_TARGET
-
-
-func _hit_drop(at_position: Vector2, data: Variant) -> void:
-	var t := _target_at(at_position - _world_view.position)
-	if t != NO_TARGET:
-		spell_dropped_on.emit(t, data["definition"])
-
-
-# ---------- helpers ----------
-func _intent_text(state: BattleState, i: int) -> String:
-	var e: CombatantState = state.enemies[i]
-	if e.is_dead():
-		return "Destroyed"
-	if e.is_broken():
-		return "BROKEN (skips turn)"
-	if e.get_status(StatusTypes.Status.FREEZE) > 0:
-		return "FROZEN (skips turn)"
-	var info = EnemyIntentSystem.get_intent(state.enemy_defs[i], state.turn)
-	return str(info.name)
+		var intent := ""
+		if e.is_dead():
+			intent = "Destroyed"
+		elif e.is_broken():
+			intent = "BROKEN (skips turn)"
+		elif e.get_status(StatusTypes.Status.FREEZE) > 0:
+			intent = "FROZEN (skips turn)"
+		else:
+			var info := EnemyIntentSystem.get_intent(state.enemy_defs[i], state.turn)
+			intent = str(info["name"])
+			if str(info.get("kind", "")) != "":
+				intent = "%s [%s]" % [intent, info["kind"]]
+		var panel: CombatantPanel = _panels[i]
+		panel.refresh(e, intent, i == state.target_index)

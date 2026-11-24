@@ -13,13 +13,14 @@ the playable Godot battle prototype. It describes the implementation, not planne
 | Reordering | Remaining actors are re-sorted after every spell/action |
 | Victory | All enemies reach 0 HP |
 | Defeat | Player reaches 0 HP |
-| Test encounter | Player plus three Wooden Dummies |
+| Test encounter | Ash Hound + Wooden Dummy (Fire) + Wooden Dummy (Ice) |
 | Player defaults | 100 HP, 5 ATK, 3 DEF, 4 SPD |
-| Test enemies | Wooden Dummy A, B, and C use separate resources |
-| Dummy A | 500 HP, 1 ATK, 2 DEF, 6 SPD; Fire variant |
-| Dummy B | 750 HP, 1 ATK, 4 DEF, 2 SPD; Ice variant |
-| Dummy C | 630 HP, 1 ATK, 6 DEF, 0.5 SPD; Lightning variant |
-| Dummy action | **Mend**: heals itself for 10 HP |
+| Ash Hound | Level 2, Rank MINOR; 100 HP, 5 ATK, 2 DEF, 4 SPD; weak Ice, strong Fire |
+| Ash Hound skills | Cinder Bite → Smoke Snarl → Ember Fever → Lick Wounds (cycle) |
+| Dummy (Fire) | Level 1, Rank MINOR; 500 HP, 1 ATK, 2 DEF, 6 SPD; **Mend** only |
+| Dummy (Ice) | Level 1, Rank MINOR; 750 HP, 1 ATK, 4 DEF, 2 SPD; **Mend** only |
+| Player actions | Board **spells** via `SpellResolver` |
+| Enemy actions | Authored **skills** via `SkillResolver` (no casting board) |
 
 ### Effective Speed
 
@@ -32,11 +33,13 @@ Temporary Speed =
 Effective Speed =
     Temporary Speed
     × max(1 - Chill stacks × 0.25, 0.50)
+    × Slow multiplier (0.70 if Slow ailment is active, else 1.00)
     × terrain Speed multiplier
 ```
 
-The Chill term applies only when the combatant has Chill. A Speed buff or
-debuff changes the order immediately when the order is refreshed.
+The Chill term applies only when the combatant has Chill. Slow is an enemy
+ailment (duration-only). A Speed buff or debuff changes the order immediately
+when the order is refreshed.
 
 ## 2. Round and turn flow
 
@@ -56,14 +59,17 @@ Start round
 1. Age special board tiles; a special tile expires after two player-turn
    advances if it has not been used.
 2. Reduce temporary ATK/DEF/SPD tile-effect durations by one.
-3. Draw a hand of **4 fragments**, reduced by any Overload debt.
-4. Place and rotate fragments on the **10 × 10** board.
-5. Match spell patterns and add matches to the spell queue.
-6. Continue placing fragments or reorder the queue.
-7. Press **Cast** to resolve queued spells, then one basic board attack if
+3. If **Shock** ailment is active: **40%** chance to skip the whole action
+   (still run end-of-turn effects), then continue the round.
+4. Draw a hand of **4 fragments**, reduced by any Overload debt.
+5. Place and rotate fragments on the **10 × 10** board.
+6. Match spell patterns and add matches to the spell queue.
+7. Continue placing fragments or reorder the queue.
+8. Press **Cast** to resolve queued spells, then one basic board attack if
    occupied tiles remain.
-8. Apply the player's end-of-turn Burn, Decay, and Chill effects.
-9. Finish the player's action and continue the round.
+9. Apply end-of-turn Burn, Decay, Chill, then enemy-ailment ticks (Poison,
+   then ailment duration countdown).
+10. Finish the player's action and continue the round.
 
 ## 3. Fragments, board, and spell matching
 
@@ -111,7 +117,10 @@ alive. Casting can be cancelled only before the first step resolves.
 
 ## 4. Damage and defence
 
-### Spell damage formula
+Player board spells and enemy Attack skills use **different** outgoing
+formulas. Both apply the same receive path for normal hits (`take_damage`).
+
+### Player spell damage formula
 
 The damage model separates the spell's base damage from effect bonuses:
 
@@ -143,6 +152,7 @@ Final damage =
       × Defence multiplier
       × Elemental multiplier
       × random multiplier
+      × Weaken multiplier
       + flat effect bonus
     )
     × Broken multiplier))
@@ -158,32 +168,61 @@ Where:
 - `Broken multiplier` is `2.45` while Broken, otherwise `1.00`. It is applied
   after flat bonuses so all damage sources receive the same Broken increase.
 - `random multiplier` is uniformly selected from `0.90` to `1.15`.
+- `Weaken multiplier` is `0.70` if the attacker has the Weaken ailment,
+  otherwise `1.00`.
 - The default `Other multiplier` is `1.00`. Defined tier values are Low
   `0.20`, Medium `0.45`, and High `0.90`.
 
-### Basic board attack
+### Player basic board attack
 
 ```text
 Base = board tiles × 0.25 × effective ATK
        × terrain neutral-element ATK multiplier
        × ultimate damage multiplier
-Final damage = ceil(Base × defence × elemental × random × Broken multiplier)
+Final damage = ceil(Base × defence × elemental × random × Weaken
+                    × Broken multiplier)
 ```
 
 The basic attack uses element `NONE`, so it normally receives the default
 elemental multiplier of `1.00`.
 
-### Direct status damage
+### Enemy Attack skill damage
+
+Enemy Attack skills do **not** use spell base × 0.40, terrain, elemental
+table, Ultimate, Broken, or flat spell bonuses. Tier powers:
+
+| Tier | Power |
+|---|---:|
+| Light | 2 |
+| Medium | 4 |
+| Heavy | 7 |
+| Very Heavy | 10 |
 
 ```text
-Final status damage =
-  ceil(max(0, status base damage × Broken multiplier))
+damage = ceil(
+  tier_power
+  × max(1, ATK)
+  × ATK multiplier
+  × Weaken multiplier
+  × Defence multiplier   # same curve as player spells vs the target
+  × random[0.90 .. 1.15]
+)
 ```
 
-Status damage uses its configured base value and the Broken multiplier. It
-does not use spell ATK, defence, elemental, terrain, or random modifiers.
+Then `take_damage` (Expose + Shield). Example: Ash Hound **Cinder Bite**
+(Medium, ATK 5, no mods) is `ceil(4 × 5 × …)` before DEF/random/Shield.
 
-### Elemental multipliers
+### Direct status / DoT damage
+
+```text
+Final =
+  ceil(max(0, base × Broken? × Expose?))
+```
+
+Uses `StatusSystem.deal_direct`. With `DOT_IGNORES_SHIELD = true`, DoTs
+bypass Shield. Applies to Burn, Decay, Detonate, Corruption, and Poison.
+
+### Elemental multipliers (player spells only)
 
 | Target relationship | Multiplier |
 |---|---:|
@@ -191,10 +230,21 @@ does not use spell ATK, defence, elemental, terrain, or random modifiers.
 | Target strength (Countering) | 0.65× |
 | No weakness/strength match | 1.00× |
 
-If the defender has at least 1 Shield, one normal incoming attack is reduced
-by 40% and exactly 1 Shield is consumed. Shield has no maximum based on max HP
-and does not absorb the full attack. Burn, Decay, Detonate, and Corruption
-remain direct damage and bypass Shield.
+### Damage received (`take_damage`)
+
+Used by player spells, basic attacks, and enemy Attack skills:
+
+```text
+scaled = ceil(amount × Expose?)     # 1.30 if Expose, else 1.00
+if Shield > 0:
+  incoming = ceil(scaled × 0.60)    # 40% reduction; consume 1 Shield
+else:
+  incoming = scaled
+HP lost = min(HP, incoming)
+```
+
+Shield has no max-HP cap. Burn, Decay, Detonate, Corruption, and Poison use
+`deal_direct` and bypass Shield when configured.
 
 ## 5. Status effects
 
@@ -222,6 +272,42 @@ remain direct damage and bypass Shield.
 | Hellfire | Applies 4 Burn to the target and 2 Self Burn to the player |
 | Chain Bolt | Applies 2 Conductive and triggers Overload |
 | Each Fire/Ice/Earth/Wind/Lightning/Dark spell | Applies its configured status, defensive, or utility effect |
+
+## 5b. Enemy skills and ailments
+
+Enemies do not use the casting board. Each `EnemyDefinition` authors
+`level`, `rank`, and a `skills` list (resources under
+`resources/skills/enemies/`). On their turn, intent cycles
+`skills[(turn - 1) % size]`.
+
+| Skill kind | Behaviour |
+|---|---|
+| **Attack** | Tiered ATK formula above; target HOSTILE (player) |
+| **Heal** | Flat HP restore; usually SELF |
+| **Support** | ATK / DEF / SPD buff or debuff for N turns (`apply_stat_mod`) |
+| **Status Ailment** | Apply one enemy ailment with duration; no primary Attack damage |
+
+### Ash Hound skill cycle
+
+| Order | Skill | Kind | Detail |
+|---|---|---|---|
+| 1 | Cinder Bite | Attack | Medium tier |
+| 2 | Smoke Snarl | Support | DEF debuff on player, 3 turns |
+| 3 | Ember Fever | Status Ailment | Poison, 3 turns |
+| 4 | Lick Wounds | Heal | +12 HP self |
+
+### Enemy ailments (`AilmentTypes`)
+
+Separate from player elemental `StatusTypes`. Duration-only; re-apply
+**refreshes** duration; **no stacks**.
+
+| Ailment | Default turns | Rule |
+|---|---:|---|
+| **Poison** | 3 | End of turn: 4 fixed direct damage, then duration ticks |
+| **Shock** | 2 | Start of turn: 40% chance to skip the action; duration still ticks |
+| **Weaken** | 3 | Outgoing damage × 0.70 |
+| **Slow** | 3 | Effective Speed × 0.70 |
+| **Expose** | 3 | Incoming damage × 1.30 |
 
 ## 6. Break, charge, and ultimate
 
@@ -254,7 +340,11 @@ Charge is not added while an ultimate is active.
 
 ### Ultimate
 
-The ultimate is available at **100 or more charge**. On activation:
+The player equips one ultimate from Inventory → Ultimates (default **Overdrive**).
+The ultimate is available at **100 or more charge**. On activation the gauge
+resets to `0` and the equipped skill resolves:
+
+**Overdrive** (original damage burst):
 
 ```text
 spent charge = current gauge
@@ -262,8 +352,9 @@ ratio = clamp((spent charge - 100) / 50, 0, 1)
 damage multiplier = lerp(2.75, 3.50, ratio)
 ```
 
-The gauge is reset to `0`, and the multiplier applies to the player's damage
-for the current turn.
+Other skills (Second Wind, Iron Ward, Bloodlust, Shockwave) use the same charge
+spend / threshold but apply heal, shield, ATK buff, or AoE hit instead. See
+`UltimateLibrary` / `UltimateResolver`.
 
 ## 7. Terrain
 
@@ -328,8 +419,18 @@ Backlash is refused if `current HP - cost < 1`.
 
 ## 11. Enemy resolution
 
-Enemy intent is shown in the battlefield UI. Enemy spells use the same generic
-spell resolver as player spells, but enemies do not use the casting board.
+Enemy intent is shown in the battlefield UI (skill name + kind). Resolution
+uses `SkillResolver`, not `SpellResolver`.
+
+Enemy turn order of checks:
+
+1. **Broken** — skip action (Break turn processed)
+2. Else **Frozen** — skip action; lose Freeze stacks
+3. Else **Shock** — 40% chance to skip action
+4. Else optional **Corruption** trigger on the enemy, then cast the selected
+   skill on the player (or self for Heal)
+5. End-of-turn Burn / Decay / Chill / ailment ticks
+6. Corruption life steal to the player if Corruption triggered
 
 The current configuration has enemy confirmation disabled:
 
@@ -337,9 +438,7 @@ The current configuration has enemy confirmation disabled:
 CONFIRM_ENEMY_ACTIONS = false
 ```
 
-Therefore, enemy actions proceed automatically after the player's turn.
-Frozen or Broken enemies skip their action before normal enemy spell
-resolution.
+Therefore enemy skills proceed automatically after the player's turn.
 
 ## 12. Controls
 

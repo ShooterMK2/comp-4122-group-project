@@ -33,8 +33,21 @@ func setup(art_name: String, color: Color) -> void:
 	%PortraitTexture.visible = tex != null
 	%PortraitPlaceholder.visible = tex == null
 	%PortraitPlaceholder.color = color
+	%ArtSprite.texture = tex
+	%ArtSprite.visible = tex != null
+	%ArtSprite.position = Vector2(SPRITE_SIZE, SPRITE_SIZE) / 2.0
+	if tex != null:
+		var longest := maxf(tex.get_width(), tex.get_height())
+		%ArtSprite.scale = Vector2.ONE * (SPRITE_SIZE / longest)
+	%Placeholder.visible = tex == null
+	%Placeholder.color = color
+	%PlaceholderLabel.visible = tex == null
+	%PlaceholderLabel.text = placeholder_text
 
-func refresh(c: CombatantState, charge: float, can_ultimate: bool) -> void:
+# Same signature as CombatantPanel.refresh so BattlefieldPanel keeps working.
+func refresh(c: CombatantState, _intent_text: String, _is_target: bool,
+		charge: float = 0.0, can_ultimate: bool = false,
+		ultimate_label: String = "ULTIMATE") -> void:
 	var dead := c.is_dead()
 	var pct := 100.0 * float(c.hp) / float(maxi(c.max_hp, 1))
 	%HpLabel.text = "%d/%d" % [c.hp, c.max_hp]
@@ -44,12 +57,10 @@ func refresh(c: CombatantState, charge: float, can_ultimate: bool) -> void:
 	_hp_tween.tween_property(%HpBar, "value", pct, HP_TWEEN_TIME)
 	%StatusLabel.text = CombatantText.status_line(c)
 	%ChargeBar.value = charge
-	_can_ultimate = can_ultimate and not dead
-	if _can_ultimate:
-		%ChargeLabel.text = "ULTIMATE READY (%.0f/%.0f) - click the portrait" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
-	else:
-		%ChargeLabel.text = "Charge %.0f / %.0f" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
-	_set_glow(_can_ultimate)
+	%ChargeLabel.text = "Charge %.0f%% / %.0f%%" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
+	%UltimateButton.text = ultimate_label if not ultimate_label.is_empty() else "ULTIMATE"
+	%UltimateButton.disabled = not can_ultimate
+	_set_glow(can_ultimate and not dead)
 	modulate = Color(0.45, 0.45, 0.45) if dead else Color.WHITE
 
 func _on_portrait_input(event: InputEvent) -> void:

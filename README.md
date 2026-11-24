@@ -7,22 +7,21 @@
 - [x] Define base damage and the damage formula () - Lok
 - [ ] Decide whether special grids are random or fixed ()
 - [ ] Decide the boss ultimate interval ()
-- [ ] Decide whether levels and talents exist ()
-- [ ] Create the autoload singleton for run state ()
+- [x] Decide whether levels and talents exist (levels: yes, light run XP; talents: deferred)
+- [x] Create the autoload singleton for run state ()
 
 ## 2. Core Battle System
 
 - [x] Build the battle state machine: player turn, enemy turn, resolve, end — Jimmy
 - [x] Build the casting board and grid data structure — Jimmy
-- [ ] Implement the element system and weakness table ()
-- [ ] Implement damage multiplier modification ()
+- [x] Implement the element system and weakness table ()
+- [x] Implement damage multiplier modification ()
 - [ ] Implement board buffs to elements (damage +/−)
-- [ ] Implement special grids on the board ()
+- [x] Implement special grids on the board ()
 - [x] Implement turn order based on the Speed stat — Jimmy
-- [ ] Implement the turn timer and its timeout behaviour ()
-- [ ] Build the status effect framework: duration, stacking, removal ()
+- [x] Build the status effect framework: duration, stacking, removal ()
 - [x] Implement knock-down status: weakness trigger, enemy disabled for x turns, ×1.5 damage (to be tuned) () - Lok
-- [] Add win/lose conditions and a result screen ()
+- [ ] Add win/lose conditions and a result screen ()
 
 ## 3. Spells and Fragments
 
@@ -34,35 +33,33 @@
 - [x] Implement base stats: HP, damage multipliers, DEF, Speed () - Lok
 - [x] Implement the charging gauge () - Lok
 - [x] Implement FEVER mode: trigger, duration, effects () - Lok
-- [x] Implement the character ultimate () - Lok
-- [ ] Implement talents (element buffs, stat changes) **[?]** 
-- [ ] Implement levels/progression **[?]** 
+- [x] Implement the character ultimate (selectable ultimates; Overdrive = original charge damage burst)
+- [ ] Implement talents (element buffs, stat changes) **[deferred]** 
+- [x] Implement levels/progression (run Lv 1–120, battle+milestone XP, guaranteed stat + 1-of-3 non-stat pick; zone enemy levels; overlevel soft gap ~18; level HUD deferred) 
 - [ ] Add more selectable characters and a select screen **[?]**
 
 ## 5. Enemy and Boss AI
 
-- [ ] Build the enemy base class and stats ()
-- [ ] Implement minion AI with fixed damage ()
-- [ ] Add minion effects **[?]**
+- [x] Build the enemy base class and stats ()
+- [x] Implement minion AI with fixed damage ()
+- [x] Add minion effects **[?]**
 - [ ] Implement elite AI: multiple spells, one per attack, forming a combo ()
 - [x] Show enemy intent (telegraphing) — Jimmy
 - [ ] Implement boss AI built on the elite framework with higher damage ()
 - [ ] Add boss ultimate spells on the set interval ()
 - [ ] Add the boss ability to ban grids on the board ()
 - [ ] Add boss terrain-change status **[?]**
-- [ ] Add more enemies ()
+- [x] Add more enemies ()
 
 ## 6. Equipment, Inventory and Economy
 
-- [ ] Implement armour (player stat modifiers)
+- [x] Implement armour (player stat modifiers)
 - [ ] Implement casting boards (weapons): board shape and board buffs ()
-- [ ] Build the backpack/inventory system ()
-- [ ] Add spell and fragment capacity limits ()
-- [ ] Implement equip/unequip logic with stat recalculation ()
-- [ ] Implement buff items **[?]**
-- [ ] Implement consumables **[?]**
-- [ ] Let inventory affect stats, storyline and economy **[?]**
-- [ ] Implement the gold economy: income, prices, sinks ()
+- [x] Build the backpack/inventory system ()
+- [x] Implement equip/unequip logic with stat recalculation ()
+- [x] Implement consumables (use anytime; next-battle modifiers)
+- [x] Let inventory affect stats / story flags / gold APIs
+- [x] Gold economy APIs (start at 0; income/shop sinks later)
 
 ## 7. Exploration and Run Flow
 
@@ -91,15 +88,15 @@
 - [ ] Dialogue system, if used
 - [ ] Event node UI: choices and buttons
 - [ ] Shop UI
-- [ ] Inventory/backpack UI
+- [x] Inventory/backpack UI
 - [ ] Main menu, pause and settings
 
 ## 10. Art, Animation and Audio ()
 
 - [ ] Player character art
 - [ ] Enemy art
-- [ ] Item art
-- [ ] Spell icons
+- [x] Item art (starter inventory icons)
+- [x] Spell icons (shared spell glyph)
 - [ ] Character animations
 - [ ] Attack action animations
 - [ ] Spell animations and FX
@@ -113,8 +110,8 @@ spell-casting game. Players build spells by placing rotatable fragments on a
 casting board, match the board against spell patterns, and resolve the
 resulting attacks and status effects against a group of enemies.
 
-The project is currently focused on validating the battle system and its user
-interface. It is a playable combat prototype, not yet a complete game.
+The project is a playable combat + run prototype: exploration map, tabbed
+inventory, and template battle wired to `RunState`.
 
 ## Requirements
 
@@ -129,17 +126,41 @@ a 1280 x 720 viewport.
 1. Open Godot.
 2. Select **Import** and choose the repository folder.
 3. Open `project.godot`.
-4. Press **F6** to run the current scene, or **F5** to run the project.
+4. Press **F5** to run the project (exploration map).
 
 The project entry point is:
 
 ```text
-res://scenes/battle/battle_scene.tscn
+res://scenes/exploration/exploration_scene.tscn
 ```
 
-The reusable battle-template UI is assembled separately in
-`res://scenes/battle/battle_scene_template.tscn`. It is not the project entry
-point and does not replace the original battle scene.
+Flow: **Inventory** on the map (use consumables anytime; battle-bound effects
+queue for the next fight) → battle node →
+`res://scenes/battle/battle_scene_template.tscn`. After victory/defeat,
+**Return to Map** syncs run HP and clears pending item modifiers.
+
+### Run state and inventory
+
+Autoload `RunState` (`scripts/run/run_state.gd`) holds gold (starts at 0),
+equipment loadout (Weapon / Armour / Alt Armour / Accessory), owned items,
+spell bag + spell deck (cap 18), fragment bag and fragment deck (size 12),
+pending next-battle modifiers, and **run leveling** (Lv 1–120).
+
+**Leveling (locked):**
+- XP from battle wins and milestones (map nodes / zone exit).
+- Each level-up: **guaranteed** permanent stat-up, then pick **1 of 3** non-stat rewards.
+- Zone 1 encounters are authored by band (early/mid/late, enemy Lv 1–20); stats suggested in the 1–500 band.
+- Overlevel soft combat penalty (deal less / take more); harsh around **gap 18**.
+- Talents and on-HUD level display are **deferred**.
+
+- Inventory UI: `scenes/run/inventory_screen.tscn`
+- Level-up modal: `scripts/run/ui/level_up_modal.gd`
+- Starter content: `scripts/content/items/starter_content.gd`
+- Zone encounters: `scripts/content/encounters/zone_encounters.gd`
+- Ultimates: `scripts/content/ultimates/ultimate_library.gd` — own several; equip from the exploration **Player Card** only (not Inventory). Battle button uses the active skill (`Overdrive` = original charge-scaled damage burst).
+- Player Card: map icon → `scripts/run/ui/player_card_overlay.gd` — HP/Lv/XP/stats/gear/ultimate; Details expands breakdown, start shield, pending modifiers.
+- Battle draws fragments from the fragment deck only (reshuffle discard when empty).
+- Stats display as `ATK = total (base + [equip] + {item} + <level>)` via `StatCalculator`.
 
 ## Battle template UI
 
@@ -164,9 +185,8 @@ target-detail sidebar. Its `cast_pressed`, `reset_pressed`, and
 
 The corresponding presentation scripts are in
 `scripts/battle/ui_scene/`. They update existing scene nodes and emit input
-signals; gameplay rules remain in the battle systems. The template is useful
-for editing and testing the reusable UI without changing the original
-`battle_scene.tscn`.
+signals; gameplay rules remain in the battle systems. The template is the
+only battle scene; `battle_template_controller.gd` wires it to `RunState`.
 
 ## How to play
 
@@ -177,7 +197,7 @@ action, so Speed changes from status effects take effect immediately.
 
 On the player's turn:
 
-1. Draw a hand of elemental fragments.
+1. Draw a hand of elemental fragments from your fragment deck.
 2. Place fragments on the 10 x 10 casting board and rotate them to fit.
 3. Match the board against spell patterns. If multiple matches are available,
    choose the spell and board position from the match menu, then reorder the
@@ -335,91 +355,28 @@ not listed individually below.
 │   └── vfx/
 │       └── .gitkeep
 ├── scenes/
+│   ├── exploration/
+│   │   └── exploration_scene.tscn    # Project main scene (map + inventory)
+│   ├── run/
+│   │   └── inventory_screen.tscn     # Tabbed inventory
 │   └── battle/
-│       ├── battle_scene.tscn          # Existing scene entry point
-│       ├── battle_scene_template.tscn # Reusable template UI composition
+│       ├── battle_scene_template.tscn # Battle entry (template UI)
 │       └── ui/                        # Reusable battle UI scenes
-│           ├── element_chip.tscn
-│           ├── combatant_panel.tscn
-│           ├── spell_card.tscn
-│           ├── battlefield.tscn
-│           ├── spell_zone.tscn
-│           ├── target_detail.tscn
-│           ├── battle_io.tscn
-│           ├── result_overlay.tscn
-│           └── log_console.tscn
 ├── scripts/
-│   ├── battle/                       # Main battle prototype
-│   │   ├── ui_scene/                 # Reusable template UI presentation
-│   │   │   ├── element_chip.gd
-│   │   │   ├── combatant_text.gd
-│   │   │   ├── combatant_panel.gd
-│   │   │   ├── spell_card.gd
-│   │   │   ├── spell_zone.gd
-│   │   │   ├── target_detail.gd
-│   │   │   ├── battlefield.gd
-│   │   │   └── battle_io.gd
-│   │   ├── ai/
-│   │   │   └── .gitkeep
-│   │   ├── battle_controller.gd      # Battle setup and interaction flow
-│   │   ├── terrain/
-│   │   │   └── .gitkeep
-│   │   ├── data/                     # Definitions and balance data
-│   │   │   ├── battle_config.gd
-│   │   │   ├── element_requirement.gd
-│   │   │   ├── enemy_definition.gd
-│   │   │   ├── fragment_data.gd
-│   │   │   ├── player_definition.gd
-│   │   │   ├── spell_definition.gd
-│   │   │   ├── spell_effect.gd
-│   │   │   ├── spell_pattern.gd
-│   │   │   └── status_types.gd
-│   │   ├── models/                   # Mutable runtime battle state
-│   │   │   ├── battle_state.gd
-│   │   │   ├── casting_board_model.gd
-│   │   │   ├── combatant_state.gd
-│   │   │   └── queued_spell.gd
-│   │   ├── systems/                  # Battle rules and resolution
-│   │   │   ├── damage_calculator.gd
-│   │   │   ├── deadlock_detector.gd
-│   │   │   ├── deadlock_resolver.gd
-│   │   │   ├── enemy_intent_system.gd
-│   │   │   ├── fragment_generator.gd
-│   │   │   ├── spell_matcher.gd
-│   │   │   ├── spell_resolver.gd
-│   │   │   ├── status_system.gd
-│   │   │   ├── turn_order_system.gd
-│   │   │   └── turn_resolver.gd
-│   │   └── ui/                       # Battle interface components
-│   │       ├── battle_log_view.gd
-│   │       ├── battlefield_view.gd
-│   │       ├── casting_board_view.gd
-│   │       ├── combatant_view.gd
-│   │       ├── deadlock_overlay.gd
-│   │       ├── fragment_card.gd
-│   │       ├── fragment_preview.gd
-│   │       ├── fragment_zone.gd
-│   │       ├── spell_entry.gd
-│   │       ├── spell_queue_view.gd
-│   │       ├── target_prompt.gd
-│   │       ├── tile_cell.gd
-│   │       ├── turn_indicator.gd
-│   │       └── turn_order_bar.gd
-│   ├── content/                      # Playable prototype content
-│   │   ├── enemies/
-│   │   │   └── .gitkeep
-│   │   ├── encounters/
-│   │   │   └── test_encounter.gd
-│   │   ├── items/
-│   │   │   └── .gitkeep
-│   │   └── spells/
-│   │       ├── demo_spell_library.gd
-│   │       └── enemy_spell_library.gd
-│   ├── debug/
-│   │   └── debug_panel.gd
-│   └── shared/                       # Cross-system definitions and helpers
-│       ├── asset_lookup.gd
-│       └── elements.gd
+│   ├── run/                          # RunState, inventory, decks, gold APIs
+│   │   ├── run_state.gd              # Autoload
+│   │   ├── ui/inventory_screen.gd
+│   │   └── ...
+│   ├── battle/                       # Battle systems + template controller
+│   │   ├── battle_template_controller.gd
+│   │   ├── ui_scene/                 # Template UI presentation scripts
+│   │   ├── data/ / models/ / systems/ / terrain/
+│   ├── content/
+│   │   ├── items/starter_content.gd  # Starter gear, consumables, fragments
+│   │   ├── encounters/test_encounter.gd
+│   │   └── spells/demo_spell_library.gd
+│   ├── exploration/exploration_scene.gd
+│   └── shared/
 ├── .editorconfig                     # Editor formatting defaults
 ├── .gitattributes                    # Git file handling rules
 ├── .gitignore                        # Ignored generated and local files
@@ -455,11 +412,9 @@ The tile UI calls this helper whenever it displays a tile:
 var tex: Texture2D = Elements.texture_of(element)
 ```
 
-This is used by `scripts/battle/ui/tile_cell.gd` for board cells and by
-`scripts/battle/ui/fragment_preview.gd` for fragment cards and drag previews. Adding a
-new elemental texture therefore requires updating the element metadata and
-placing the corresponding file in the configured asset directory; callers do
-not need separate path logic.
+Board and hand UI under `scripts/battle/ui_scene/` use this helper for tiles.
+Adding a new elemental texture requires updating the element metadata and
+placing the corresponding file in the configured asset directory.
 
 ### Character and enemy artwork
 
@@ -467,9 +422,8 @@ not need separate path logic.
 searches
 the directories listed in `CHARACTER_DIRS`, tries the extensions in
 `EXTENSIONS` (`png` and `webp`), and returns the first matching texture.
-`scripts/battle/ui/combatant_view.gd` uses this helper when it receives an enemy or
-player art name. If no file is found, the view uses its configured
-placeholder color and label instead of failing to construct the combatant UI.
+Combatant panels in `scripts/battle/ui_scene/` use this helper for art names.
+If no file is found, the view uses a configured placeholder color instead.
 
 The art name comes from data definitions. For example,
 `scripts/battle/data/battle_config.gd` contains the current player and
@@ -489,9 +443,10 @@ asset directory searched by `AssetLookup`.
 ## Battle architecture
 
 The battle code is separated into data resources, mutable models, systems,
-and UI views. `scripts/battle/battle_controller.gd` creates the runtime objects,
-connects signals, and coordinates these layers. Rules should generally stay
-in models or systems; UI scripts should present state and emit input events.
+and UI views. `scripts/battle/battle_template_controller.gd` creates the runtime
+objects, connects signals, and coordinates these layers with `RunState`.
+Rules should generally stay in models or systems; UI scripts should present
+state and emit input events.
 
 ### Implemented gameplay systems
 
@@ -646,36 +601,16 @@ The shared scripts complement these data definitions:
 
 ## UI scripts
 
-The UI layer is created at runtime by `scripts/battle/battle_controller.gd`.
-
-- `scripts/battle/ui/battlefield_view.gd` displays the player and enemies, enemy
-  intent, HP/status information, and target selection.
-- `scripts/battle/ui/casting_board_view.gd` displays the grid, placement previews,
-  spell outlines, and drag-and-drop targets.
-- `scripts/battle/ui/tile_cell.gd` renders one board cell and handles tile drop input.
-- `scripts/battle/ui/fragment_zone.gd`, `fragment_card.gd`, and
-  `fragment_preview.gd` display the hand, selection, rotation, and drag data.
-- `scripts/battle/ui/spell_queue_view.gd` and `spell_entry.gd` display matched spells,
-  projected final damage, previews, and queue reorder controls.
-- `scripts/battle/ui/turn_indicator.gd` displays the round and Cast/Reset actions.
-- `scripts/battle/ui/turn_order_bar.gd` displays actor order and effective Speed.
-- `scripts/battle/ui/target_prompt.gd` displays target confirmation and
-  cancellation controls.
-- `scripts/battle/ui/deadlock_overlay.gd` displays the Backlash and Fizzle
-  choices for a deadlocked hand.
-- `scripts/battle/ui/battle_log_view.gd` displays combat-resolution messages.
-- `scripts/battle/ui/combatant_view.gd` renders an individual player or enemy.
-- `scripts/debug/debug_panel.gd` exposes testing controls for rerolling and
-  granting elemental fragments.
+Battle presentation lives under `scripts/battle/ui_scene/` (template scenes in
+`scenes/battle/ui/`). Inventory UI lives under `scripts/run/ui/`.
 
 ## Important files
 
-- `scripts/battle/battle_controller.gd` — scene setup, signal wiring, turn flow, and
-  battle interaction coordination.
-- `scenes/battle/battle_scene.tscn` — the scene entry point; the controller builds
-  the rest of the interface at runtime.
-- `scenes/battle/battle_scene_template.tscn` — reusable template composition for
-  the split battle UI.
+- `scripts/run/run_state.gd` — run autoload (gold, inventory, decks, pending modifiers).
+- `scenes/exploration/exploration_scene.tscn` — project main scene.
+- `scenes/run/inventory_screen.tscn` — inventory UI.
+- `scripts/battle/battle_template_controller.gd` — battle coordination + RunState hooks.
+- `scenes/battle/battle_scene_template.tscn` — battle scene.
 - `scripts/battle/ui_scene/battle_io.gd` — switches the template between
   Chanting and Casting presentation states and emits UI input signals.
 - `scripts/battle/systems/spell_matcher.gd` — board-pattern and requirement matching.

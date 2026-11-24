@@ -3,7 +3,7 @@ extends RefCounted
 
 const S := StatusTypes.Status
 
-# END of a unit's own turn: Burn, Decay, then natural stack loss.
+# END of a unit's own turn: Burn, Decay, then natural stack loss, then ailments.
 static func end_turn_effects(c: CombatantState, _log: Array[String]) -> void:
 	var burn := c.get_status(S.BURN)
 	if burn > 0:
@@ -16,6 +16,7 @@ static func end_turn_effects(c: CombatantState, _log: Array[String]) -> void:
 		c.consume_status(S.DECAY, BattleConfig.DECAY_LOSS_PER_TURN)
 		_log.append("%s takes %d Decay damage." % [c.display_name, dmg2])
 	c.consume_status(S.CHILL, BattleConfig.CHILL_LOSS_PER_TURN)
+	AilmentSystem.end_turn(c, _log)
 
 static func run_enemy_action(state: BattleState, i: int, _log: Array[String]) -> void:
 	var e := state.enemies[i]
@@ -29,6 +30,8 @@ static func run_enemy_action(state: BattleState, i: int, _log: Array[String]) ->
 	elif e.get_status(S.FREEZE) > 0:
 		e.consume_status(S.FREEZE, BattleConfig.FREEZE_LOSS_PER_SKIP)
 		_log.append("%s is Frozen and skips its turn (no Corruption trigger)." % e.display_name)
+	elif SkillResolver.should_shock_skip(e):
+		_log.append("%s is Shocked and fails to act." % e.display_name)
 	else:
 		var corr := e.get_status(S.CORRUPTION)
 		if corr > 0:
@@ -38,9 +41,9 @@ static func run_enemy_action(state: BattleState, i: int, _log: Array[String]) ->
 			_log.append("Corruption x%d deals %d Dark damage to %s." % [corr, cdmg, e.display_name])
 		if e.is_dead():
 			return
-		var spell := EnemyIntentSystem.pick_spell(state.enemy_defs[i], state.turn)
-		if spell != null:
-			SpellResolver.cast(spell, e, state.player, state, _log)
+		var skill := EnemyIntentSystem.pick_skill(state.enemy_defs[i], state.turn)
+		if skill != null:
+			SkillResolver.cast(skill, e, state.player, state, _log)
 		else:
 			_log.append("%s stands still." % e.display_name)
 

@@ -7,6 +7,9 @@ var hp := 1
 var level := 1
 var attack := 1
 var defence := 0
+## Player side uses encounter max level for overlevel gap; enemies use player level.
+var is_player := false
+var compare_level := 1
 var attack_multiplier := 1.0
 var defence_multiplier := 1.0
 var speed_multiplier := 1.0
@@ -17,6 +20,7 @@ var elemental_weaknesses: Array[int] = []
 var elemental_strengths: Array[int] = []
 var shield := 0
 var statuses := {}
+var ailments := {}  # AilmentTypes.Ailment -> turns remaining (no stacks)
 var break_rank := EnemyDefinition.Rank.MINOR
 var break_hits := 0
 var break_threshold := 0
@@ -65,11 +69,12 @@ func consume_status(s: int, n: int = -1) -> int:
 	return take
 
 func take_damage(amount: int) -> Dictionary:
-	var incoming := amount
+	var scaled := maxi(0, ceili(amount * incoming_ailment_multiplier()))
+	var incoming := scaled
 	var absorbed := 0
 	if shield > 0:
-		incoming = ceili(amount * (1.0 - BattleConfig.SHIELD_DAMAGE_REDUCTION))
-		absorbed = amount - incoming
+		incoming = ceili(scaled * (1.0 - BattleConfig.SHIELD_DAMAGE_REDUCTION))
+		absorbed = scaled - incoming
 		shield -= 1
 	var lost := mini(hp, incoming)
 	hp -= lost
@@ -96,11 +101,45 @@ func duplicate_state() -> CombatantState:
 	c.hp = hp
 	c.shield = shield
 	c.statuses = statuses.duplicate()
+	c.ailments = ailments.duplicate()
 	c.break_rank = break_rank
 	c.break_hits = break_hits
 	c.break_threshold = break_threshold
 	c.break_last_processed_turn = break_last_processed_turn
+	c.is_player = is_player
+	c.compare_level = compare_level
 	return c
+
+func get_ailment(a: int) -> int:
+	return ailments.get(a, 0)
+
+func has_ailment(a: int) -> bool:
+	return get_ailment(a) > 0
+
+func apply_ailment(a: int, duration: int) -> void:
+	if duration <= 0:
+		ailments.erase(a)
+		return
+	ailments[a] = duration  # refresh; no stacks
+
+func tick_ailments() -> void:
+	var keys: Array = ailments.keys()
+	for a in keys:
+		var left: int = ailments[a] - 1
+		if left <= 0:
+			ailments.erase(a)
+		else:
+			ailments[a] = left
+
+func outgoing_ailment_multiplier() -> float:
+	if has_ailment(AilmentTypes.Ailment.WEAKEN):
+		return BattleConfig.AILMENT_WEAKEN_MULTIPLIER
+	return 1.0
+
+func incoming_ailment_multiplier() -> float:
+	if has_ailment(AilmentTypes.Ailment.EXPOSE):
+		return BattleConfig.AILMENT_EXPOSE_MULTIPLIER
+	return 1.0
 
 func apply_stat_tile(stat: int, is_buff: bool) -> void:
 	if stat < 0 or stat >= stat_buff_turns.size():
@@ -109,6 +148,15 @@ func apply_stat_tile(stat: int, is_buff: bool) -> void:
 	var opposite_turns: Array[int] = stat_debuff_turns if is_buff else stat_buff_turns
 	opposite_turns[stat] = 0
 	own_turns[stat] += BattleConfig.SPECIAL_TILE_EFFECT_TURNS
+	_refresh_stat_multipliers()
+
+func apply_stat_mod(stat: int, is_buff: bool, turns: int) -> void:
+	if stat < 0 or stat >= stat_buff_turns.size() or turns <= 0:
+		return
+	var own_turns: Array[int] = stat_buff_turns if is_buff else stat_debuff_turns
+	var opposite_turns: Array[int] = stat_debuff_turns if is_buff else stat_buff_turns
+	opposite_turns[stat] = 0
+	own_turns[stat] = maxi(own_turns[stat], turns)
 	_refresh_stat_multipliers()
 
 func advance_stat_tile_turn() -> void:
