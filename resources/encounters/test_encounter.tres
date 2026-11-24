@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EncounterDefinition" format=3 uid="uid://tcix88mjcju5"]
+
+[ext_resource type="Script" uid="uid://bn7vntfn0na7k" path="res://scripts/battle/data/encounter_definition.gd" id="1_encounter"]
+[ext_resource type="Resource" path="res://resources/enemies/wooden_dummy_fire.tres" id="2_fire"]
+[ext_resource type="Resource" path="res://resources/enemies/wooden_dummy_ice.tres" id="3_ice"]
+[ext_resource type="Resource" path="res://resources/enemies/wooden_dummy_lightning.tres" id="4_lightning"]
+[ext_resource type="Script" uid="uid://cv7sop7kt22tn" path="res://scripts/battle/data/enemy_definition.gd" id="5_enemy"]
+
+[resource]
+script = ExtResource("1_encounter")
+id = "test"
+terrain_id = "plain"
+enemies = Array[ExtResource("5_enemy")]([ExtResource("2_fire"), ExtResource("3_ice"), ExtResource("4_lightning"), ExtResource("4_lightning")])

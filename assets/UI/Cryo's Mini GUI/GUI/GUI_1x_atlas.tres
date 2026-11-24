@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" format=3 uid="uid://dvn64cwwju54e"]
+
+[ext_resource type="Texture2D" uid="uid://cef7ll1mewuwj" path="res://assets/UI/Cryo's Mini GUI/GUI/Sliced/GUI_1x_sliced.png" id="1_h4jse"]
+
+[resource]
+atlas = ExtResource("1_h4jse")
+region = Rect2(1, 28, 8, 8)

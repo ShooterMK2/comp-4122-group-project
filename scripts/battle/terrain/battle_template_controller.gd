@@ -36,7 +36,11 @@ var _cast_basic_total := 0
 func _ready() -> void:
 	randomize()
 	spells = DemoSpellLibrary.build()
-	state = BattleState.new(TestEncounter.enemies(), TerrainSystem.random_terrain())
+	var enc := EncounterDefinition.load_encounter("res://resources/encounters/test_encounter.tres")
+	if enc != null:
+		state = BattleState.new(enc.make_enemies(), enc.make_terrain())
+	else:
+		state = BattleState.new(TestEncounter.enemies(), TerrainSystem.random_terrain())
 	_terrain_label.text = "TERRAIN: %s  |  %s" % [
 		state.terrain.display_name, state.terrain.description().replace("\n", "  ")]
 	_battlefield.setup(state)

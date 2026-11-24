@@ -1,7 +1,20 @@
-[gd_scene format=3 uid="uid://om8xki24ve8t"]
+[gd_scene format=3 uid="uid://dmg3eytp1h0ae"]
 
 [ext_resource type="Script" uid="uid://cauvefeso8267" path="res://scripts/battle/ui_scene/combatant_panel.gd" id="1_panel"]
 [ext_resource type="PackedScene" path="res://scenes/battle/ui/element_chip.tscn" id="2_chip"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_root"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.55)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_bg"]
 bg_color = Color(0.12, 0.05, 0.05, 1)
@@ -17,11 +30,12 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(1, 0.749, 0.2, 1)
 
-[node name="CombatantPanel" type="PanelContainer" unique_id=1340084291]
+[node name="CombatantPanel" type="PanelContainer" unique_id=1841448918]
 custom_minimum_size = Vector2(164, 0)
+theme_override_styles/panel = SubResource("StyleBoxFlat_root")
 script = ExtResource("1_panel")
 
-[node name="Margin" type="MarginContainer" parent="." unique_id=1909694480]
+[node name="Margin" type="MarginContainer" parent="." unique_id=724937753]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 6
@@ -29,47 +43,34 @@ theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=1765733644]
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=1318625431]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="WeakRow" type="HFlowContainer" parent="Margin/VBox" unique_id=196791037]
+[node name="Info" type="PanelContainer" parent="Margin/VBox" unique_id=2100608655]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_info")
+
+[node name="VBox" type="VBoxContainer" parent="Margin/VBox/Info" unique_id=36190651]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/VBox/Info/VBox" unique_id=793420362]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-mouse_filter = 2
-theme_override_constants/h_separation = 3
-theme_override_constants/v_separation = 3
+theme_override_font_sizes/font_size = 13
+text = "Name"
+horizontal_alignment = 1
 
-[node name="Label" type="Label" parent="Margin/VBox/WeakRow" unique_id=14494795]
-custom_minimum_size = Vector2(44, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 10
-text = "WEAK"
-
-[node name="Chip1" parent="Margin/VBox/WeakRow" unique_id=1472782141 instance=ExtResource("2_chip")]
-layout_mode = 2
-theme_type_variation = &"WeakChip"
-
-[node name="Chip2" parent="Margin/VBox/WeakRow" unique_id=1366545389 instance=ExtResource("2_chip")]
-layout_mode = 2
-theme_type_variation = &"WeakChip"
-
-[node name="Chip3" parent="Margin/VBox/WeakRow" unique_id=709040947 instance=ExtResource("2_chip")]
-layout_mode = 2
-theme_type_variation = &"WeakChip"
-
-[node name="Chip4" parent="Margin/VBox/WeakRow" unique_id=628848603 instance=ExtResource("2_chip")]
-layout_mode = 2
-theme_type_variation = &"WeakChip"
-
-[node name="HpRow" type="HBoxContainer" parent="Margin/VBox" unique_id=1489375400]
+[node name="HpRow" type="HBoxContainer" parent="Margin/VBox/Info/VBox" unique_id=699235570]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="HpBar" type="ProgressBar" parent="Margin/VBox/HpRow" unique_id=486764543]
+[node name="HpBar" type="ProgressBar" parent="Margin/VBox/Info/VBox/HpRow" unique_id=1009966525]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
@@ -81,7 +82,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
 value = 100.0
 show_percentage = false
 
-[node name="HpLabel" type="Label" parent="Margin/VBox/HpRow" unique_id=46099758]
+[node name="HpLabel" type="Label" parent="Margin/VBox/Info/VBox/HpRow" unique_id=33370911]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(52, 0)
 layout_mode = 2
@@ -89,13 +90,19 @@ theme_override_font_sizes/font_size = 11
 text = "0/0"
 horizontal_alignment = 2
 
-[node name="StatusScroll" type="ScrollContainer" parent="Margin/VBox" unique_id=1298524905]
+[node name="ChargeBlock" type="Control" parent="Margin/VBox/Info/VBox" unique_id=2103245368]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="StatusScroll" type="ScrollContainer" parent="Margin/VBox/Info/VBox" unique_id=960474155]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 mouse_filter = 2
 horizontal_scroll_mode = 0
 
-[node name="StatusLabel" type="Label" parent="Margin/VBox/StatusScroll" unique_id=70261370]
+[node name="StatusLabel" type="Label" parent="Margin/VBox/Info/VBox/StatusScroll" unique_id=1431939615]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -103,52 +110,43 @@ theme_override_font_sizes/font_size = 11
 text = "-"
 autowrap_mode = 3
 
-[node name="NameLabel" type="Label" parent="Margin/VBox" unique_id=107317998]
+[node name="WeakRow" type="HFlowContainer" parent="Margin/VBox/Info/VBox" unique_id=1007069690]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 18)
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "Name"
-horizontal_alignment = 1
+mouse_filter = 2
+theme_override_constants/h_separation = 3
+theme_override_constants/v_separation = 3
 
-[node name="ArtRow" type="CenterContainer" parent="Margin/VBox" unique_id=389362249]
+[node name="Label" type="Label" parent="Margin/VBox/Info/VBox/WeakRow" unique_id=1193742180]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "WEAK"
+
+[node name="Chip1" parent="Margin/VBox/Info/VBox/WeakRow" unique_id=2070292308 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip2" parent="Margin/VBox/Info/VBox/WeakRow" unique_id=1056345389 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip3" parent="Margin/VBox/Info/VBox/WeakRow" unique_id=752372763 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="Chip4" parent="Margin/VBox/Info/VBox/WeakRow" unique_id=1990186536 instance=ExtResource("2_chip")]
+layout_mode = 2
+theme_type_variation = &"WeakChip"
+
+[node name="StrongRow" type="HFlowContainer" parent="Margin/VBox/Info/VBox" unique_id=476557535]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 mouse_filter = 2
 
-[node name="ArtAnchor" type="Control" parent="Margin/VBox/ArtRow" unique_id=1339738872]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Placeholder" type="ColorRect" parent="Margin/VBox/ArtRow/ArtAnchor" unique_id=818249721]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.55, 0.4, 0.25, 1)
-
-[node name="PlaceholderLabel" type="Label" parent="Margin/VBox/ArtRow/ArtAnchor/Placeholder" unique_id=1579203208]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "DUMMY"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ArtSprite" type="Sprite2D" parent="Margin/VBox/ArtRow/ArtAnchor" unique_id=1172967190]
-unique_name_in_owner = true
-texture_filter = 1
-position = Vector2(40, 40)
-
-[node name="IntentLabel" type="Label" parent="Margin/VBox" unique_id=246050936]
+[node name="IntentLabel" type="Label" parent="Margin/VBox/Info/VBox" unique_id=901827527]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
@@ -156,7 +154,14 @@ theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="TargetFrame" type="Panel" parent="." unique_id=1011976021]
+[node name="ArtSpacer" type="Control" parent="Margin/VBox" unique_id=492123599]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="TargetFrame" type="Panel" parent="." unique_id=1178776846]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

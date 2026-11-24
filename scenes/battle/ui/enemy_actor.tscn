@@ -1,0 +1,175 @@
+[gd_scene format=3 uid="uid://mqbwc1rytvdh"]
+
+[ext_resource type="Script" uid="uid://c8583lk8s2ii2" path="res://scenes/battle/ui/sprite_slot.gd" id="1_o4kih"]
+[ext_resource type="Script" uid="uid://e7hphka4s87y" path="res://scenes/battle/ui/enemy_actor.gd" id="1_p18a1"]
+[ext_resource type="Theme" uid="uid://y1yijd4fntne" path="res://actorNames.tres" id="2_theme"]
+[ext_resource type="Texture2D" uid="uid://bnfk86cm7i1xs" path="res://assets/enemies/enemy_wooden_dummy.png" id="2_wnsej"]
+[ext_resource type="FontFile" uid="uid://ddn1lswv0ikau" path="res://dontTrack/LocalAssets/quadlet-fonts/Quadlet/Quadlet.ttf" id="3_font"]
+[ext_resource type="PackedScene" uid="uid://buno6w5sl62jo" path="res://scenes/battle/ui/status_chip.tscn" id="4_7p0qe"]
+[ext_resource type="Texture2D" uid="uid://b7s4cjoa2g5hb" path="res://dontTrack/LocalAssets/Pixel_ProgressBars_Variety_Pack/Pixel_ProgressBars_Variety_Pack/Striaght_Frames/framed_organge.png" id="5_progress"]
+[ext_resource type="Script" uid="uid://dn747alp275jw" path="res://scripts/battle/ui_scene/actor_hitbox.gd" id="7_o4kih"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_wnsej"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_wnsej")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="LabelSettings" id="LabelSettings_name"]
+font = ExtResource("3_font")
+font_size = 10
+
+[node name="EnemyActor" type="Control" unique_id=385133714]
+custom_minimum_size = Vector2(128, 256)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 128.0
+offset_bottom = 256.0
+script = ExtResource("1_p18a1")
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=714206889]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Placeholder" unique_id=263576267]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpriteWarpper" type="VBoxContainer" parent="." unique_id=1984795191]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 2
+
+[node name="SpriteSlot" type="Control" parent="SpriteWarpper" unique_id=2102192526]
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("1_o4kih")
+
+[node name="Fit" type="Node2D" parent="SpriteWarpper/SpriteSlot" unique_id=1136941451]
+
+[node name="Sprite" type="AnimatedSprite2D" parent="SpriteWarpper/SpriteSlot/Fit" unique_id=1710989182]
+unique_name_in_owner = true
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_wnsej")
+centered = false
+
+[node name="SpriteUI" type="VBoxContainer" parent="SpriteWarpper/SpriteSlot" unique_id=1397763894]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+offset_top = -25.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="NameLabel" type="Label" parent="SpriteWarpper/SpriteSlot/SpriteUI" unique_id=1018068904]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("2_theme")
+text = "Placeholder"
+label_settings = SubResource("LabelSettings_name")
+horizontal_alignment = 1
+clip_text = true
+
+[node name="WeakspotRow" type="HFlowContainer" parent="SpriteWarpper/SpriteSlot/SpriteUI" unique_id=807072003]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+alignment = 1
+
+[node name="StatusChip" parent="SpriteWarpper/SpriteSlot/SpriteUI/WeakspotRow" unique_id=427671265 instance=ExtResource("4_7p0qe")]
+custom_minimum_size = Vector2(12, 12)
+custom_maximum_size = Vector2(12, 12)
+layout_mode = 2
+
+[node name="StatusChip2" parent="SpriteWarpper/SpriteSlot/SpriteUI/WeakspotRow" unique_id=2085723382 instance=ExtResource("4_7p0qe")]
+custom_minimum_size = Vector2(12, 12)
+custom_maximum_size = Vector2(12, 12)
+layout_mode = 2
+
+[node name="StatusChip3" parent="SpriteWarpper/SpriteSlot/SpriteUI/WeakspotRow" unique_id=1437286265 instance=ExtResource("4_7p0qe")]
+custom_minimum_size = Vector2(12, 12)
+custom_maximum_size = Vector2(12, 12)
+layout_mode = 2
+
+[node name="HpBar" type="TextureProgressBar" parent="SpriteWarpper/SpriteSlot/SpriteUI" unique_id=243226836]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+value = 100.0
+nine_patch_stretch = true
+stretch_margin_left = 6
+stretch_margin_top = 6
+stretch_margin_right = 6
+stretch_margin_bottom = 6
+texture_over = ExtResource("5_progress")
+texture_progress = ExtResource("5_progress")
+
+[node name="HpLabel" type="Label" parent="SpriteWarpper/SpriteSlot/SpriteUI/HpBar" unique_id=136334810]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 8
+text = "0/0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusRow" type="HFlowContainer" parent="SpriteWarpper/SpriteSlot/SpriteUI" unique_id=1987979848]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+custom_maximum_size = Vector2(-1, 12)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+
+[node name="StatusChip" parent="SpriteWarpper/SpriteSlot/SpriteUI/StatusRow" unique_id=108604122 instance=ExtResource("4_7p0qe")]
+custom_minimum_size = Vector2(12, 12)
+custom_maximum_size = Vector2(12, 12)
+layout_mode = 2
+
+[node name="StatusChip2" parent="SpriteWarpper/SpriteSlot/SpriteUI/StatusRow" unique_id=1290612515 instance=ExtResource("4_7p0qe")]
+custom_minimum_size = Vector2(12, 12)
+custom_maximum_size = Vector2(12, 12)
+layout_mode = 2
+
+[node name="StatusChip3" parent="SpriteWarpper/SpriteSlot/SpriteUI/StatusRow" unique_id=1631724752 instance=ExtResource("4_7p0qe")]
+custom_minimum_size = Vector2(12, 12)
+custom_maximum_size = Vector2(12, 12)
+layout_mode = 2
+
+[node name="ActorHitbox" type="Control" parent="." unique_id=1753717544]
+layout_mode = 1
+anchor_top = -0.098000005
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 0.08800125
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("7_o4kih")
+metadata/_custom_type_script = "uid://dn747alp275jw"

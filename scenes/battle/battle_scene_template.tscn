@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://bio2il47f8imq"]
 
 [ext_resource type="Script" uid="uid://blefk51blxokv" path="res://scripts/battle/battle_template_controller.gd" id="1_ctrl"]
-[ext_resource type="Texture2D" uid="uid://y0t80tmaggt4" path="res://assets/textures/environments/ComfyUI_temp_zhdlv_00027_.png" id="2_bg"]
 [ext_resource type="PackedScene" uid="uid://cnve72bhndf7j" path="res://scenes/battle/ui/result_overlay.tscn" id="2_res"]
 [ext_resource type="PackedScene" uid="uid://by8raoqxf0a4" path="res://scenes/battle/ui/log_console.tscn" id="3_log"]
 [ext_resource type="PackedScene" uid="uid://bktse2uli5q2k" path="res://scenes/battle/ui/battlefield.tscn" id="4_bf"]
@@ -19,24 +18,6 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ctrl")
 
-[node name="Background" type="ColorRect" parent="." unique_id=1722193160]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0, 0, 0, 1)
-
-[node name="TextureRect" type="TextureRect" parent="Background" unique_id=62277348]
-custom_minimum_size = Vector2(1280, 360)
-layout_mode = 0
-offset_right = 1280.0
-offset_bottom = 360.0
-texture = ExtResource("2_bg")
-expand_mode = 1
-
 [node name="Margin" type="MarginContainer" parent="." unique_id=1617094621]
 layout_mode = 1
 anchors_preset = 15
@@ -53,20 +34,28 @@ theme_override_constants/margin_bottom = 4
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="TopBar" type="HBoxContainer" parent="Margin/Main" unique_id=244220191]
+[node name="Battlefield" parent="Margin/Main" unique_id=2135845803 instance=ExtResource("4_bf")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Main/Battlefield" unique_id=244220191]
 material = SubResource("CanvasItemMaterial_ghomo")
 custom_minimum_size = Vector2(0, 28)
-layout_mode = 2
+layout_mode = 0
+offset_left = 2.0
+offset_top = -2.0
+offset_right = 1274.0
+offset_bottom = 26.0
 theme_override_constants/separation = 12
 
-[node name="TerrainLabel" type="Label" parent="Margin/Main/TopBar" unique_id=1756216061]
+[node name="TerrainLabel" type="Label" parent="Margin/Main/Battlefield/TopBar" unique_id=1756216061]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
 clip_text = true
 
-[node name="RoundLabel" type="Label" parent="Margin/Main/TopBar" unique_id=801759491]
+[node name="RoundLabel" type="Label" parent="Margin/Main/Battlefield/TopBar" unique_id=801759491]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
@@ -74,7 +63,7 @@ theme_override_font_sizes/font_size = 14
 text = "Round 1"
 horizontal_alignment = 1
 
-[node name="OrderBar" type="Label" parent="Margin/Main/TopBar" unique_id=1212647385]
+[node name="OrderBar" type="Label" parent="Margin/Main/Battlefield/TopBar" unique_id=1212647385]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -82,10 +71,6 @@ theme_override_font_sizes/font_size = 12
 text = "Turn order (placeholder)"
 horizontal_alignment = 2
 clip_text = true
-
-[node name="Battlefield" parent="Margin/Main" unique_id=2135845803 instance=ExtResource("4_bf")]
-unique_name_in_owner = true
-layout_mode = 2
 
 [node name="BattleIO" parent="Margin/Main" unique_id=893007832 instance=ExtResource("5_io")]
 unique_name_in_owner = true
@@ -103,6 +88,67 @@ offset_right = 470.0
 offset_bottom = 300.0
 grow_horizontal = 1
 grow_vertical = 1
+
+[node name="DimBackground" type="ColorRect" parent="DeadlockOverlay" unique_id=248163485]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 435.0
+offset_top = 364.0
+offset_right = -504.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.20392157, 0.19215687, 0.2, 0.8039216)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeadlockOverlay" unique_id=2039040968]
+layout_mode = 0
+anchor_left = 0.40500003
+anchor_top = 0.69600004
+anchor_right = 0.40500003
+anchor_bottom = 0.69600004
+offset_left = -87.400024
+offset_top = -89.120026
+offset_right = 265.59998
+offset_bottom = 135.87997
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 26
+
+[node name="DeadlockTitle" type="Label" parent="DeadlockOverlay/VBoxContainer" unique_id=1157939743]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "DEADLOCK"
+horizontal_alignment = 1
+
+[node name="DeadlockDescription" type="Label" parent="DeadlockOverlay/VBoxContainer" unique_id=817711067]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "No fragment in your hand fits the board.
+Choose how to clear it.
+Either choice ends your turn."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeadlockOverlay/VBoxContainer" unique_id=712213264]
+layout_mode = 2
+size_flags_horizontal = 4
+alignment = 1
+
+[node name="BacklashButton" type="Button" parent="DeadlockOverlay/VBoxContainer/VBoxContainer" unique_id=1505342676]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Backlash"
+
+[node name="FizzleButton" type="Button" parent="DeadlockOverlay/VBoxContainer/VBoxContainer" unique_id=1121735937]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Fizzle"
 
 [node name="ResultOverlay" parent="." unique_id=1094423970 instance=ExtResource("2_res")]
 unique_name_in_owner = true
@@ -161,66 +207,5 @@ visible = false
 layout_mode = 2
 text = "Cancel"
 
-[node name="DeadlockOverlay" type="CanvasLayer" parent="." unique_id=1816363628]
+[node name="DeadlockOverlay2" type="CanvasLayer" parent="." unique_id=1816363628]
 unique_name_in_owner = true
-
-[node name="DimBackground" type="ColorRect" parent="DeadlockOverlay" unique_id=248163485]
-anchors_preset = -1
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 435.0
-offset_top = 364.0
-offset_right = -504.0
-offset_bottom = -9.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.20392157, 0.19215687, 0.2, 0.8039216)
-
-[node name="VBoxContainer" type="VBoxContainer" parent="DeadlockOverlay" unique_id=2039040968]
-anchors_preset = -1
-anchor_left = 0.40500003
-anchor_top = 0.69600004
-anchor_right = 0.40500003
-anchor_bottom = 0.69600004
-offset_left = -87.400024
-offset_top = -89.120026
-offset_right = 265.59998
-offset_bottom = 135.87997
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 26
-
-[node name="DeadlockTitle" type="Label" parent="DeadlockOverlay/VBoxContainer" unique_id=1157939743]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "DEADLOCK"
-horizontal_alignment = 1
-
-[node name="DeadlockDescription" type="Label" parent="DeadlockOverlay/VBoxContainer" unique_id=817711067]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 15
-text = "No fragment in your hand fits the board.
-Choose how to clear it.
-Either choice ends your turn."
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="DeadlockOverlay/VBoxContainer" unique_id=712213264]
-layout_mode = 2
-size_flags_horizontal = 4
-alignment = 1
-
-[node name="BacklashButton" type="Button" parent="DeadlockOverlay/VBoxContainer/VBoxContainer" unique_id=1505342676]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Backlash"
-
-[node name="FizzleButton" type="Button" parent="DeadlockOverlay/VBoxContainer/VBoxContainer" unique_id=1121735937]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Fizzle"

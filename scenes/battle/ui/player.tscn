@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://5mkujkka1f0e"]
+
+[ext_resource type="Script" uid="uid://c4e3648wk8yj" path="res://scripts/battle/ui_scene/actor.gd" id="1_actor"]
+[ext_resource type="Texture2D" uid="uid://cmdrxusohctbc" path="res://assets/characters/wizard_1.png" id="2_mwibx"]
+
+[node name="Player" type="Node2D" unique_id=336408198]
+script = ExtResource("1_actor")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1286721681]
+texture_filter = 1
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("2_mwibx")
+centered = false
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=778266906]
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Placeholder" unique_id=667996528]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1

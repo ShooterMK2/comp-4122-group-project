@@ -1,0 +1,123 @@
+[gd_scene format=3 uid="uid://bktse2uli5q2k"]
+
+[ext_resource type="Script" uid="uid://chr35s6jy574b" path="res://scripts/battle/ui_scene/battlefield.gd" id="1_d474f"]
+[ext_resource type="Resource" path="res://resources/encounters/test_encounter.tres" id="2_ko43h"]
+[ext_resource type="Texture2D" uid="uid://y0t80tmaggt4" path="res://assets/textures/environments/ComfyUI_temp_zhdlv_00027_.png" id="3_bg"]
+[ext_resource type="PackedScene" uid="uid://njxfbwl0hdrh" path="res://scenes/battle/ui/player_panel.tscn" id="5_panel"]
+
+[node name="Battlefield" type="Control" unique_id=1577251761]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -360.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("1_d474f")
+encounter = ExtResource("2_ko43h")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1659104057]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="BackgroundTexture" type="TextureRect" parent="Background" unique_id=1669298743]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_bg")
+expand_mode = 1
+
+[node name="WorldView" type="SubViewportContainer" parent="." unique_id=968327217]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="WorldView" unique_id=946189159]
+transparent_bg = true
+handle_input_locally = false
+gui_disable_input = true
+size = Vector2i(1280, 360)
+render_target_update_mode = 4
+
+[node name="World" type="Node2D" parent="WorldView/SubViewport" unique_id=269218585]
+unique_name_in_owner = true
+
+[node name="Camera2D" type="Camera2D" parent="WorldView/SubViewport/World" unique_id=1441385179]
+anchor_mode = 0
+
+[node name="Zones" type="Control" parent="WorldView/SubViewport" unique_id=54390067]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayerZone" type="ReferenceRect" parent="WorldView/SubViewport/Zones" unique_id=1528649857]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.34
+anchor_bottom = 1.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(0, 1, 0, 1)
+border_width = 2.0
+editor_only = false
+
+[node name="EnemyZone" type="ReferenceRect" parent="WorldView/SubViewport/Zones" unique_id=1384108828]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.34
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(1, 0.2, 0.2, 1)
+border_width = 2.0
+editor_only = false
+
+[node name="EnemySlots" type="HBoxContainer" parent="WorldView/SubViewport/Zones/EnemyZone" unique_id=2115061268]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="PlayerPanel" parent="." unique_id=1214397493 instance=ExtResource("5_panel")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+offset_top = 50.0
+offset_right = 122.44
+offset_bottom = 140.0
+script = null
