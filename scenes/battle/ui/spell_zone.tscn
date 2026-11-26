@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://crd40wptxpgjy"]
 
 [ext_resource type="Script" uid="uid://bu4t42v5xosjm" path="res://scripts/battle/ui_scene/spell_zone.gd" id="1_15emw"]
-[ext_resource type="PackedScene" uid="uid://cexhn6lk1cibh" path="res://scenes/battle/ui/spell_card.tscn" id="2_w1uva"]
+[ext_resource type="PackedScene" uid="uid://dhxmjx1xrygom" path="res://scenes/battle/ui/spell_card.tscn" id="2_w1uva"]
 
 [node name="SpellZone" type="ScrollContainer" unique_id=1374050087]
 size_flags_horizontal = 3

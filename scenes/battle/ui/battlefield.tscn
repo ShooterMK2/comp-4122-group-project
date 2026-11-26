@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bktse2uli5q2k"]
 
-[ext_resource type="Script" uid="uid://chr35s6jy574b" path="res://scripts/battle/ui_scene/battlefield.gd" id="1_d474f"]
-[ext_resource type="Resource" uid="uid://tcix88mjcju5" path="res://resources/encounters/test_encounter.tres" id="2_ko43h"]
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/battlefield_panel.gd" id="1_d474f"]
+[ext_resource type="Resource" path="res://resources/encounters/test_encounter.tres" id="2_ko43h"]
 [ext_resource type="Texture2D" uid="uid://y0t80tmaggt4" path="res://assets/textures/environments/ComfyUI_temp_zhdlv_00027_.png" id="3_bg"]
 [ext_resource type="PackedScene" uid="uid://njxfbwl0hdrh" path="res://scenes/battle/ui/player_panel.tscn" id="5_panel"]
 

@@ -18,33 +18,33 @@ static func activate(state: BattleState, ult: UltimateDefinition, spent: float,
 	match ult.effect_kind:
 		UltimateDefinition.EffectKind.DAMAGE_BURST:
 			var mult := scaled_damage_mult(ult, spent)
-			state.player.set_damage_output_multiplier(mult)
+			state.player.set_damage_output_multiplier(
+				state.player.base_damage_output_multiplier * mult)
 			log_lines.append("%s: %.2fx damage this turn." % [ult.display_name, mult])
-		UltimateDefinition.EffectKind.SECOND_WIND:
-			var heal_amt := ult.heal_base + int(round(float(ult.heal_charge_bonus) * ratio))
+		UltimateDefinition.EffectKind.EMERGENCY_AID:
+			var pct := lerpf(ult.heal_percent_min, ult.heal_percent_max, ratio)
+			var heal_amt := maxi(1, ceili(float(state.player.max_hp) * pct))
 			var healed := state.player.heal(heal_amt)
-			if ult.heal_shield > 0:
-				state.player.shield += ult.heal_shield
-			log_lines.append("%s: restored %d HP%s." % [
-				ult.display_name, healed,
-				(" and +%d Shield" % ult.heal_shield) if ult.heal_shield > 0 else ""])
-		UltimateDefinition.EffectKind.IRON_WARD:
-			state.player.shield += ult.ward_shield
-			log_lines.append("%s: +%d Shield." % [ult.display_name, ult.ward_shield])
-		UltimateDefinition.EffectKind.BLOODLUST:
-			var mild := scaled_damage_mult(ult, spent)
-			state.player.set_damage_output_multiplier(mild)
-			state.player.apply_stat_mod(0, true, ult.buff_turns)  # ATK
-			log_lines.append("%s: %.2fx damage this turn, ATK up %d turns." % [
-				ult.display_name, mild, ult.buff_turns])
+			var shields := int(round(lerpf(float(ult.shield_min), float(ult.shield_max), ratio)))
+			shields = clampi(shields, ult.shield_min, ult.shield_max)
+			state.player.shield += shields
+			log_lines.append("%s: restored %d HP and +%d Shield." % [
+				ult.display_name, healed, shields])
+		UltimateDefinition.EffectKind.FIGHTING_SPIRIT:
+			var turns := int(round(lerpf(float(ult.buff_turns_min), float(ult.buff_turns_max), ratio)))
+			turns = clampi(turns, ult.buff_turns_min, ult.buff_turns_max)
+			state.player.apply_stat_mod(0, true, turns)  # ATK
+			state.player.apply_stat_mod(1, true, turns)  # DEF
+			state.player.apply_stat_mod(2, true, turns)  # SPD
+			log_lines.append("%s: ATK/DEF/SPD up for %d turns." % [ult.display_name, turns])
 		UltimateDefinition.EffectKind.SHOCKWAVE:
 			var raw := ult.shockwave_base + int(round(float(ult.shockwave_charge_bonus) * ratio))
 			var hits: Array[String] = []
 			for enemy in state.enemies:
 				if enemy.is_dead():
 					continue
-				# Scale lightly with player ATK so gear still matters.
-				var dmg := maxi(1, ceili(float(raw) * maxf(1.0, float(state.player.attack)) / 5.0))
+				# Fixed damage — no ATK gear scaling (Crowd Control).
+				var dmg := maxi(1, raw)
 				dmg = maxi(1, ceili(float(dmg) * DamageCalculator.overlevel_multiplier_of(
 					state.player, enemy)))
 				var res := enemy.take_damage(dmg)

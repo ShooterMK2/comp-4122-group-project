@@ -6,6 +6,7 @@ extends PanelContainer
 # HpBar, HpLabel, StatusLabel, ChargeBar, ChargeLabel.
 
 signal ultimate_pressed
+signal clicked
 
 const GLOW_PULSE_TIME := 0.8            # TUNABLE: seconds per half-pulse of the glow
 const HP_TWEEN_TIME := 0.25
@@ -13,6 +14,7 @@ const HP_TWEEN_TIME := 0.25
 var _glow_tween: Tween
 var _hp_tween: Tween
 var _can_ultimate := false
+var _ultimate_label := "ULTIMATE"
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -44,19 +46,25 @@ func refresh(c: CombatantState, charge: float, can_ultimate: bool) -> void:
 	_hp_tween.tween_property(%HpBar, "value", pct, HP_TWEEN_TIME)
 	%StatusLabel.text = CombatantText.status_line(c)
 	%ChargeBar.value = charge
+	_ultimate_label = ultimate_label if not ultimate_label.is_empty() else "ULTIMATE"
 	_can_ultimate = can_ultimate and not dead
 	if _can_ultimate:
-		%ChargeLabel.text = "ULTIMATE READY (%.0f/%.0f) - click the portrait" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
+		%ChargeLabel.text = "%s READY (%.0f/%.0f) - click portrait" % [
+			_ultimate_label, charge, BattleConfig.CHARGE_GAUGE_MAX]
 	else:
-		%ChargeLabel.text = "Charge %.0f / %.0f" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
-	
+		%ChargeLabel.text = "%s  |  Charge %.0f / %.0f" % [
+			_ultimate_label, charge, BattleConfig.CHARGE_GAUGE_MAX]
 	_set_glow(_can_ultimate)
 	modulate = Color(0.45, 0.45, 0.45) if dead else Color.WHITE
 
 func _on_portrait_input(event: InputEvent) -> void:
-	if _can_ultimate and event is InputEventMouseButton and event.pressed \
-			and event.button_index == MOUSE_BUTTON_LEFT:
+	if not (event is InputEventMouseButton and event.pressed \
+			and event.button_index == MOUSE_BUTTON_LEFT):
+		return
+	if _can_ultimate:
 		ultimate_pressed.emit()
+	else:
+		clicked.emit()
 
 func _ignore_mouse(n: Node) -> void:
 	for c in n.get_children():
@@ -64,7 +72,7 @@ func _ignore_mouse(n: Node) -> void:
 			(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_ignore_mouse(c)
 
-# Pulsing golden frame around the portrait while the ultimate is ready.
+# Pulsing golden frame around the portrait while the ultimate can be cast.
 func _set_glow(on: bool) -> void:
 	%PortraitAnchor.mouse_default_cursor_shape = \
 		Control.CURSOR_POINTING_HAND if on else Control.CURSOR_ARROW

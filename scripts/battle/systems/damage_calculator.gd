@@ -12,6 +12,7 @@ static func finalize(raw: float, attacker: CombatantState,
 	var base := raw * effective_attack
 	base *= attacker.attack_multiplier * _attack_multiplier(attacker, element, terrain)
 	base *= attacker.damage_output_multiplier
+	base *= _element_spell_multiplier(attacker, element)
 	return _apply_multipliers(base, attacker, defender, element, other_multiplier,
 		terrain, flat_bonus)
 
@@ -28,9 +29,12 @@ static func _apply_multipliers(base: float, attacker: CombatantState,
 		broken_multiplier += BattleConfig.BREAK_DAMAGE_BONUS
 	var weaken_multiplier := attacker.outgoing_ailment_multiplier()
 	var overlevel_multiplier := overlevel_multiplier_of(attacker, defender)
+	var taken_multiplier := 1.0
+	if defender != null:
+		taken_multiplier = defender.damage_taken_multiplier
 	return maxi(0, ceili((base * other_multiplier * defence_multiplier
 		* elemental_multiplier * random_multiplier * weaken_multiplier
-		* overlevel_multiplier + flat_bonus) * broken_multiplier))
+		* overlevel_multiplier * taken_multiplier + flat_bonus) * broken_multiplier))
 
 ## Soft combat penalty when fighting above your level (gap harsh ~18).
 ## Uses encounter level stored on the player as compare_level.
@@ -96,6 +100,7 @@ static func explain_spell(raw: float, attacker: CombatantState,
 	var base := raw * effective_attack * attacker.attack_multiplier
 	base *= attack_terrain
 	base *= attacker.damage_output_multiplier
+	base *= _element_spell_multiplier(attacker, element)
 	var defence: float = defence_multiplier_of(attacker, defender, element, terrain)
 	var elemental: float = elemental_multiplier_of(defender, element)
 	var expected_random: float = (BattleConfig.DAMAGE_RANDOM_MIN
@@ -103,8 +108,9 @@ static func explain_spell(raw: float, attacker: CombatantState,
 	var broken_multiplier := 1.0
 	if defender.is_broken():
 		broken_multiplier += BattleConfig.BREAK_DAMAGE_BONUS
+	var taken := defender.damage_taken_multiplier if defender != null else 1.0
 	var expected := maxi(0, ceili(
-		(base * other_multiplier * defence * elemental * expected_random)
+		(base * other_multiplier * defence * elemental * expected_random * taken)
 		* broken_multiplier))
 	return {
 		"damage": raw,
@@ -137,11 +143,16 @@ static func defence_multiplier_of(attacker: CombatantState, defender: CombatantS
 	return BattleConfig.DEFENCE_MULTIPLIER_BASE / (
 		BattleConfig.DEFENCE_MULTIPLIER_BASE + compared_defence)
 
-static func _attack_multiplier(attacker: CombatantState, element: int,
+static func _attack_multiplier(_attacker: CombatantState, element: int,
 		terrain: TerrainDefinition) -> float:
 	if terrain == null:
 		return 1.0
 	return terrain.attack_multiplier_for(element)
+
+static func _element_spell_multiplier(attacker: CombatantState, element: int) -> float:
+	if attacker == null or attacker.element_spell_damage_mult.is_empty():
+		return 1.0
+	return 1.0 + float(attacker.element_spell_damage_mult.get(element, 0.0))
 
 static func elemental_multiplier_of(defender: CombatantState, element: int) -> float:
 	if defender == null or element == Elements.Element.NONE:

@@ -27,6 +27,9 @@ var current_node_index: int = 0
 var cleared_nodes: Array[String] = []
 var pending_node_to_clear: String = ""
 var map_seed: int = 0 # for Node generation
+var morality: int = 0
+var karma_pending: bool = false
+var seen_events: Array[int] = []
 
 # ---------- leveling (run-scoped) ----------
 var player_level: int = RunConfig.PLAYER_LEVEL_MIN
@@ -35,6 +38,8 @@ var level_bonus_max_hp: int = 0
 var level_bonus_attack: int = 0
 var level_bonus_defence: int = 0
 var level_bonus_speed: float = 0.0
+## Permanent start-of-battle shield from Importants (e.g. Shield of Hero).
+var perm_start_shield: int = 0
 var zone_id: int = 1
 var zone_exit_claimed: bool = false
 ## early | mid | late — set by exploration before entering battle
@@ -67,6 +72,7 @@ func reset_run() -> void:
 	level_bonus_attack = 0
 	level_bonus_defence = 0
 	level_bonus_speed = 0.0
+	perm_start_shield = 0
 	zone_id = 1
 	zone_exit_claimed = false
 	pending_encounter_band = &"mid"
@@ -77,6 +83,9 @@ func reset_run() -> void:
 	changed.emit()
 	level_up_pending_changed.emit()
 	map_seed = randi()
+	morality = 0
+	karma_pending = false
+	seen_events.clear()
 
 func _next_acquire_seq() -> int:
 	_acquire_seq += 1
@@ -94,15 +103,32 @@ func _seed_starter() -> void:
 		_fragment_deck.append(frag.id)
 	for eq in StarterContent.all_equipment():
 		_add_entry(eq.id, ItemCategory.Kind.EQUIPMENT, 1, eq)
-	loadout.equip(StarterContent.wooden_rod())
-	_add_entry(&"minor_tonic", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.minor_tonic())
-	_add_entry(&"warding_charm", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.warding_charm())
+	# Chapter 1: own gear but start unequipped (1A). All catalog items owned for testing.
+	_add_entry(&"healing_potion", ItemCategory.Kind.CONSUMABLE, 5, StarterContent.healing_potion())
+	_add_entry(&"greater_healing_potion", ItemCategory.Kind.CONSUMABLE, 3, StarterContent.greater_healing_potion())
+	_add_entry(&"protective_ring", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.protective_ring())
+	_add_entry(&"barrier_charm", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.barrier_charm())
+	_add_entry(&"fire_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.fire_booster())
+	_add_entry(&"ice_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.ice_booster())
+	_add_entry(&"earth_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.earth_booster())
+	_add_entry(&"wind_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.wind_booster())
+	_add_entry(&"lightning_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.lightning_booster())
+	_add_entry(&"dark_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.dark_booster())
+	_add_entry(&"strength_tonic", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.strength_tonic())
+	_add_entry(&"iron_skin_elixir", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.iron_skin_elixir())
+	_add_entry(&"swift_draft", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.swift_draft())
+	_add_entry(&"vitality_draft", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.vitality_draft())
+	_add_entry(&"pieces_of_hp", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_hp())
+	_add_entry(&"pieces_of_atk", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_atk())
+	_add_entry(&"pieces_of_def", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_def())
+	_add_entry(&"pieces_of_spd", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_spd())
+	_add_entry(&"gold_dust", ItemCategory.Kind.CONSUMABLE, 3, StarterContent.gold_dust())
 	_add_entry(&"sealed_letter", ItemCategory.Kind.IMPORTANT, 1, StarterContent.sealed_letter())
-	_add_entry(&"blessed_sigil", ItemCategory.Kind.IMPORTANT, 1, StarterContent.blessed_sigil())
+	_add_entry(&"shield_of_hero", ItemCategory.Kind.IMPORTANT, 1, StarterContent.shield_of_hero())
 	for ult in UltimateLibrary.all():
 		_ultimates[ult.id] = ult
 		_ultimate_acquired[ult.id] = _next_acquire_seq()
-	equipped_ultimate_id = UltimateLibrary.damage_burst().id
+	equipped_ultimate_id = &""
 
 func _add_entry(id: StringName, category: int, qty: int, ref: Resource) -> void:
 	var seq := _next_acquire_seq()
@@ -120,7 +146,8 @@ func run_max_hp() -> int:
 	return snapshot().max_hp()
 
 func snapshot() -> PlayerStatSnapshot:
-	return StatCalculator.build_snapshot(_base_player, loadout, pending, level_bonuses(), player_level)
+	return StatCalculator.build_snapshot(_base_player, loadout, pending, level_bonuses(),
+		player_level, perm_start_shield)
 
 func level_bonuses() -> Dictionary:
 	return {
@@ -229,12 +256,10 @@ func _apply_level_up_offer(offer: LevelUpOffer) -> String:
 		LevelUpOffer.Kind.HEAL:
 			heal_run_hp(offer.amount)
 		LevelUpOffer.Kind.CONSUMABLE:
-			if offer.item_id == &"minor_tonic":
-				_add_entry(&"minor_tonic", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.minor_tonic())
-			elif offer.item_id == &"warding_charm":
-				_add_entry(&"warding_charm", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.warding_charm())
-			else:
+			var cons := StarterContent.consumable_by_id(offer.item_id)
+			if cons == null:
 				return "Unknown consumable."
+			_add_entry(cons.id, ItemCategory.Kind.CONSUMABLE, 1, cons)
 		LevelUpOffer.Kind.FRAGMENT:
 			var frag := _reward_fragment_by_id(offer.item_id)
 			if frag == null:
@@ -488,21 +513,24 @@ func is_ultimate_equipped(id: StringName) -> bool:
 	return equipped_ultimate_id == id
 
 func equipped_ultimate() -> UltimateDefinition:
-	if _ultimates.has(equipped_ultimate_id):
-		return _ultimates[equipped_ultimate_id]
-	# Fallback to classic Overdrive if somehow unequipped.
-	var fallback := UltimateLibrary.damage_burst()
-	if _ultimates.has(fallback.id):
-		equipped_ultimate_id = fallback.id
-		return _ultimates[fallback.id]
-	return fallback
+	if equipped_ultimate_id == &"" or not _ultimates.has(equipped_ultimate_id):
+		return null
+	return _ultimates[equipped_ultimate_id]
 
 func equip_ultimate(id: StringName) -> String:
+	if id == &"":
+		equipped_ultimate_id = &""
+		changed.emit()
+		return ""
 	if not _ultimates.has(id):
 		return "Ultimate not owned."
 	equipped_ultimate_id = id
 	changed.emit()
 	return ""
+
+func clear_ultimate() -> void:
+	equipped_ultimate_id = &""
+	changed.emit()
 
 func clear_pending_after_battle() -> void:
 	pending.clear()
