@@ -42,12 +42,10 @@ static func starter_necklace() -> EquipmentDefinition:
 	var e := EquipmentDefinition.new()
 	e.id = &"starter_necklace"
 	e.display_name = "Starter Necklace"
-	e.description = "Start with 2 Shield, Slight Defense Boost"
+	e.description = "Start with 2 Shield"
 	e.slot = EquipmentSlot.Kind.ACCESSORY
 	e.passive = PassiveEffect.Kind.START_SHIELD
 	e.passive_amount = 2
-	e.passive2 = PassiveEffect.Kind.DAMAGE_RESISTANCE
-	e.passive2_amount = 20  # 20% incoming damage reduction (hidden from UI label above)
 	e.max_stack = 1
 	return _with_icon(e) as EquipmentDefinition
 
@@ -99,6 +97,122 @@ static func pieces_of_atk() -> ConsumableDefinition:
 	c.use_effect = UseEffect.Kind.PERM_ATK
 	c.use_amount = RunConfig.PIECES_OF_ATK_BONUS
 	c.max_stack = 1
+	return _with_icon(c) as ConsumableDefinition
+
+static func greater_healing_potion() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"greater_healing_potion"
+	c.display_name = "Greater Healing Potion"
+	c.description = "Restore 50 HP Immediately"
+	c.use_effect = UseEffect.Kind.HEAL_HP
+	c.use_amount = RunConfig.GREATER_HEALING_POTION_HEAL
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func barrier_charm() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"barrier_charm"
+	c.display_name = "Barrier Charm"
+	c.description = "Next Battle: +4 Shields"
+	c.use_effect = UseEffect.Kind.START_SHIELD
+	c.use_amount = RunConfig.BARRIER_CHARM_SHIELD
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func _element_booster(id: StringName, name: String, element: int, label: String) -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = id
+	c.display_name = name
+	c.description = "Next Battle: Slight Boost to %s Damage" % label
+	c.use_effect = UseEffect.Kind.ELEMENT_SPELL_DAMAGE
+	c.use_amount = RunConfig.ELEMENT_BOOSTER_SPELL_BONUS_PCT
+	c.use_element = element
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func ice_booster() -> ConsumableDefinition:
+	return _element_booster(&"ice_booster", "Ice Booster", E.ICE, "Ice")
+
+static func earth_booster() -> ConsumableDefinition:
+	return _element_booster(&"earth_booster", "Earth Booster", E.EARTH, "Earth")
+
+static func wind_booster() -> ConsumableDefinition:
+	return _element_booster(&"wind_booster", "Wind Booster", E.WIND, "Wind")
+
+static func lightning_booster() -> ConsumableDefinition:
+	return _element_booster(&"lightning_booster", "Lightning Booster", E.LIGHTNING, "Lightning")
+
+static func dark_booster() -> ConsumableDefinition:
+	return _element_booster(&"dark_booster", "Dark Booster", E.DARK, "Dark")
+
+static func strength_tonic() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"strength_tonic"
+	c.display_name = "Strength Tonic"
+	c.description = "Next Battle: +3 ATK"
+	c.use_effect = UseEffect.Kind.TEMP_ATK
+	c.use_amount = RunConfig.STRENGTH_TONIC_ATK
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func iron_skin_elixir() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"iron_skin_elixir"
+	c.display_name = "Iron Skin Elixir"
+	c.description = "Next Battle: +3 DEF"
+	c.use_effect = UseEffect.Kind.TEMP_DEF
+	c.use_amount = RunConfig.IRON_SKIN_ELIXIR_DEF
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func swift_draft() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"swift_draft"
+	c.display_name = "Swift Draft"
+	c.description = "Next Battle: +2 SPD"
+	c.use_effect = UseEffect.Kind.TEMP_SPD
+	c.use_amount = RunConfig.SWIFT_DRAFT_SPD
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func vitality_draft() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"vitality_draft"
+	c.display_name = "Vitality Draft"
+	c.description = "Next Battle: +30 Max HP"
+	c.use_effect = UseEffect.Kind.TEMP_MAX_HP
+	c.use_amount = RunConfig.VITALITY_DRAFT_MAX_HP
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func pieces_of_def() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"pieces_of_def"
+	c.display_name = "Pieces of DEF"
+	c.description = "+1 DEF permanently"
+	c.use_effect = UseEffect.Kind.PERM_DEF
+	c.use_amount = RunConfig.PIECES_OF_DEF_BONUS
+	c.max_stack = 1
+	return _with_icon(c) as ConsumableDefinition
+
+static func pieces_of_spd() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"pieces_of_spd"
+	c.display_name = "Pieces of SPD"
+	c.description = "+1 SPD permanently"
+	c.use_effect = UseEffect.Kind.PERM_SPD
+	c.use_amount = RunConfig.PIECES_OF_SPD_BONUS
+	c.max_stack = 1
+	return _with_icon(c) as ConsumableDefinition
+
+static func gold_dust() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"gold_dust"
+	c.display_name = "Gold Dust"
+	c.description = "Gain 25 Gold"
+	c.use_effect = UseEffect.Kind.GAIN_GOLD
+	c.use_amount = RunConfig.GOLD_DUST_AMOUNT
+	c.max_stack = 99
 	return _with_icon(c) as ConsumableDefinition
 
 static func sealed_letter() -> ImportantDefinition:
@@ -164,10 +278,20 @@ static func fragments() -> Array[FragmentDefinition]:
 	return out
 
 static func all_equipment() -> Array[EquipmentDefinition]:
-	return [starter_rod(), starter_robe(), starter_shoes(), starter_necklace()]
+	var out: Array[EquipmentDefinition] = [
+		starter_rod(), starter_robe(), starter_shoes(), starter_necklace()]
+	out.append_array(EquipmentLibrary.all())
+	return out
 
 static func all_consumables() -> Array[ConsumableDefinition]:
-	return [healing_potion(), protective_ring(), fire_booster(), pieces_of_hp(), pieces_of_atk()]
+	return [
+		healing_potion(), greater_healing_potion(), protective_ring(), barrier_charm(),
+		fire_booster(), ice_booster(), earth_booster(), wind_booster(),
+		lightning_booster(), dark_booster(),
+		strength_tonic(), iron_skin_elixir(), swift_draft(), vitality_draft(),
+		pieces_of_hp(), pieces_of_atk(), pieces_of_def(), pieces_of_spd(),
+		gold_dust(),
+	]
 
 static func all_importants() -> Array[ImportantDefinition]:
 	return [sealed_letter(), shield_of_hero()]
@@ -176,6 +300,12 @@ static func consumable_by_id(id: StringName) -> ConsumableDefinition:
 	for c in all_consumables():
 		if c.id == id:
 			return c
+	return null
+
+static func equipment_by_id(id: StringName) -> EquipmentDefinition:
+	for eq in all_equipment():
+		if eq.id == id:
+			return eq
 	return null
 
 ## Extra fragments only available via level-up rewards (not starter-owned).

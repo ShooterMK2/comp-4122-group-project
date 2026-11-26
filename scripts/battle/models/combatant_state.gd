@@ -14,10 +14,12 @@ var attack_multiplier := 1.0
 var defence_multiplier := 1.0
 var speed_multiplier := 1.0
 var damage_output_multiplier := 1.0
+## Gear baseline for damage_output_multiplier (restored each player turn).
+var base_damage_output_multiplier := 1.0
 ## Incoming damage multiplier (necklace DR etc.). Default 1.0.
 var damage_taken_multiplier := 1.0
-## Additive fire spell damage bonus this battle (0.2 = +20%).
-var fire_spell_damage_mult := 0.0
+## Additive spell damage by element this battle (0.2 = +20%; may be negative).
+var element_spell_damage_mult: Dictionary = {}
 var stat_buff_turns: Array[int] = [0, 0, 0]
 var stat_debuff_turns: Array[int] = [0, 0, 0]
 var elemental_weaknesses: Array[int] = []
@@ -100,8 +102,9 @@ func duplicate_state() -> CombatantState:
 	c.defence_multiplier = defence_multiplier
 	c.speed_multiplier = speed_multiplier
 	c.damage_output_multiplier = damage_output_multiplier
+	c.base_damage_output_multiplier = base_damage_output_multiplier
 	c.damage_taken_multiplier = damage_taken_multiplier
-	c.fire_spell_damage_mult = fire_spell_damage_mult
+	c.element_spell_damage_mult = element_spell_damage_mult.duplicate()
 	c.stat_buff_turns = stat_buff_turns.duplicate()
 	c.stat_debuff_turns = stat_debuff_turns.duplicate()
 	c.hp = hp

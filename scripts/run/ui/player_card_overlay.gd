@@ -8,6 +8,9 @@ const FONT_TITLE := 28
 const FONT_BODY := 18
 const FONT_SMALL := 16
 const SLOT_SIZE := Vector2(88, 88)
+const PICKER_ROW_H := 44
+const PICKER_ICON_MAX := 36
+const SLOT_ICON_MAX := 64
 
 var _panel: PanelContainer
 var _name_label: Label
@@ -242,6 +245,7 @@ func _make_slot_widget(slot: int) -> Control:
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.clip_text = true
 	btn.expand_icon = true
+	btn.add_theme_constant_override("icon_max_width", SLOT_ICON_MAX)
 	btn.pressed.connect(_open_gear_picker.bind(slot))
 	btn.mouse_entered.connect(_on_slot_hover.bind(slot))
 	btn.mouse_exited.connect(_on_slot_unhover.bind(slot))
@@ -338,12 +342,32 @@ func _equipment_stats_text(eq: EquipmentDefinition) -> String:
 		bits.append("SPD %+.0f" % eq.bonus_speed)
 	if eq.bonus_max_hp != 0:
 		bits.append("MAX HP %+d" % eq.bonus_max_hp)
+	if not is_zero_approx(eq.max_hp_mult):
+		bits.append("MAX HP %+.0f%%" % (eq.max_hp_mult * 100.0))
+	if not is_zero_approx(eq.speed_mult):
+		bits.append("SPD ×%.2f" % (1.0 + eq.speed_mult))
+	if not is_zero_approx(eq.damage_dealt_bonus):
+		bits.append("Damage %+.0f%%" % (eq.damage_dealt_bonus * 100.0))
+	for el in eq.element_damage_bonuses.keys():
+		var pct := float(eq.element_damage_bonuses[el]) * 100.0
+		bits.append("%s spell %+.0f%%" % [_element_label(int(el)), pct])
 	return ", ".join(bits)
 
 func _passive_text(eq: EquipmentDefinition) -> String:
 	var bits: Array[String] = []
 	_append_passive_bit(bits, eq.passive, eq.passive_amount)
 	_append_passive_bit(bits, eq.passive2, eq.passive2_amount)
+	match eq.start_stat_buff:
+		EquipmentDefinition.START_BUFF_ATK:
+			bits.append("Start ATK buff")
+		EquipmentDefinition.START_BUFF_DEF:
+			bits.append("Start DEF buff")
+		EquipmentDefinition.START_BUFF_SPD:
+			bits.append("Start SPD buff")
+		EquipmentDefinition.START_BUFF_RANDOM:
+			bits.append("Start random ATK/DEF/SPD buff")
+		_:
+			pass
 	return ", ".join(bits)
 
 func _append_passive_bit(bits: Array[String], kind: int, amount: int) -> void:
@@ -353,10 +377,28 @@ func _append_passive_bit(bits: Array[String], kind: int, amount: int) -> void:
 		PassiveEffect.Kind.ELEMENT_DAMAGE_BONUS:
 			bits.append("+%d Element damage bonus" % amount)
 		PassiveEffect.Kind.DAMAGE_RESISTANCE:
-			# Hidden exact % from main item description; omit numeric here.
-			bits.append("Slight Defense Boost")
+			bits.append("Slight Damage Resistance (%d%%)" % amount)
 		_:
 			pass
+
+func _element_label(element: int) -> String:
+	match element:
+		Elements.Element.FIRE:
+			return "Fire"
+		Elements.Element.ICE:
+			return "Ice"
+		Elements.Element.EARTH:
+			return "Earth"
+		Elements.Element.WIND:
+			return "Wind"
+		Elements.Element.LIGHTNING:
+			return "Lightning"
+		Elements.Element.DARK:
+			return "Dark"
+		Elements.Element.UNIVERSAL:
+			return "Universal"
+		_:
+			return "Element"
 
 func _build_picker(root: Control) -> void:
 	_picker = PanelContainer.new()
@@ -433,7 +475,8 @@ func refresh() -> void:
 		var btn: Button = _slot_buttons[slot]
 		var lab: Label = _slot_labels[slot]
 		if eq != null:
-			btn.text = eq.display_name
+			# Icon-only on the face; name lives in the label under the slot.
+			btn.text = ""
 			btn.icon = IconLookup.for_item_id(eq.id)
 			lab.text = "%s\n%s" % [EquipmentSlot.display_name(slot), eq.display_name]
 		else:
@@ -469,8 +512,11 @@ func _pending_summary() -> String:
 		parts.append("%+d Start Shield" % p.start_shield)
 	if p.heal_amount != 0:
 		parts.append("%+d Heal" % p.heal_amount)
-	if not is_zero_approx(p.fire_spell_damage_mult):
-		parts.append("%+.0f%% Fire spell dmg" % (p.fire_spell_damage_mult * 100.0))
+	for el in p.element_spell_damage_mult.keys():
+		var pct := float(p.element_spell_damage_mult[el]) * 100.0
+		if is_zero_approx(pct):
+			continue
+		parts.append("%+.0f%% %s spell dmg" % [pct, _element_label(int(el))])
 	return ", ".join(parts)
 
 func _toggle_details() -> void:
@@ -494,8 +540,9 @@ func _open_gear_picker(slot: int) -> void:
 		var row := Button.new()
 		row.focus_mode = Control.FOCUS_NONE
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.custom_minimum_size = Vector2(0, 44)
+		row.custom_minimum_size = Vector2(0, PICKER_ROW_H)
 		row.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		row.add_theme_constant_override("icon_max_width", PICKER_ICON_MAX)
 		var mark := " [E]" if RunState.is_equipped(entry.id) else ""
 		row.text = "%s%s" % [entry.display_name(), mark]
 		row.icon = IconLookup.for_item_id(entry.id)
@@ -545,14 +592,15 @@ func _open_ultimate_picker() -> void:
 		var row := Button.new()
 		row.focus_mode = Control.FOCUS_NONE
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.custom_minimum_size = Vector2(0, 48)
+		row.custom_minimum_size = Vector2(0, PICKER_ROW_H)
 		row.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		row.add_theme_constant_override("icon_max_width", PICKER_ICON_MAX)
 		var active := RunState.is_ultimate_equipped(entry.id)
 		row.text = "%s%s" % [entry.display_name(), " [Active]" if active else ""]
 		row.disabled = active
 		var ult := entry.ref as UltimateDefinition
-		if ult != null and ult.icon != null:
-			row.icon = ult.icon
+		if ult != null:
+			row.icon = IconLookup.for_item_id(ult.id) if ult.icon == null else ult.icon
 		row.pressed.connect(_on_ultimate_picked.bind(entry.id))
 		_picker_list.add_child(row)
 		var desc := Label.new()

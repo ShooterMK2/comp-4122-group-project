@@ -5,8 +5,16 @@ base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "
 names = [
 	"starter_rod", "starter_robe", "starter_shoes", "starter_necklace",
 	"healing_potion", "protective_ring", "fire_booster", "pieces_of_hp",
-	"pieces_of_atk", "shield_of_hero", "ult_powerful_charge", "ult_emergency_aid",
-	"ult_fighting_spirit", "ult_crowd_control",
+	"pieces_of_atk", "sealed_letter", "shield_of_hero",
+	"ult_powerful_charge", "ult_emergency_aid", "ult_fighting_spirit", "ult_crowd_control",
+	"iron_rod", "duo_staff", "nature_staff", "shock_point", "blood_stick",
+	"iron_plate", "stable_chestcover", "heavy_armour", "fittest_top", "speed_shirt",
+	"iron_gauntlet", "adventurers_helmet", "bandits_leggings", "knights_shields",
+	"hunters_gloves", "merchants_glasses", "dancers_mask", "pupils_note", "priests_necklace",
+	"greater_healing_potion", "barrier_charm",
+	"ice_booster", "earth_booster", "wind_booster", "lightning_booster", "dark_booster",
+	"strength_tonic", "iron_skin_elixir", "swift_draft", "vitality_draft",
+	"pieces_of_def", "pieces_of_spd", "gold_dust",
 ]
 alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 tmpl = """[remap]

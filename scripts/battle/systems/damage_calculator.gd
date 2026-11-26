@@ -12,7 +12,7 @@ static func finalize(raw: float, attacker: CombatantState,
 	var base := raw * effective_attack
 	base *= attacker.attack_multiplier * _attack_multiplier(attacker, element, terrain)
 	base *= attacker.damage_output_multiplier
-	base *= _fire_spell_multiplier(attacker, element)
+	base *= _element_spell_multiplier(attacker, element)
 	return _apply_multipliers(base, attacker, defender, element, other_multiplier,
 		terrain, flat_bonus)
 
@@ -100,7 +100,7 @@ static func explain_spell(raw: float, attacker: CombatantState,
 	var base := raw * effective_attack * attacker.attack_multiplier
 	base *= attack_terrain
 	base *= attacker.damage_output_multiplier
-	base *= _fire_spell_multiplier(attacker, element)
+	base *= _element_spell_multiplier(attacker, element)
 	var defence: float = defence_multiplier_of(attacker, defender, element, terrain)
 	var elemental: float = elemental_multiplier_of(defender, element)
 	var expected_random: float = (BattleConfig.DAMAGE_RANDOM_MIN
@@ -149,10 +149,10 @@ static func _attack_multiplier(_attacker: CombatantState, element: int,
 		return 1.0
 	return terrain.attack_multiplier_for(element)
 
-static func _fire_spell_multiplier(attacker: CombatantState, element: int) -> float:
-	if attacker == null or element != Elements.Element.FIRE:
+static func _element_spell_multiplier(attacker: CombatantState, element: int) -> float:
+	if attacker == null or attacker.element_spell_damage_mult.is_empty():
 		return 1.0
-	return 1.0 + maxf(0.0, attacker.fire_spell_damage_mult)
+	return 1.0 + float(attacker.element_spell_damage_mult.get(element, 0.0))
 
 static func elemental_multiplier_of(defender: CombatantState, element: int) -> float:
 	if defender == null or element == Elements.Element.NONE:

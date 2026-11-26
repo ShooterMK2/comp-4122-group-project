@@ -18,7 +18,8 @@ static func activate(state: BattleState, ult: UltimateDefinition, spent: float,
 	match ult.effect_kind:
 		UltimateDefinition.EffectKind.DAMAGE_BURST:
 			var mult := scaled_damage_mult(ult, spent)
-			state.player.set_damage_output_multiplier(mult)
+			state.player.set_damage_output_multiplier(
+				state.player.base_damage_output_multiplier * mult)
 			log_lines.append("%s: %.2fx damage this turn." % [ult.display_name, mult])
 		UltimateDefinition.EffectKind.EMERGENCY_AID:
 			var pct := lerpf(ult.heal_percent_min, ult.heal_percent_max, ratio)

@@ -97,12 +97,26 @@ func _seed_starter() -> void:
 		_fragment_deck.append(frag.id)
 	for eq in StarterContent.all_equipment():
 		_add_entry(eq.id, ItemCategory.Kind.EQUIPMENT, 1, eq)
-	# Chapter 1: own starter gear but start unequipped (1A).
+	# Chapter 1: own gear but start unequipped (1A). All catalog items owned for testing.
 	_add_entry(&"healing_potion", ItemCategory.Kind.CONSUMABLE, 5, StarterContent.healing_potion())
+	_add_entry(&"greater_healing_potion", ItemCategory.Kind.CONSUMABLE, 3, StarterContent.greater_healing_potion())
 	_add_entry(&"protective_ring", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.protective_ring())
+	_add_entry(&"barrier_charm", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.barrier_charm())
 	_add_entry(&"fire_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.fire_booster())
+	_add_entry(&"ice_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.ice_booster())
+	_add_entry(&"earth_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.earth_booster())
+	_add_entry(&"wind_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.wind_booster())
+	_add_entry(&"lightning_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.lightning_booster())
+	_add_entry(&"dark_booster", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.dark_booster())
+	_add_entry(&"strength_tonic", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.strength_tonic())
+	_add_entry(&"iron_skin_elixir", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.iron_skin_elixir())
+	_add_entry(&"swift_draft", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.swift_draft())
+	_add_entry(&"vitality_draft", ItemCategory.Kind.CONSUMABLE, 2, StarterContent.vitality_draft())
 	_add_entry(&"pieces_of_hp", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_hp())
 	_add_entry(&"pieces_of_atk", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_atk())
+	_add_entry(&"pieces_of_def", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_def())
+	_add_entry(&"pieces_of_spd", ItemCategory.Kind.CONSUMABLE, 1, StarterContent.pieces_of_spd())
+	_add_entry(&"gold_dust", ItemCategory.Kind.CONSUMABLE, 3, StarterContent.gold_dust())
 	_add_entry(&"sealed_letter", ItemCategory.Kind.IMPORTANT, 1, StarterContent.sealed_letter())
 	_add_entry(&"shield_of_hero", ItemCategory.Kind.IMPORTANT, 1, StarterContent.shield_of_hero())
 	for ult in UltimateLibrary.all():

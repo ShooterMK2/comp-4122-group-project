@@ -182,7 +182,7 @@ func _on_prompt_confirmed() -> void:
 
 func _start_turn() -> void:
 	state.ultimate_active = false
-	state.player.set_damage_output_multiplier(1.0)
+	state.player.set_damage_output_multiplier(state.player.base_damage_output_multiplier)
 	board.advance_special_tiles()
 	state.player.advance_stat_tile_turn()
 	for enemy in state.enemies:

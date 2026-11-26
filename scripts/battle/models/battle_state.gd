@@ -47,10 +47,25 @@ func _init_player_from_run(run: Node) -> void:
 	player.elemental_strengths = snap.elemental_strengths.duplicate()
 	player.shield = snap.start_shield
 	player.damage_taken_multiplier = snap.damage_taken_multiplier
-	player.fire_spell_damage_mult = snap.fire_spell_damage_mult
+	player.element_spell_damage_mult = snap.element_spell_damage_mult.duplicate()
+	if not is_zero_approx(snap.damage_dealt_bonus):
+		player.base_damage_output_multiplier = 1.0 + snap.damage_dealt_bonus
+		player.damage_output_multiplier = player.base_damage_output_multiplier
 	player.is_player = true
 	player.compare_level = player.level
 	player_speed = snap.speed()
+	_apply_start_stat_buffs(snap.start_stat_buffs)
+
+func _apply_start_stat_buffs(buffs: Array[int]) -> void:
+	if player == null or buffs.is_empty():
+		return
+	for raw in buffs:
+		var stat := int(raw)
+		if stat == EquipmentDefinition.START_BUFF_RANDOM:
+			stat = randi_range(0, 2)
+		if stat < 0 or stat > 2:
+			continue
+		player.apply_stat_tile(stat, true)
 
 func _init_player_from_definition(player_definition: PlayerDefinition) -> void:
 	player = CombatantState.from_definition(player_definition)
