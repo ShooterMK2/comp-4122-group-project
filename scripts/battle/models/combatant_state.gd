@@ -14,6 +14,10 @@ var attack_multiplier := 1.0
 var defence_multiplier := 1.0
 var speed_multiplier := 1.0
 var damage_output_multiplier := 1.0
+## Incoming damage multiplier (necklace DR etc.). Default 1.0.
+var damage_taken_multiplier := 1.0
+## Additive fire spell damage bonus this battle (0.2 = +20%).
+var fire_spell_damage_mult := 0.0
 var stat_buff_turns: Array[int] = [0, 0, 0]
 var stat_debuff_turns: Array[int] = [0, 0, 0]
 var elemental_weaknesses: Array[int] = []
@@ -96,6 +100,8 @@ func duplicate_state() -> CombatantState:
 	c.defence_multiplier = defence_multiplier
 	c.speed_multiplier = speed_multiplier
 	c.damage_output_multiplier = damage_output_multiplier
+	c.damage_taken_multiplier = damage_taken_multiplier
+	c.fire_spell_damage_mult = fire_spell_damage_mult
 	c.stat_buff_turns = stat_buff_turns.duplicate()
 	c.stat_debuff_turns = stat_debuff_turns.duplicate()
 	c.hp = hp

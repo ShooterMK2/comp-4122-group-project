@@ -8,6 +8,8 @@ extends ItemDefinition
 @export var bonus_speed: float = 0.0
 @export var passive: PassiveEffect.Kind = PassiveEffect.Kind.NONE
 @export var passive_amount: int = 0
+@export var passive2: PassiveEffect.Kind = PassiveEffect.Kind.NONE
+@export var passive2_amount: int = 0
 
 func category() -> int:
 	return ItemCategory.Kind.EQUIPMENT

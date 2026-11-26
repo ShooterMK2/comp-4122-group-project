@@ -235,8 +235,8 @@ func _stat_chip(parent: Control) -> Label:
 	return lab
 
 func _make_slot_widget(slot: int) -> Control:
-	var wrap := VBoxContainer.new()
-	wrap.custom_minimum_size = SLOT_SIZE + Vector2(0, 24)
+	var slot_box := VBoxContainer.new()
+	slot_box.custom_minimum_size = SLOT_SIZE + Vector2(0, 24)
 	var btn := Button.new()
 	btn.custom_minimum_size = SLOT_SIZE
 	btn.focus_mode = Control.FOCUS_NONE
@@ -245,15 +245,15 @@ func _make_slot_widget(slot: int) -> Control:
 	btn.pressed.connect(_open_gear_picker.bind(slot))
 	btn.mouse_entered.connect(_on_slot_hover.bind(slot))
 	btn.mouse_exited.connect(_on_slot_unhover.bind(slot))
-	wrap.add_child(btn)
+	slot_box.add_child(btn)
 	var lab := Label.new()
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lab.add_theme_font_size_override("font_size", FONT_SMALL)
 	lab.text = EquipmentSlot.display_name(slot)
-	wrap.add_child(lab)
+	slot_box.add_child(lab)
 	_slot_buttons[slot] = btn
 	_slot_labels[slot] = lab
-	return wrap
+	return slot_box
 
 func _on_slot_hover(slot: int) -> void:
 	if _picker != null and _picker.visible:
@@ -341,13 +341,22 @@ func _equipment_stats_text(eq: EquipmentDefinition) -> String:
 	return ", ".join(bits)
 
 func _passive_text(eq: EquipmentDefinition) -> String:
-	match eq.passive:
+	var bits: Array[String] = []
+	_append_passive_bit(bits, eq.passive, eq.passive_amount)
+	_append_passive_bit(bits, eq.passive2, eq.passive2_amount)
+	return ", ".join(bits)
+
+func _append_passive_bit(bits: Array[String], kind: int, amount: int) -> void:
+	match kind:
 		PassiveEffect.Kind.START_SHIELD:
-			return "+%d Start Shield next battle" % eq.passive_amount
+			bits.append("+%d Start Shield" % amount)
 		PassiveEffect.Kind.ELEMENT_DAMAGE_BONUS:
-			return "+%d Element damage bonus" % eq.passive_amount
+			bits.append("+%d Element damage bonus" % amount)
+		PassiveEffect.Kind.DAMAGE_RESISTANCE:
+			# Hidden exact % from main item description; omit numeric here.
+			bits.append("Slight Defense Boost")
 		_:
-			return ""
+			pass
 
 func _build_picker(root: Control) -> void:
 	_picker = PanelContainer.new()
@@ -460,6 +469,8 @@ func _pending_summary() -> String:
 		parts.append("%+d Start Shield" % p.start_shield)
 	if p.heal_amount != 0:
 		parts.append("%+d Heal" % p.heal_amount)
+	if not is_zero_approx(p.fire_spell_damage_mult):
+		parts.append("%+.0f%% Fire spell dmg" % (p.fire_spell_damage_mult * 100.0))
 	return ", ".join(parts)
 
 func _toggle_details() -> void:
@@ -515,6 +526,21 @@ func _open_ultimate_picker() -> void:
 	_picker_title.text = "Ultimates"
 	for c in _picker_list.get_children():
 		c.queue_free()
+	var none_row := Button.new()
+	none_row.focus_mode = Control.FOCUS_NONE
+	none_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	none_row.custom_minimum_size = Vector2(0, 48)
+	none_row.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var none_active := RunState.equipped_ultimate() == null
+	none_row.text = "None%s" % (" [Active]" if none_active else "")
+	none_row.disabled = none_active
+	none_row.pressed.connect(_on_ultimate_picked.bind(&""))
+	_picker_list.add_child(none_row)
+	var none_desc := Label.new()
+	none_desc.text = "No ultimate equipped. Charge still builds, but cannot activate."
+	none_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	none_desc.add_theme_font_size_override("font_size", FONT_SMALL)
+	_picker_list.add_child(none_desc)
 	for entry in RunState.list_entries(ItemCategory.Kind.ULTIMATE):
 		var row := Button.new()
 		row.focus_mode = Control.FOCUS_NONE

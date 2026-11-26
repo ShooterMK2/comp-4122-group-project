@@ -57,8 +57,9 @@ static func roll_non_stat_offers(run: Node, count: int = 3) -> Array[LevelUpOffe
 	var pool: Array[LevelUpOffer] = []
 	pool.append(LevelUpOffer.gold(randi_range(RunConfig.LEVEL_UP_GOLD_MIN, RunConfig.LEVEL_UP_GOLD_MAX)))
 	pool.append(LevelUpOffer.heal(RunConfig.LEVEL_UP_HEAL_AMOUNT))
-	pool.append(LevelUpOffer.consumable(&"minor_tonic", "Minor Tonic"))
-	pool.append(LevelUpOffer.consumable(&"warding_charm", "Warding Charm"))
+	pool.append(LevelUpOffer.consumable(&"healing_potion", "Healing Potion"))
+	pool.append(LevelUpOffer.consumable(&"protective_ring", "Protective Ring"))
+	pool.append(LevelUpOffer.consumable(&"fire_booster", "Fire Booster"))
 	for frag in StarterContent.reward_fragments():
 		if run != null and run.has_method("owns_fragment") and run.owns_fragment(frag.id):
 			continue

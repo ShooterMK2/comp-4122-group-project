@@ -33,13 +33,13 @@ static func make_heal(p_id: StringName, p_name: String, amount: int) -> SkillDef
 	return s
 
 static func make_support(p_id: StringName, p_name: String, target: TargetKind,
-		effects: Array) -> SkillDefinition:
+		p_effects: Array) -> SkillDefinition:
 	var s := SkillDefinition.new()
 	s.id = p_id
 	s.display_name = p_name
 	s.kind = SkillKind.SUPPORT
 	s.target_kind = target
-	for fx in effects:
+	for fx in p_effects:
 		s.effects.append(fx)
 	return s
 

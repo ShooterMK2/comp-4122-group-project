@@ -46,6 +46,8 @@ func _init_player_from_run(run: Node) -> void:
 	player.elemental_weaknesses = snap.elemental_weaknesses.duplicate()
 	player.elemental_strengths = snap.elemental_strengths.duplicate()
 	player.shield = snap.start_shield
+	player.damage_taken_multiplier = snap.damage_taken_multiplier
+	player.fire_spell_damage_mult = snap.fire_spell_damage_mult
 	player.is_player = true
 	player.compare_level = player.level
 	player_speed = snap.speed()

@@ -4,8 +4,14 @@ extends RefCounted
 const STARTING_GOLD := 0
 const FRAGMENT_DECK_SIZE := 12
 const SPELL_DECK_SIZE := 18  # soft cap; owned spells can fill up to this
-const MINOR_TONIC_HEAL := 20
-const BLESSED_SIGIL_MAX_HP_BONUS := 10
+const HEALING_POTION_HEAL := 20
+const PIECES_OF_HP_BONUS := 10
+const PIECES_OF_ATK_BONUS := 1
+const SHIELD_OF_HERO_BONUS := 3
+const FIRE_BOOSTER_SPELL_BONUS := 0.20  # +20% fire spell damage
+## Deprecated aliases kept for any stray references.
+const MINOR_TONIC_HEAL := HEALING_POTION_HEAL
+const BLESSED_SIGIL_MAX_HP_BONUS := PIECES_OF_HP_BONUS
 
 # ---------- leveling ----------
 const PLAYER_LEVEL_MIN := 1
