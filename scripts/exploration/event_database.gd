@@ -4,6 +4,7 @@ extends RefCounted
 const EVENTS = {
 	# Wood (None) / Snow
 	"ABANDONED_CAMPFIRE": {
+		"id": 0,
 		"title": "Abandoned Campfire",
 		"description": "You find a recently extinguished campfire. A scattered backpack lies nearby.",
 		"terrains": ["None", "Snow"],
@@ -14,6 +15,7 @@ const EVENTS = {
 		]
 	},
 	"LOST_TRAVELER": {
+		"id": 1,
 		"title": "Lost Traveler",
 		"description": "A traveler is trapped in the snow. He begs for help.",
 		"terrains": ["None", "Snow"],
@@ -24,6 +26,7 @@ const EVENTS = {
 		]
 	},
 	"FROZEN_MERCHANT": {
+		"id": 2,
 		"title": "Frozen Merchant",
 		"description": "A merchant lies dead in the snow, clutching a locked chest.",
 		"terrains": ["None", "Snow"],
@@ -36,6 +39,7 @@ const EVENTS = {
 
 	# Forest
 	"ANCIENT_ALTAR": {
+		"id": 3,
 		"title": "Ancient Elemental Altar",
 		"description": "An altar of vines and stone holds three glowing orbs: red, blue, and green.",
 		"terrains": ["Forest"],
@@ -46,6 +50,7 @@ const EVENTS = {
 		]
 	},
 	"MYSTIC_SPRING": {
+		"id": 4,
 		"title": "Mystic Spring",
 		"description": "You discover a spring glowing with soft light.",
 		"terrains": ["Forest"],
@@ -56,6 +61,7 @@ const EVENTS = {
 		]
 	},
 	"LOST_FAIRY": {
+		"id": 5,
 		"title": "Lost Fairy",
 		"description": "A small fairy is trapped in a spider web, glowing weakly.",
 		"terrains": ["Forest"],
@@ -68,6 +74,7 @@ const EVENTS = {
 
 	# Desert
 	"CARAVAN_WRECKAGE": {
+		"id": 6,
 		"title": "Desert Caravan Wreckage",
 		"description": "A massive caravan wagon is buried under the sand, still loaded with supplies.",
 		"terrains": ["Desert"],
@@ -78,6 +85,7 @@ const EVENTS = {
 		]
 	},
 	"GHOST_SANDSTORM": {
+		"id": 7,
 		"title": "Ghost in the Sandstorm",
 		"description": "A translucent ghost appears before you, seemingly with unfinished business.",
 		"terrains": ["Desert"],
@@ -88,6 +96,7 @@ const EVENTS = {
 		]
 	},
 	"THIRSTY_REFUGEES": {
+		"id": 8,
 		"title": "Thirsty Refugees",
 		"description": "A group of ragged refugees begs you for water.",
 		"terrains": ["Desert"],
@@ -100,6 +109,7 @@ const EVENTS = {
 
 	# Volcano
 	"LAVA_CHEST": {
+		"id": 9,
 		"title": "Chest in the Lava",
 		"description": "A glittering chest floats in the middle of a lava pool.",
 		"terrains": ["Volcano"],
@@ -113,6 +123,7 @@ const EVENTS = {
 
 const SPEC_EVENTS = {
 	"VILLAGER_VENGEANCE": {
+		"id": 99,
 		"title": "Villager Vengeance",
 		"description": "A group of angry villagers ambushes you on the road. They remember what you did.",
 		"is_special": true,
@@ -124,17 +135,20 @@ const SPEC_EVENTS = {
 	}
 }
 
-static func get_random_event(terrain: String) -> Dictionary:
+static func get_random_event(terrain: String, seen_ids: Array[int] = []) -> Dictionary:
 	var valid_keys: Array = []
+	var unseen_keys: Array = []
 	for key in EVENTS.keys():
 		var event_terrains: Array = EVENTS[key]["terrains"]
 		if terrain in event_terrains:
 			valid_keys.append(key)
-	
+			if not EVENTS[key]["id"] in seen_ids:
+				unseen_keys.append(key)
 	if valid_keys.is_empty():
 		return EVENTS["ABANDONED_CAMPFIRE"]
-	
-	var random_key = valid_keys.pick_random()
+	# Try to select events not seen before
+	var pool = unseen_keys if not unseen_keys.is_empty() else valid_keys
+	var random_key = pool.pick_random()
 	return EVENTS[random_key]
 
 static func get_karma_event() -> Dictionary:

@@ -32,12 +32,12 @@ const FIXED_TYPES = {
 }
 
 # Determines the terrain
-func get_terrain(y_pos: float) -> String:
-	if y_pos >= 1900: return "None"			# 1900~2276 (Woods, Starting Area)
-	elif y_pos >= 1500: return "Snow"		# 1500~1900 (Snow Mountain)
-	elif y_pos >= 1000: return "Forest"		# 1000~1500 (Forest)
-	elif y_pos >= 500: return "Desert"		# 500~1000 (Desert)
-	else: return "Volcano"					# 0~500 (Volcano)
+func get_terrain(layer_idx: int) -> String:
+	if layer_idx <= 1: return "None"
+	elif layer_idx <= 4: return "Snow"
+	elif layer_idx <= 7: return "Forest"
+	elif layer_idx <= 10: return "Desert"
+	else: return "Volcano"
 
 
 var map_nodes: Array = []
@@ -259,9 +259,8 @@ func _generate_forced_quotas() -> Dictionary:
 		for node_idx in range(nodes_in_layer):
 			var type_key = "%d_%d" % [layer_idx, node_idx]
 			if FIXED_TYPES.has(type_key):
-				continue	
-			var y_pos = LAYER_Y_POSITIONS[layer_idx]
-			var terrain = get_terrain(y_pos)
+				continue
+			var terrain = get_terrain(layer_idx)
 			if not terrain_slots.has(terrain):
 				terrain_slots[terrain] = []
 			terrain_slots[terrain].append(type_key)
@@ -496,8 +495,10 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 			await ScreenTransition.fade_out()
 			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")
 		elif type == "EVENT":
-			var terrain = get_terrain(node.position.y)
-			var event_data = EventDatabase.get_random_event(terrain)
+			var terrain = get_terrain(layer_idx)
+			var event_data = EventDatabase.get_random_event(terrain, RunState.seen_events)
+			if not event_data["id"] in RunState.seen_events:
+				RunState.seen_events.append(event_data["id"])
 			_clear_notifications()
 			_event_scene.show_event(event_data)
 			RunState.pending_node_to_clear = "%d_%d" % [layer_idx, node_idx]
