@@ -1,14 +1,13 @@
-[gd_resource type="Resource" script_class="PlayerDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PlayerDefinition" format=3 uid="uid://b835sibykolpq"]
 
-[ext_resource type="Script" path="res://scripts/battle/data/player_definition.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://cuerela1q2tc1" path="res://scripts/battle/data/player_definition.gd" id="1_player"]
 
 [resource]
 script = ExtResource("1_player")
 display_name = "Player"
 max_hp = 100
-level = 1
 attack = 5
 defence = 3
 speed = 4
-art_name = "player"
+art_name = "player_wizard"
 placeholder_color = Color(0.2, 0.45, 0.7, 1)

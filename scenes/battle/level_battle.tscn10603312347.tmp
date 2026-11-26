@@ -1,0 +1,83 @@
+[gd_scene format=3 uid="uid://b566mxf84qe31"]
+
+[ext_resource type="Script" uid="uid://bkj6ojtb5gkrr" path="res://scripts/battle/new/battle_controller.gd" id="1_8gi1x"]
+[ext_resource type="PackedScene" uid="uid://bktse2uli5q2k" path="res://scenes/battle/ui/battlefield.tscn" id="1_qr5ad"]
+[ext_resource type="PackedScene" uid="uid://boeyhivkukinj" path="res://scenes/battle/ui/battle_io.tscn" id="1_tsgdp"]
+[ext_resource type="Resource" uid="uid://tcix88mjcju5" path="res://resources/encounters/test_encounter.tres" id="2_q55g6"]
+[ext_resource type="Script" uid="uid://cnhp5mod5iqiq" path="res://scripts/battle/new/battlefield.gd" id="3_aitsp"]
+[ext_resource type="PackedScene" uid="uid://sunla5qcbi67" path="res://scenes/battle/ui/top_panel.tscn" id="3_ky0jg"]
+[ext_resource type="PackedScene" uid="uid://cnve72bhndf7j" path="res://scenes/battle/ui/result_overlay.tscn" id="5_aitsp"]
+[ext_resource type="PackedScene" path="res://scenes/battle/ui/deadlock_overlay.tscn" id="6_q55g6"]
+[ext_resource type="PackedScene" uid="uid://by8raoqxf0a4" path="res://scenes/battle/ui/log_console.tscn" id="7_x3kp1"]
+
+[node name="Control" type="Control" unique_id=566920335]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_8gi1x")
+encounter = ExtResource("2_q55g6")
+
+[node name="Scene" type="Control" parent="." unique_id=269137693]
+custom_minimum_size = Vector2(1280, 360)
+layout_mode = 1
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Battlefield" parent="Scene" unique_id=1577251761 instance=ExtResource("1_qr5ad")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 1280.0
+offset_bottom = 360.0
+grow_horizontal = 1
+grow_vertical = 1
+script = ExtResource("3_aitsp")
+preview_on_ready = null
+
+[node name="TopIO" type="Control" parent="Scene" unique_id=386505173]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 50.0
+grow_horizontal = 2
+
+[node name="TopPanel" parent="Scene/TopIO" unique_id=295323717 instance=ExtResource("3_ky0jg")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_bottom = 1.0
+offset_bottom = 0.0
+
+[node name="MainIO" type="Control" parent="." unique_id=728412288]
+custom_minimum_size = Vector2(1280, 360)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -360.0
+offset_right = 1280.0
+grow_vertical = 0
+
+[node name="BattleIO" parent="MainIO" unique_id=902454972 instance=ExtResource("1_tsgdp")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 955.0
+offset_bottom = 360.0
+
+[node name="ResultOverlay" parent="." unique_id=1327950614 instance=ExtResource("5_aitsp")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="DeadlockOverlay" parent="." unique_id=1054025664 instance=ExtResource("6_q55g6")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="LogConsole" parent="." unique_id=1151448837 instance=ExtResource("7_x3kp1")]
+unique_name_in_owner = true

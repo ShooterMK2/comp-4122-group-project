@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://bakkb0y25me8e"]
+
+[ext_resource type="PackedScene" uid="uid://buno6w5sl62jo" path="res://scenes/battle/ui/status_chip.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/hover_icon.gd" id="2_hover"]
+
+[node name="TerrainChip" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(40, 40)
+script = ExtResource("2_hover")

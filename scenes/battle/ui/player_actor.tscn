@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://tbpfe2i2ipdl"]
+
+[ext_resource type="Script" uid="uid://dtmea2t0supou" path="res://scripts/battle/ui_scene/player_actor.gd" id="1_player"]
+[ext_resource type="Texture2D" uid="uid://xhec4axmwrv8" path="res://assets/characters/player_wizard.png" id="2_e23vv"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_py7os"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_e23vv")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="PlayerActor" type="Control" unique_id=940567581]
+custom_minimum_size = Vector2(64, 128)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 64.0
+offset_bottom = 128.0
+mouse_filter = 2
+script = ExtResource("1_player")
+
+[node name="Placeholder" type="ColorRect" parent="." unique_id=437051137]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Placeholder" unique_id=1267084066]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="SpriteWrapper" type="VBoxContainer" parent="." unique_id=1566717658]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 2
+
+[node name="SpriteSlot" type="Control" parent="SpriteWrapper" unique_id=470774579]
+custom_maximum_size = Vector2(64, 128)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Fit" type="Node2D" parent="SpriteWrapper/SpriteSlot" unique_id=1350307298]
+
+[node name="Sprite" type="AnimatedSprite2D" parent="SpriteWrapper/SpriteSlot/Fit" unique_id=1822258978]
+unique_name_in_owner = true
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_py7os")
+centered = false

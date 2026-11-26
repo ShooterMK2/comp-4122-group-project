@@ -1,4 +1,4 @@
-class_name EnemyActor
+class_name _EnemyActor
 extends Control
 signal clicked
 signal spell_dropped(definition: SpellDefinition)

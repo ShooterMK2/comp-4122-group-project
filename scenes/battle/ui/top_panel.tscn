@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://sunla5qcbi67"]
+
+[ext_resource type="PackedScene" uid="uid://cnhax8v0uiis3" path="res://scenes/battle/ui/terrain_display.tscn" id="1_terrain"]
+[ext_resource type="PackedScene" uid="uid://bsqssan32lnct" path="res://scenes/battle/ui/round_display.tscn" id="2_round"]
+[ext_resource type="Script" uid="uid://ccqomb0d0ramv" path="res://scripts/battle/ui_scene/terrain_display.gd" id="3_eirfn"]
+[ext_resource type="PackedScene" uid="uid://dswaecsoli1j2" path="res://scenes/battle/ui/turn_order_bar.tscn" id="3_order"]
+[ext_resource type="Script" uid="uid://d1knhcjb3qf6p" path="res://scripts/battle/ui_scene/top_panel.gd" id="4_script"]
+
+[node name="TopPanel" type="Control" unique_id=327513219]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 50.0
+grow_horizontal = 2
+mouse_filter = 2
+script = ExtResource("4_script")
+
+[node name="RoundDisplay" parent="." unique_id=243243428 instance=ExtResource("2_round")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -73.0
+offset_right = 73.0
+offset_bottom = 50.0
+grow_horizontal = 2
+
+[node name="Control" type="Control" parent="RoundDisplay" unique_id=484019800]
+layout_mode = 2
+
+[node name="TurnOrderBar" parent="RoundDisplay/Control" unique_id=1670247078 instance=ExtResource("3_order")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+offset_left = 150.0
+offset_right = 146.0
+offset_bottom = 50.0
+
+[node name="TerrainDisplay" parent="RoundDisplay/Control" unique_id=796294751 instance=ExtResource("1_terrain")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+offset_left = -150.0
+offset_right = -5.0
+offset_bottom = 50.0
+script = ExtResource("3_eirfn")

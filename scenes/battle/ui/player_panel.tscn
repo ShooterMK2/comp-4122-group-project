@@ -23,6 +23,8 @@ bg_color = Color(0.12, 0.05, 0.05, 1)
 bg_color = Color(0.75, 0.22, 0.17, 1)
 
 [node name="PlayerPanel" type="PanelContainer" unique_id=2048075562]
+offset_right = 148.0
+offset_bottom = 90.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_pp")
@@ -102,7 +104,7 @@ theme_override_constants/separation = 4
 
 [node name="HpBar" type="ProgressBar" parent="Margin/VBox/Header/Info/HpRow" unique_id=219300809]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 14)
+custom_minimum_size = Vector2(100, 14)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -114,7 +116,7 @@ show_percentage = false
 
 [node name="HpLabel" type="Label" parent="Margin/VBox/Header/Info/HpRow" unique_id=411317270]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(52, 0)
+custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "0/0"

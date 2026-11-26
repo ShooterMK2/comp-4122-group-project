@@ -41,14 +41,10 @@ func setup_enemy(def: EnemyDefinition, height: float) -> void:
 	_name_label.text = def.display_name
 	_refit_header()
 
-func refresh(c: CombatantState, targeted: bool) -> void:
-	_name_label.text = c.display_name
+func refresh(c: CombatantState) -> void:
 	_set_hp(c)
 	_sync_weaknesses(c.elemental_weaknesses)
 	_sync_statuses(c)
-	apply_statuses(c.statuses)
-	set_dead(c.is_dead())
-	set_targeted(targeted)
 
 func get_hit_rect(with_header: bool = false) -> Rect2:
 	var r := body_rect
@@ -114,3 +110,4 @@ func _refit_header() -> void:
 func _place_header() -> void:
 	_header.position = Vector2(-_header.size.x / 2.0,
 		body_rect.position.y - _header.size.y - HEADER_GAP)
+		

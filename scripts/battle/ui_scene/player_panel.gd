@@ -34,8 +34,7 @@ func setup(art_name: String, color: Color) -> void:
 	%PortraitPlaceholder.visible = tex == null
 	%PortraitPlaceholder.color = color
 
-func refresh(c: CombatantState, charge: float, can_ultimate: bool,
-		ultimate_label: String = "ULTIMATE") -> void:
+func refresh(c: CombatantState, charge: float, can_ultimate: bool) -> void:
 	var dead := c.is_dead()
 	var pct := 100.0 * float(c.hp) / float(maxi(c.max_hp, 1))
 	%HpLabel.text = "%d/%d" % [c.hp, c.max_hp]
@@ -50,7 +49,7 @@ func refresh(c: CombatantState, charge: float, can_ultimate: bool,
 		%ChargeLabel.text = "ULTIMATE READY (%.0f/%.0f) - click the portrait" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
 	else:
 		%ChargeLabel.text = "Charge %.0f / %.0f" % [charge, BattleConfig.CHARGE_GAUGE_MAX]
-	%UltimateButton.text = ultimate_label if not ultimate_label.is_empty() else "ULTIMATE"
+	
 	_set_glow(_can_ultimate)
 	modulate = Color(0.45, 0.45, 0.45) if dead else Color.WHITE
 

@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://bsqssan32lnct"]
+
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/round_display.gd" id="1_script"]
+
+[node name="RoundDisplay" type="PanelContainer"]
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 4
+
+[node name="RoundLabel" type="Label" parent="Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Round 1"
+horizontal_alignment = 1
+vertical_alignment = 1

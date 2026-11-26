@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://cnhax8v0uiis3"]
+
+[ext_resource type="PackedScene" uid="uid://bakkb0y25me8e" path="res://scenes/battle/ui/terrain_chip.tscn" id="1_ki7y1"]
+
+[node name="TerrainDisplay" type="PanelContainer" unique_id=585887848]
+offset_right = 146.0
+offset_bottom = 48.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=135449209]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer" unique_id=799274836]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Tarrrain: "
+
+[node name="TerrainChip" parent="HBoxContainer" unique_id=717059082 instance=ExtResource("1_ki7y1")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2

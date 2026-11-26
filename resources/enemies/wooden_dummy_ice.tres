@@ -1,19 +1,19 @@
-[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyDefinition" format=3 uid="uid://beimw8ryk8ddb"]
 
-[ext_resource type="Script" path="res://scripts/battle/data/enemy_definition.gd" id="1_enemy"]
+[ext_resource type="Script" uid="uid://cv7sop7kt22tn" path="res://scripts/battle/data/enemy_definition.gd" id="1_enemy"]
+[ext_resource type="Script" uid="uid://dikj5o518q5by" path="res://scripts/battle/data/skill_definition.gd" id="2_lmm2n"]
 [ext_resource type="Resource" path="res://resources/skills/enemies/mend.tres" id="2_mend"]
 
 [resource]
 script = ExtResource("1_enemy")
+skills = Array[ExtResource("2_lmm2n")]([ExtResource("2_mend")])
 display_name = "Wooden Dummy"
 max_hp = 70
 level = 3
 attack = 4
 defence = 2
 speed = 3.0
-elemental_weaknesses = [3]
-elemental_strengths = [4]
+elemental_weaknesses = Array[int]([3])
+elemental_strengths = Array[int]([4])
 art_name = "enemy_wooden_dummy.png"
 placeholder_color = Color(0.55, 0.4, 0.25, 1)
-rank = 0
-skills = [ExtResource("2_mend")]
