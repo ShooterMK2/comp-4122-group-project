@@ -6,6 +6,7 @@ const PlayerCardOverlayScript = preload("res://scripts/run/ui/player_card_overla
 const EventModalScript = preload("res://scenes/exploration/event_scene.tscn")
 
 @onready var camera = $Camera2D
+@onready var notif_container = %NotificationContainer
 
 const NODE_TYPES = {
 	"BATTLE": { "name": "Battle", "icon": "res://assets/exploration/battle.png" },
@@ -30,7 +31,7 @@ const FIXED_TYPES = {
 	"12_0": "BATTLE",	# Final Boss
 }
 
-# Determines the terrain for battle
+# Determines the terrain
 func get_terrain(y_pos: float) -> String:
 	if y_pos >= 1900: return "None"			# 1900~2276 (Woods, Starting Area)
 	elif y_pos >= 1500: return "Snow"		# 1500~1900 (Snow Mountain)
@@ -45,6 +46,7 @@ var _level_up_modal: CanvasLayer
 var _player_card: CanvasLayer
 var _event_scene: CanvasLayer
 var start_layer = 0
+var _pending_node_after_karma: Control = null
 
 func _ready() -> void:
 	if RunState.pending_node_to_clear != "":
@@ -68,6 +70,7 @@ func _ready() -> void:
 	_event_scene.visible = false
 	add_child(_event_scene)
 	_event_scene.choice_made.connect(_on_event_choice_made)
+	ScreenTransition.fade_in()
 	
 func _unhandled_input(event: InputEvent) -> void:
 	# Mouse wheel events: scroll the camera
@@ -200,9 +203,10 @@ func _on_level_up_offer_chosen(index: int) -> void:
 
 func generate_map_graph() -> void:
 	seed(RunState.map_seed)
-	var type_keys = NODE_TYPES.keys()
 	var screen_width = get_viewport_rect().size.x
 	var x_offset = 50.0
+	var forced_types := _generate_forced_quotas()
+
 	for layer_idx in range(MAP_LAYOUT.size()):
 		var nodes_in_layer = MAP_LAYOUT[layer_idx]
 		var layer_array: Array = []
@@ -221,8 +225,10 @@ func generate_map_graph() -> void:
 			var random_type = ""
 			if FIXED_TYPES.has(type_key):
 				random_type = FIXED_TYPES[type_key]
-			else:
-				random_type = type_keys.pick_random()
+			elif forced_types.has(type_key):  # For Treasure and Trade Nodes
+				random_type = forced_types[type_key]
+			else:  # Remaining Nodes: Randomly picked between Battle and Event
+				random_type = _pick_weighted_node_type()
 			new_node.set_meta("node_type", random_type)
 			new_node.set_meta("layer", layer_idx)
 			new_node.set_meta("index", node_idx)
@@ -244,6 +250,67 @@ func generate_map_graph() -> void:
 		map_nodes.append(layer_array)
 	build_connections()
 	draw_connections()
+
+func _generate_forced_quotas() -> Dictionary:
+	var forced := {}
+	var terrain_slots := {}
+	for layer_idx in range(MAP_LAYOUT.size()):
+		var nodes_in_layer = MAP_LAYOUT[layer_idx]
+		for node_idx in range(nodes_in_layer):
+			var type_key = "%d_%d" % [layer_idx, node_idx]
+			if FIXED_TYPES.has(type_key):
+				continue	
+			var y_pos = LAYER_Y_POSITIONS[layer_idx]
+			var terrain = get_terrain(y_pos)
+			if not terrain_slots.has(terrain):
+				terrain_slots[terrain] = []
+			terrain_slots[terrain].append(type_key)
+			
+	# Treasure: One in each Terrain
+	for terrain in terrain_slots.keys():
+		var slots: Array = terrain_slots[terrain]
+		if slots.size() < 1: 
+			continue
+		var chosen_slot = slots.pick_random()
+		forced[chosen_slot] = "TREASURE"
+		terrain_slots[terrain].erase(chosen_slot)
+	# Trade: Total 2-3, Maximum one in each Terrain
+	var trade_count = randi_range(2, 3)
+	var available_terrains = []
+	for terrain in terrain_slots.keys():
+		if terrain_slots[terrain].size() > 0:
+			available_terrains.append(terrain)
+	available_terrains.shuffle()
+	for i in range(mini(trade_count, available_terrains.size())):
+		var terrain = available_terrains[i]
+		var slots: Array = terrain_slots[terrain]
+		var valid_slots := []
+		for slot in slots:
+			if int(slot.split("_")[0]) >= 5:  # Only appear in Forest or above
+				valid_slots.append(slot)
+		if valid_slots.is_empty():
+			continue
+		var chosen_slot = valid_slots.pick_random()
+		forced[chosen_slot] = "TRADE"
+		slots.erase(chosen_slot)
+	return forced
+
+func _pick_weighted_node_type() -> String:
+	var weights := {
+		"BATTLE": 60,
+		"EVENT": 40
+	}
+	var total_weight := 0
+	for w in weights.values():
+		total_weight += w
+
+	var roll = randi_range(1, total_weight)
+	var cumulative := 0
+	for type in weights.keys():
+		cumulative += weights[type]
+		if roll <= cumulative:
+			return type
+	return "BATTLE" # Fallback
 
 func build_connections() -> void:
 	connections.clear()
@@ -320,25 +387,72 @@ func _band_for_index(index: int) -> StringName:
 		return &"mid"
 	return &"late"
 
-func _on_event_choice_made(effect: String) -> void:
-	match effect:
-		"monolith_touch":
-			RunState.add_gold(50)
-			RunState.set_run_hp(RunState.run_hp - 20)
-		"monolith_pray":
-			RunState.heal_run_hp(30)
-		"spring_rest":
-			RunState.heal_run_hp(30)
-		"spring_bottle":
-			RunState.add_gold(10)
-		"merchant_help":
-			RunState.add_gold(30)
-		"merchant_rob":
-			RunState.add_gold(80)
-			RunState.set_run_hp(RunState.run_hp - 30)
-		"leave":
-			pass
+func _on_event_choice_made(choice: Dictionary) -> void:
+	var effects: Array = choice.get("effects", [])
+	var battle_triggered = _apply_effects(effects)
+	
+	# Morality: <= -2 will trigger special event (Villager Vengeance)
+	var morality_change: int = choice.get("morality", 0)
+	if morality_change != 0:
+		RunState.morality += morality_change
+		var color = Color.GREEN if morality_change > 0 else Color.RED
+		var sign_str = "+" if morality_change > 0 else ""
+		_show_notification("%s%d Morality" % [sign_str, morality_change], color)
+		if RunState.morality <= -2 and not RunState.karma_pending:
+			RunState.karma_pending = true
+	if battle_triggered:  # choose battle in special event
+		_pending_node_after_karma = null
+		_mark_node_as_cleared() 
+		_clear_notifications()
+		await ScreenTransition.fade_out()
+		get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")
+		return
+		
 	_mark_node_as_cleared()
+	if RunState.has_pending_level_ups():
+		_present_next_level_up()
+	if _pending_node_after_karma != null:
+		var node_to_enter = _pending_node_after_karma
+		_pending_node_after_karma = null
+		await get_tree().process_frame
+		var fake_event = InputEventMouseButton.new()
+		fake_event.button_index = MOUSE_BUTTON_LEFT
+		fake_event.pressed = true
+		_on_node_clicked(fake_event, node_to_enter)
+		return
+
+func _apply_effects(effects: Array) -> bool:
+	var battle_triggered := false
+	for effect in effects:
+		var type: String = effect.get("type", "")
+		var value = effect.get("value", 0)
+		match type:
+			"gold":
+				if value > 0:
+					RunState.add_gold(value)
+					_show_notification("+%d Gold" % value, Color.GOLD)
+				else:
+					RunState.spend_gold(abs(value))
+					_show_notification("%d Gold" % value, Color.GOLD)
+			"hp":
+				if value > 0:
+					RunState.heal_run_hp(value)
+					_show_notification("+%d HP" % value, Color.GREEN)
+				else:
+					RunState.set_run_hp(RunState.run_hp + value)
+					_show_notification("%d HP" % value, Color.RED)
+			"xp":
+				RunState.add_xp(value)
+				_show_notification("+%d XP" % value, Color.CYAN)
+			"fragment":
+				# Placeholder
+				_show_notification("+Random Fragment (WIP)", Color.MAGENTA)
+			"spell":
+				# Placeholder
+				_show_notification("+%s Spell (WIP)" % value, Color.MAGENTA)
+			"battle":
+				battle_triggered = true
+	return battle_triggered
 
 
 func _on_node_clicked(event: InputEvent, node: Control) -> void:
@@ -359,6 +473,16 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 				if connections.has(node):
 					if current_node not in connections[node]: return  # Not connected with current node
 				else: return  # Not recorded in dictionary
+		
+		if RunState.karma_pending:
+			RunState.karma_pending = false
+			RunState.morality = 0
+			_clear_notifications()
+			_pending_node_after_karma = node
+			var karma_event = EventDatabase.get_karma_event()
+			_event_scene.show_event(karma_event)
+			return
+
 		RunState.current_layer = layer_idx
 		RunState.current_node_index = node_idx
 		RunState.pending_node_to_clear = "%d_%d" % [layer_idx, node_idx]
@@ -368,12 +492,17 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 			if RunState.fragment_deck_count() <= 0:
 				RunState.autofill_fragment_deck()
 			RunState.pending_encounter_band = _band_for_index(node_idx)
+			_clear_notifications()
+			await ScreenTransition.fade_out()
 			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")
 		elif type == "EVENT":
-			var event_data = EventDatabase.get_random_event()
+			var terrain = get_terrain(node.position.y)
+			var event_data = EventDatabase.get_random_event(terrain)
+			_clear_notifications()
 			_event_scene.show_event(event_data)
 			RunState.pending_node_to_clear = "%d_%d" % [layer_idx, node_idx]
 		else:
+			_clear_notifications()
 			var levels := RunState.grant_milestone_xp(RunConfig.MILESTONE_NODE_XP)
 			var dialog = AcceptDialog.new()
 			dialog.dialog_text = "Entering Node: %s\n+%d XP%s" % [
@@ -396,3 +525,20 @@ func _move_camera(layer_idx: int) -> void:
 		return
 	var target_y = LAYER_Y_POSITIONS[layer_idx] + 50
 	camera.position.y = target_y
+
+func _show_notification(text: String, color: Color = Color.WHITE) -> void:
+	var label = Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_font_size_override("font_size", 24)
+	notif_container.add_child(label)
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 50, 3).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(label, "modulate:a", 0.0, 3.0).set_trans(Tween.TRANS_SINE)
+	await tween.finished
+	if label != null: label.queue_free()
+
+func _clear_notifications() -> void:
+	for child in notif_container.get_children():
+		child.queue_free()

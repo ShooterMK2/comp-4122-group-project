@@ -27,6 +27,8 @@ var current_node_index: int = 0
 var cleared_nodes: Array[String] = []
 var pending_node_to_clear: String = ""
 var map_seed: int = 0 # for Node generation
+var morality: int = 0
+var karma_pending: bool = false
 
 # ---------- leveling (run-scoped) ----------
 var player_level: int = RunConfig.PLAYER_LEVEL_MIN
@@ -77,6 +79,8 @@ func reset_run() -> void:
 	changed.emit()
 	level_up_pending_changed.emit()
 	map_seed = randi()
+	morality = 0
+	karma_pending = false
 
 func _next_acquire_seq() -> int:
 	_acquire_seq += 1

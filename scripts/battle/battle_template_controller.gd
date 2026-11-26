@@ -57,6 +57,7 @@ func _ready() -> void:
 	_level_up_modal.offer_chosen.connect(_on_level_up_offer_chosen)
 	_connect_signals()
 	_advance()
+	ScreenTransition.fade_in()
 
 func _connect_signals() -> void:
 	_io.cast_pressed.connect(_on_cast)
@@ -81,10 +82,12 @@ func _on_return_to_map() -> void:
 	if _won_battle and RunState.has_pending_level_ups():
 		_present_next_level_up()
 		return
+	await ScreenTransition.fade_out() 
 	get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
 
 func _present_next_level_up() -> void:
 	if not RunState.has_pending_level_ups():
+		await ScreenTransition.fade_out()
 		get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
 		return
 	if _result != null:
@@ -100,6 +103,7 @@ func _on_level_up_offer_chosen(index: int) -> void:
 	if RunState.has_pending_level_ups():
 		_present_next_level_up()
 	else:
+		await ScreenTransition.fade_out()
 		get_tree().change_scene_to_file("res://scenes/exploration/exploration_scene.tscn")
 
 func _sync_run_after_battle() -> void:
