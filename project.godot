@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 MCPRuntime="*uid://vm45gif4yrcf"
 RunState="*res://scripts/run/run_state.gd"
+ScreenTransition="*uid://lx6hrbol7bsa"
 
 [display]
 
