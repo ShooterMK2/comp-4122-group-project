@@ -4,7 +4,8 @@ extends RefCounted
 static func build_snapshot(base: PlayerDefinition, loadout: EquipmentLoadout,
 		pending: PendingBattleModifiers = null,
 		level_bonuses: Dictionary = {},
-		player_level: int = -1) -> PlayerStatSnapshot:
+		player_level: int = -1,
+		perm_start_shield: int = 0) -> PlayerStatSnapshot:
 	var snap := PlayerStatSnapshot.new()
 	snap.display_name = base.display_name
 	snap.level = player_level if player_level > 0 else base.level
@@ -16,21 +17,37 @@ static func build_snapshot(base: PlayerDefinition, loadout: EquipmentLoadout,
 	snap.elemental_strengths = base.elemental_strengths.duplicate()
 	snap.art_name = base.art_name
 	snap.placeholder_color = base.placeholder_color
+	snap.start_shield = perm_start_shield
+	snap.damage_taken_multiplier = 1.0
 	for item in loadout.all_equipped():
 		snap.equip_max_hp += item.bonus_max_hp
 		snap.equip_attack += item.bonus_attack
 		snap.equip_defence += item.bonus_defence
 		snap.equip_speed += item.bonus_speed
-		if item.passive == PassiveEffect.Kind.START_SHIELD:
-			snap.start_shield += item.passive_amount
+		_apply_passive(snap, item.passive, item.passive_amount)
+		_apply_passive(snap, item.passive2, item.passive2_amount)
 	if pending != null:
 		snap.item_max_hp += pending.temp_max_hp
 		snap.item_attack += pending.item_attack
 		snap.item_defence += pending.item_defence
 		snap.item_speed += pending.item_speed
 		snap.start_shield += pending.start_shield
+		snap.fire_spell_damage_mult += pending.fire_spell_damage_mult
 	snap.level_max_hp = int(level_bonuses.get("max_hp", 0))
 	snap.level_attack = int(level_bonuses.get("attack", 0))
 	snap.level_defence = int(level_bonuses.get("defence", 0))
 	snap.level_speed = float(level_bonuses.get("speed", 0.0))
 	return snap
+
+static func _apply_passive(snap: PlayerStatSnapshot, kind: int, amount: int) -> void:
+	match kind:
+		PassiveEffect.Kind.START_SHIELD:
+			snap.start_shield += amount
+		PassiveEffect.Kind.DAMAGE_RESISTANCE:
+			# amount is percent reduction (20 => ×0.8); stack multiplicatively.
+			var resist := clampf(float(amount) / 100.0, 0.0, 0.95)
+			snap.damage_taken_multiplier *= (1.0 - resist)
+		PassiveEffect.Kind.ELEMENT_DAMAGE_BONUS:
+			pass  # reserved
+		_:
+			pass

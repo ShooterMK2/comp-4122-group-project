@@ -1,68 +1,35 @@
 [gd_scene format=3 uid="uid://bktse2uli5q2k"]
 
-[ext_resource type="Script" uid="uid://d3s1rlwqrp0sj" path="res://scripts/battle/ui_scene/battlefield_panel.gd" id="1_bf"]
-[ext_resource type="PackedScene" path="res://scenes/battle/ui/combatant_panel.tscn" id="2_panel"]
-[ext_resource type="PackedScene" path="res://scenes/battle/ui/player_panel.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/battle/ui_scene/battlefield_panel.gd" id="1_d474f"]
+[ext_resource type="Resource" path="res://resources/encounters/test_encounter.tres" id="2_ko43h"]
+[ext_resource type="Texture2D" uid="uid://y0t80tmaggt4" path="res://assets/textures/environments/ComfyUI_temp_zhdlv_00027_.png" id="3_bg"]
+[ext_resource type="PackedScene" uid="uid://njxfbwl0hdrh" path="res://scenes/battle/ui/player_panel.tscn" id="5_panel"]
 
-[node name="Battlefield" type="VBoxContainer"]
+[node name="Battlefield" type="Control" unique_id=1577251761]
+custom_minimum_size = Vector2(1280, 360)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -360.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 6
-script = ExtResource("1_bf")
+mouse_filter = 2
+script = ExtResource("1_d474f")
+encounter = ExtResource("2_ko43h")
 
-[node name="Zones" type="HBoxContainer" parent="."]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 12
+[node name="Background" type="ColorRect" parent="." unique_id=1659104057]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
 
-[node name="PlayerZone" type="PanelContainer" parent="Zones"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 2.0
-theme_type_variation = &"Zone"
-
-[node name="PlayerPanel" parent="Zones/PlayerZone" instance=ExtResource("3_player")]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="VSeparator" type="VSeparator" parent="Zones"]
-custom_minimum_size = Vector2(4, 0)
-layout_mode = 2
-
-[node name="EnemyZone" type="PanelContainer" parent="Zones"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 3.0
-theme_type_variation = &"Zone"
-
-[node name="Center" type="CenterContainer" parent="Zones/EnemyZone"]
-layout_mode = 2
-
-[node name="EnemyRow" type="HBoxContainer" parent="Zones/EnemyZone/Center"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 24
-alignment = 1
-
-[node name="EnemyPanel1" parent="Zones/EnemyZone/Center/EnemyRow" instance=ExtResource("2_panel")]
-layout_mode = 2
-
-[node name="EnemyPanel2" parent="Zones/EnemyZone/Center/EnemyRow" instance=ExtResource("2_panel")]
-layout_mode = 2
-
-[node name="EnemyPanel3" parent="Zones/EnemyZone/Center/EnemyRow" instance=ExtResource("2_panel")]
-layout_mode = 2
-
-[node name="Floor" type="TextureRect" parent="."]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-texture_filter = 1
-expand_mode = 1
-stretch_mode = 1
-
-[node name="FloorPlaceholder" type="ColorRect" parent="Floor"]
+[node name="BackgroundTexture" type="TextureRect" parent="Background" unique_id=1669298743]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -71,4 +38,61 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.25, 0.2, 0.15, 1)
+texture = ExtResource("3_bg")
+expand_mode = 1
+
+[node name="Zones" type="Control" parent="." unique_id=54390067]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayerZone" type="ReferenceRect" parent="Zones" unique_id=1528649857]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.34
+anchor_bottom = 1.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(0, 1, 0, 1)
+border_width = 2.0
+editor_only = false
+
+[node name="EnemyZone" type="ReferenceRect" parent="Zones" unique_id=1384108828]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.34
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(1, 0.2, 0.2, 1)
+border_width = 2.0
+editor_only = false
+
+[node name="EnemySlots" type="HBoxContainer" parent="Zones/EnemyZone" unique_id=2115061268]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="PlayerPanel" parent="." unique_id=1214397493 instance=ExtResource("5_panel")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+offset_top = 50.0
+offset_right = 122.44
+offset_bottom = 140.0

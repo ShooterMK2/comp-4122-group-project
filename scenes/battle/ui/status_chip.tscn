@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://buno6w5sl62jo"]
+
+[ext_resource type="Script" uid="uid://dvc7lbdbwkix8" path="res://scripts/battle/ui_scene/status_chip.gd" id="1_status"]
+
+[node name="StatusChip" type="PanelContainer" unique_id=717059082]
+custom_minimum_size = Vector2(64, 64)
+mouse_filter = 2
+script = ExtResource("1_status")
+
+[node name="Layers" type="Control" parent="." unique_id=1447938744]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="Layers" unique_id=1970817093]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Letter" type="Label" parent="Layers" unique_id=265081135]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Count" type="Label" parent="Layers" unique_id=1006393242]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -24.0
+offset_top = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2
+vertical_alignment = 2

@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://b566mxf84qe31"]
+
+[ext_resource type="PackedScene" uid="uid://bktse2uli5q2k" path="res://scenes/battle/ui/battlefield.tscn" id="1_qr5ad"]
+[ext_resource type="PackedScene" uid="uid://boeyhivkukinj" path="res://scenes/battle/ui/battle_io.tscn" id="1_tsgdp"]
+
+[node name="Control" type="Control" unique_id=566920335]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scene" type="Control" parent="." unique_id=269137693]
+custom_minimum_size = Vector2(1280, 360)
+layout_mode = 1
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Battlefield" parent="Scene" unique_id=1577251761 instance=ExtResource("1_qr5ad")]
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 1280.0
+offset_bottom = 360.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="MainIO" type="Control" parent="." unique_id=728412288]
+custom_minimum_size = Vector2(1280, 360)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -360.0
+offset_right = 1280.0
+grow_vertical = 0
+
+[node name="BattleIO" parent="MainIO" unique_id=902454972 instance=ExtResource("1_tsgdp")]
+layout_mode = 0
+offset_right = 955.0
+offset_bottom = 360.0

@@ -1,25 +1,24 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dhxmjx1xrygom"]
 
-[ext_resource type="Script" path="res://scripts/battle/ui_scene/spell_card.gd" id="1_card"]
+[ext_resource type="Script" uid="uid://bkhwnwhpajoaf" path="res://scripts/battle/ui_scene/spell_card.gd" id="1_card"]
+[ext_resource type="PackedScene" uid="uid://dnfcpbwb0rsbs" path="res://scenes/battle/ui/cell.tscn" id="2_wdsex"]
 
-[node name="SpellCard" type="Control"]
+[node name="SpellCard" type="Control" unique_id=107617786]
+custom_minimum_size = Vector2(120, 200)
 layout_mode = 3
 anchors_preset = 0
-custom_minimum_size = Vector2(120, 174)
 script = ExtResource("1_card")
 
-[node name="Lift" type="Control" parent="."]
+[node name="Lift" type="Control" parent="." unique_id=313263385]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 24.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Body" type="PanelContainer" parent="Lift"]
+[node name="Body" type="Panel" parent="Lift" unique_id=1970145642]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -27,37 +26,41 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
 theme_type_variation = &"SpellCard"
 
-[node name="Margin" type="MarginContainer" parent="Lift/Body"]
-layout_mode = 2
+[node name="Margin" type="MarginContainer" parent="Lift/Body" unique_id=1506076737]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="VBox" type="VBoxContainer" parent="Lift/Body/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Lift/Body/Margin" unique_id=1765224964]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
+alignment = 1
 
-[node name="HeaderRow" type="HBoxContainer" parent="Lift/Body/Margin/VBox"]
-layout_mode = 2
+[node name="HeaderRow" type="HBoxContainer" parent="Lift/Body/Margin/VBox" unique_id=142457336]
 custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
 mouse_filter = 2
 
-[node name="NameLabel" type="Label" parent="Lift/Body/Margin/VBox/HeaderRow"]
+[node name="NameLabel" type="Label" parent="Lift/Body/Margin/VBox/HeaderRow" unique_id=1236230961]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-mouse_filter = 2
 theme_override_font_sizes/font_size = 12
 text = "Spell"
 clip_text = true
 
-[node name="ElementIcon" type="TextureRect" parent="Lift/Body/Margin/VBox/HeaderRow"]
+[node name="ElementIcon" type="TextureRect" parent="Lift/Body/Margin/VBox/HeaderRow" unique_id=659699690]
 unique_name_in_owner = true
 texture_filter = 1
 custom_minimum_size = Vector2(20, 20)
@@ -66,260 +69,225 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ShapeCenter" type="CenterContainer" parent="Lift/Body/Margin/VBox"]
+[node name="ShapeCenter" type="CenterContainer" parent="Lift/Body/Margin/VBox" unique_id=1376936510]
+custom_minimum_size = Vector2(0, 103)
 layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
 mouse_filter = 2
 
-[node name="ShapeGrid" type="GridContainer" parent="Lift/Body/Margin/VBox/ShapeCenter"]
-unique_name_in_owner = true
+[node name="TextureRect" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter" unique_id=491505643]
+custom_maximum_size = Vector2(64, 64)
 layout_mode = 2
+
+[node name="ShapeGrid" type="GridContainer" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect" unique_id=2126748219]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/h_separation = 1
 theme_override_constants/v_separation = 1
-columns = 5
+columns = 7
 
-[node name="Cell_00" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_00" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1469636863 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_01" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_01" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1824971861 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_02" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_02" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=546386167 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_03" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_03" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=55099013 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_04" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_04" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=6978729 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_05" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_05" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=2035028128 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_06" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_06" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=391141400 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_07" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_07" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1037650059 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_08" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_08" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=331944985 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_09" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_09" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1810366150 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_10" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_10" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=896553071 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_11" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_11" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=250443123 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_12" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_12" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=294851479 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_13" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_13" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=2120587358 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_14" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_14" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=734694099 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_15" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_15" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=216485094 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_16" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_16" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=784949113 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_17" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_17" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=320845369 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_18" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_18" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1673133613 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_19" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_19" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1178979920 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_20" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_20" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=2068622348 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_21" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_21" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=537669067 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_22" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_22" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=825911219 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_23" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_23" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1962566144 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="Cell_24" type="TextureRect" parent="Lift/Body/Margin/VBox/ShapeCenter/ShapeGrid"]
-texture_filter = 1
-custom_minimum_size = Vector2(12, 12)
+[node name="Cell_24" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1818111568 instance=ExtResource("2_wdsex")]
 layout_mode = 2
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
 
-[node name="RequirementRow" type="HFlowContainer" parent="Lift/Body/Margin/VBox"]
+[node name="Cell_25" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=755687542 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_26" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=333793301 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_27" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1894696520 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_28" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1647554060 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_29" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1859398184 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_30" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=727603831 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_31" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=169329371 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_32" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=724554341 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_33" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=457611155 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_34" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1139141341 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_35" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=322808746 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_36" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=405186310 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_37" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1334514748 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_38" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1278525205 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_39" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=233950930 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_40" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=731591596 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_41" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=592778687 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_42" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1917459664 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_43" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1514318090 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_44" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1493478302 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_45" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=966639944 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_46" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1075742498 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_47" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=518917222 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="Cell_48" parent="Lift/Body/Margin/VBox/ShapeCenter/TextureRect/ShapeGrid" unique_id=1063832609 instance=ExtResource("2_wdsex")]
+layout_mode = 2
+
+[node name="RequirementRow" type="HFlowContainer" parent="Lift/Body/Margin/VBox" unique_id=577272293]
 unique_name_in_owner = true
-layout_mode = 2
 custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
 mouse_filter = 2
 theme_override_constants/h_separation = 3
 
-[node name="DamageLabel" type="Label" parent="Lift/Body/Margin/VBox"]
+[node name="DamageLabel" type="Label" parent="Lift/Body/Margin/VBox" unique_id=1989606826]
 unique_name_in_owner = true
-layout_mode = 2
 custom_minimum_size = Vector2(0, 18)
-mouse_filter = 2
+layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "DMG 0"
 
-[node name="EffectLabel" type="Label" parent="Lift/Body/Margin/VBox"]
+[node name="EffectLabel" type="Label" parent="Lift/Body/Margin/VBox" unique_id=137840888]
 unique_name_in_owner = true
 layout_mode = 2
-mouse_filter = 2
 theme_override_font_sizes/font_size = 11
-text = ""
 autowrap_mode = 3
 
-[node name="CountBadge" type="PanelContainer" parent="Lift"]
+[node name="EffectLabel" type="Label" parent="Lift/Body/Margin/VBox/EffectLabel" unique_id=1240981221]
+layout_mode = 0
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
+
+[node name="EffectLabel" type="Label" parent="Lift/Body/Margin/VBox/EffectLabel/EffectLabel" unique_id=1660192930]
+layout_mode = 0
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
+
+[node name="CountBadge" type="TextureRect" parent="Lift" unique_id=1972507584]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -28.0
-offset_top = -6.0
-offset_right = 6.0
-offset_bottom = 22.0
+offset_left = -34.0
+offset_bottom = 28.0
 grow_horizontal = 0
 mouse_filter = 2
 theme_type_variation = &"CountBadge"
 
-[node name="CountLabel" type="Label" parent="Lift/CountBadge"]
+[node name="CountLabel" type="Label" parent="Lift/CountBadge" unique_id=747960621]
 unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
+layout_mode = 0
+offset_top = 7.0
+offset_right = 34.0
+offset_bottom = 21.0
 theme_override_font_sizes/font_size = 13
 text = "x0"
 horizontal_alignment = 1

@@ -31,7 +31,9 @@ static func _can_apply(effect: int, amount: int, run: Node) -> String:
 				return "—"
 			return ""
 		UseEffect.Kind.START_SHIELD, UseEffect.Kind.TEMP_MAX_HP, \
-		UseEffect.Kind.TEMP_ATK, UseEffect.Kind.TEMP_DEF, UseEffect.Kind.TEMP_SPD:
+		UseEffect.Kind.TEMP_ATK, UseEffect.Kind.TEMP_DEF, UseEffect.Kind.TEMP_SPD, \
+		UseEffect.Kind.FIRE_SPELL_DAMAGE, UseEffect.Kind.PERM_MAX_HP, \
+		UseEffect.Kind.PERM_ATK, UseEffect.Kind.PERM_START_SHIELD:
 			return ""
 		_:
 			return "—"
@@ -70,3 +72,12 @@ static func _apply(effect: int, amount: int, run: Node) -> void:
 			run.pending.item_defence += amount
 		UseEffect.Kind.TEMP_SPD:
 			run.pending.item_speed += float(amount)
+		UseEffect.Kind.FIRE_SPELL_DAMAGE:
+			run.pending.fire_spell_damage_mult += float(amount) / 100.0
+		UseEffect.Kind.PERM_MAX_HP:
+			run.level_bonus_max_hp += amount
+			run.heal_run_hp(amount)
+		UseEffect.Kind.PERM_ATK:
+			run.level_bonus_attack += amount
+		UseEffect.Kind.PERM_START_SHIELD:
+			run.perm_start_shield += amount

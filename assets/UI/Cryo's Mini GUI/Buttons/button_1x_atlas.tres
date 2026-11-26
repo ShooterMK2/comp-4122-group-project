@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" format=3 uid="uid://dapw3rcm7jkvl"]
+
+[ext_resource type="Texture2D" uid="uid://cj2qx7ijjbta2" path="res://assets/UI/Cryo's Mini GUI/Buttons/buttons_1x.png" id="1_nc4a3"]
+
+[resource]
+atlas = ExtResource("1_nc4a3")
+region = Rect2(0, 0, 16, 16)

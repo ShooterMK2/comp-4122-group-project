@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://dnfcpbwb0rsbs"]
+
+[ext_resource type="Texture2D" uid="uid://dvn64cwwju54e" path="res://assets/UI/Cryo's Mini GUI/GUI/GUI_1x_atlas.tres" id="1_qnqgj"]
+
+[node name="Cell_00" type="TextureRect" unique_id=1469636863]
+texture_filter = 1
+custom_minimum_size = Vector2(12, 12)
+mouse_filter = 2
+texture = ExtResource("1_qnqgj")
+expand_mode = 1

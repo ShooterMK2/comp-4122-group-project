@@ -3,11 +3,10 @@ extends Resource
 # Player ultimate skill. Activated from the charge gauge in battle.
 
 enum EffectKind {
-	DAMAGE_BURST,  # existing: charge-scaled damage multiplier for the rest of the turn
-	SECOND_WIND,   # heal (+ optional shield)
-	IRON_WARD,     # large shield
-	BLOODLUST,     # ATK buff for several turns (+ mild damage mult)
-	SHOCKWAVE,     # instant damage to all living enemies (scaled by charge)
+	DAMAGE_BURST,    # Powerful Charge: charge-scaled damage multiplier for the turn
+	EMERGENCY_AID,   # Heal % HP + shields (charge-scaled)
+	FIGHTING_SPIRIT, # ATK+DEF+SPD buff for charge-scaled turns
+	SHOCKWAVE,       # Crowd Control: fixed damage to all living enemies
 }
 
 @export var id: StringName
@@ -16,24 +15,23 @@ enum EffectKind {
 @export var icon: Texture2D
 @export var effect_kind: EffectKind = EffectKind.DAMAGE_BURST
 
-# DAMAGE_BURST / BLOODLUST mild mult — charge-scaled between min and max
+# DAMAGE_BURST — charge-scaled between min and max
 @export var damage_mult_min: float = BattleConfig.ULTIMATE_MIN_MULTIPLIER
 @export var damage_mult_max: float = BattleConfig.ULTIMATE_MAX_MULTIPLIER
 
-# SECOND_WIND
-@export var heal_base: int = 25
-@export var heal_charge_bonus: int = 35  # added at full overflow charge
-@export var heal_shield: int = 0
+# EMERGENCY_AID — percent of max HP heal + shields
+@export var heal_percent_min: float = 0.15
+@export var heal_percent_max: float = 0.30
+@export var shield_min: int = 1
+@export var shield_max: int = 4
 
-# IRON_WARD
-@export var ward_shield: int = 4
+# FIGHTING_SPIRIT
+@export var buff_turns_min: int = 4
+@export var buff_turns_max: int = 7
 
-# BLOODLUST
-@export var buff_turns: int = 3
-
-# SHOCKWAVE — flat damage before ATK scaling feel; charge adds more
-@export var shockwave_base: int = 18
-@export var shockwave_charge_bonus: int = 22
+# SHOCKWAVE / Crowd Control — fixed damage (no ATK gear scaling)
+@export var shockwave_base: int = 20
+@export var shockwave_charge_bonus: int = 28
 
 static func make(p_id: StringName, p_name: String, p_desc: String,
 		kind: EffectKind) -> UltimateDefinition:
@@ -54,15 +52,13 @@ func effect_label() -> String:
 	match effect_kind:
 		EffectKind.DAMAGE_BURST:
 			return "Damage Burst (%.2fx–%.2fx this turn)" % [damage_mult_min, damage_mult_max]
-		EffectKind.SECOND_WIND:
-			return "Heal %d–%d HP%s" % [
-				heal_base, heal_base + heal_charge_bonus,
-				(" +%d Shield" % heal_shield) if heal_shield > 0 else ""]
-		EffectKind.IRON_WARD:
-			return "Gain %d Shield" % ward_shield
-		EffectKind.BLOODLUST:
-			return "ATK up %d turns + mild damage burst" % buff_turns
+		EffectKind.EMERGENCY_AID:
+			return "Heal %d%%–%d%% HP + %d–%d Shield" % [
+				int(heal_percent_min * 100.0), int(heal_percent_max * 100.0),
+				shield_min, shield_max]
+		EffectKind.FIGHTING_SPIRIT:
+			return "ATK/DEF/SPD up %d–%d turns" % [buff_turns_min, buff_turns_max]
 		EffectKind.SHOCKWAVE:
-			return "Hit all enemies (%d–%d base)" % [
+			return "Hit all enemies (%d–%d fixed)" % [
 				shockwave_base, shockwave_base + shockwave_charge_bonus]
 	return "Ultimate"

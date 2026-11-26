@@ -1,12 +1,10 @@
 class_name CombatantPanel
 extends PanelContainer
 # One enemy. Shows data, reports clicks and spell drops. Never changes game state.
-# Order top to bottom: weaknesses, HP bar, status, sprite, name, intent.
+# Order top to bottom: name, HP bar, status, weaknesses, intent.
 
 signal clicked
 signal spell_dropped(definition: SpellDefinition)
-
-const ART_SIZE := 80.0                  # TUNABLE: must match %ArtAnchor min size
 
 var drop_enabled := false               # the controller enables this during the Casting Period
 
@@ -24,19 +22,6 @@ func _ignore_mouse(n: Node) -> void:
 		if c is Control:
 			(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_ignore_mouse(c)
-
-func setup(art_name: String, color: Color, placeholder_text: String) -> void:
-	var tex: Texture2D = AssetLookup.character(art_name.get_basename())
-	%ArtSprite.texture = tex
-	%ArtSprite.visible = tex != null
-	%ArtSprite.position = Vector2(ART_SIZE, ART_SIZE) / 2.0
-	if tex != null:
-		var longest := maxf(tex.get_width(), tex.get_height())
-		%ArtSprite.scale = Vector2.ONE * (ART_SIZE / longest)
-	%Placeholder.visible = tex == null
-	%Placeholder.color = color
-	%PlaceholderLabel.visible = tex == null
-	%PlaceholderLabel.text = placeholder_text
 
 func refresh(c: CombatantState, intent_text: String, is_target: bool) -> void:
 	var dead := c.is_dead()

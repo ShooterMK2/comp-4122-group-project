@@ -31,11 +31,11 @@ func speed_multiplier_for(is_player: bool) -> float:
 func description() -> String:
 	var parts: Array[String] = []
 	for modifier in modifiers:
-		var sign := "+" if modifier["delta"] >= 0.0 else "-"
+		var sign_str := "+" if modifier["delta"] >= 0.0 else "-"
 		var percent := roundi(absf(modifier["delta"]) * 100.0)
 		var scope := Elements.name_of(modifier["element"])
 		var stat: String = ["ATK", "DEF", "SPD", "OTHER"][modifier["stat"]]
-		parts.append("%s %s %s%d%%" % [scope, stat, sign, percent])
+		parts.append("%s %s %s%d%%" % [scope, stat, sign_str, percent])
 	return ", ".join(parts)
 
 func _multiplier_for(element: int, stat: Stat) -> float:

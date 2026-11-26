@@ -1,4 +1,16 @@
 class_name UseEffect
 extends RefCounted
 
-enum Kind { NONE, HEAL_HP, START_SHIELD, TEMP_MAX_HP, TEMP_ATK, TEMP_DEF, TEMP_SPD }
+enum Kind {
+	NONE,
+	HEAL_HP,
+	START_SHIELD,
+	TEMP_MAX_HP,
+	TEMP_ATK,
+	TEMP_DEF,
+	TEMP_SPD,
+	FIRE_SPELL_DAMAGE,
+	PERM_MAX_HP,
+	PERM_ATK,
+	PERM_START_SHIELD,
+}

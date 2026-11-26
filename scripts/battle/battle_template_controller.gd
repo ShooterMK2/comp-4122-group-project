@@ -16,7 +16,6 @@ var _outlined: Dictionary = {}
 var _ghosts: Dictionary = {}
 var _placed_this_turn := 0
 var _deadlock_open := false                 # true while the Backlash / Fizzle choice is on screen
-
 var _casting := false                       # true during the Casting Period
 var _selected_spell: SpellDefinition = null
 var _inspect_player := false
@@ -389,10 +388,11 @@ func _update_deadlock() -> void:
 		return
 	var tiles := board.filled_count()
 	var check := DeadlockResolver.check_backlash(state)
-	if not _deadlock.visible:
+	if not _deadlock_open:
 		_io.set_hint("DEADLOCK: no fragment fits the board.")
 		_log_line("system", "Deadlock! No fragment fits the board.")
-	var desc = %DeadlockDescription
+	_deadlock_open = true
+	var desc: Label = %DeadlockDescription
 	desc.text = "No fragment in your hand fits the board (%d tile(s) in the way).\nChoose how to clear it. Either choice ends your turn." % tiles
 	var back_btn = %BacklashButton
 	state.ensure_valid_target()
@@ -403,7 +403,7 @@ func _update_deadlock() -> void:
 		check["cost"],
 		DamageCalculator.basic_attack(tiles, state.player, backlash_target, state.terrain)]
 	back_btn.disabled = not check["ok"]
-	var fizzle_btn = %FizzleButton
+	var fizzle_btn: Button = %FizzleButton
 	fizzle_btn.text = "Fizzle (free)"
 	_deadlock.visible = true
 	_deadlock_open = true

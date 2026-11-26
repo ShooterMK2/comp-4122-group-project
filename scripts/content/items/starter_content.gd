@@ -7,66 +7,98 @@ static func _with_icon(item: ItemDefinition) -> ItemDefinition:
 	item.icon = IconLookup.for_item_id(item.id)
 	return item
 
-static func wooden_rod() -> EquipmentDefinition:
+static func starter_rod() -> EquipmentDefinition:
 	var e := EquipmentDefinition.new()
-	e.id = &"wooden_rod"
-	e.display_name = "Wooden Rod"
-	e.description = "Casting focus."
+	e.id = &"starter_rod"
+	e.display_name = "Starter Rod"
+	e.description = "Weapon for beginner"
 	e.slot = EquipmentSlot.Kind.WEAPON
-	e.bonus_attack = 2
+	e.bonus_attack = 3
 	e.max_stack = 1
 	return _with_icon(e) as EquipmentDefinition
 
-static func travel_cloak() -> EquipmentDefinition:
+static func starter_robe() -> EquipmentDefinition:
 	var e := EquipmentDefinition.new()
-	e.id = &"travel_cloak"
-	e.display_name = "Travel Cloak"
-	e.description = "Chest armour."
+	e.id = &"starter_robe"
+	e.display_name = "Starter Robe"
+	e.description = "Robe for beginner"
 	e.slot = EquipmentSlot.Kind.ARMOUR
-	e.bonus_defence = 1
-	e.bonus_max_hp = 10
+	e.bonus_defence = 3
+	e.bonus_max_hp = 20
 	e.max_stack = 1
 	return _with_icon(e) as EquipmentDefinition
 
-static func leather_greaves() -> EquipmentDefinition:
+static func starter_shoes() -> EquipmentDefinition:
 	var e := EquipmentDefinition.new()
-	e.id = &"leather_greaves"
-	e.display_name = "Leather Greaves"
-	e.description = "Leg protection."
+	e.id = &"starter_shoes"
+	e.display_name = "Starter Shoes"
+	e.description = "Shoes for beginner"
 	e.slot = EquipmentSlot.Kind.ALT_ARMOUR
-	e.bonus_speed = 1.0
+	e.bonus_speed = 2.0
 	e.max_stack = 1
 	return _with_icon(e) as EquipmentDefinition
 
-static func copper_ring() -> EquipmentDefinition:
+static func starter_necklace() -> EquipmentDefinition:
 	var e := EquipmentDefinition.new()
-	e.id = &"copper_ring"
-	e.display_name = "Copper Ring"
-	e.description = "Wards the first blow."
+	e.id = &"starter_necklace"
+	e.display_name = "Starter Necklace"
+	e.description = "Start with 2 Shield, Slight Defense Boost"
 	e.slot = EquipmentSlot.Kind.ACCESSORY
 	e.passive = PassiveEffect.Kind.START_SHIELD
-	e.passive_amount = 1
+	e.passive_amount = 2
+	e.passive2 = PassiveEffect.Kind.DAMAGE_RESISTANCE
+	e.passive2_amount = 20  # 20% incoming damage reduction (hidden from UI label above)
 	e.max_stack = 1
 	return _with_icon(e) as EquipmentDefinition
 
-static func minor_tonic() -> ConsumableDefinition:
+static func healing_potion() -> ConsumableDefinition:
 	var c := ConsumableDefinition.new()
-	c.id = &"minor_tonic"
-	c.display_name = "Minor Tonic"
-	c.description = "Restore 20 HP."
+	c.id = &"healing_potion"
+	c.display_name = "Healing Potion"
+	c.description = "Restore 20 HP Immediately"
 	c.use_effect = UseEffect.Kind.HEAL_HP
-	c.use_amount = RunConfig.MINOR_TONIC_HEAL
+	c.use_amount = RunConfig.HEALING_POTION_HEAL
 	c.max_stack = 99
 	return _with_icon(c) as ConsumableDefinition
 
-static func warding_charm() -> ConsumableDefinition:
+static func protective_ring() -> ConsumableDefinition:
 	var c := ConsumableDefinition.new()
-	c.id = &"warding_charm"
-	c.display_name = "Warding Charm"
-	c.description = "+1 Shield next battle."
+	c.id = &"protective_ring"
+	c.display_name = "Protective Ring"
+	c.description = "Next Battle: +2 Shields"
 	c.use_effect = UseEffect.Kind.START_SHIELD
-	c.use_amount = 1
+	c.use_amount = 2
 	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func fire_booster() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"fire_booster"
+	c.display_name = "Fire Booster"
+	c.description = "Next Battle: Slight Boost to Fire Damage"
+	c.use_effect = UseEffect.Kind.FIRE_SPELL_DAMAGE
+	c.use_amount = 20  # +20%
+	c.max_stack = 99
+	return _with_icon(c) as ConsumableDefinition
+
+static func pieces_of_hp() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"pieces_of_hp"
+	c.display_name = "Pieces of HP"
+	c.description = "+10 HP permanently"
+	c.use_effect = UseEffect.Kind.PERM_MAX_HP
+	c.use_amount = RunConfig.PIECES_OF_HP_BONUS
+	c.max_stack = 1
+	return _with_icon(c) as ConsumableDefinition
+
+static func pieces_of_atk() -> ConsumableDefinition:
+	var c := ConsumableDefinition.new()
+	c.id = &"pieces_of_atk"
+	c.display_name = "Pieces of ATK"
+	c.description = "+1 ATK permanently"
+	c.use_effect = UseEffect.Kind.PERM_ATK
+	c.use_amount = RunConfig.PIECES_OF_ATK_BONUS
+	c.max_stack = 1
 	return _with_icon(c) as ConsumableDefinition
 
 static func sealed_letter() -> ImportantDefinition:
@@ -79,15 +111,15 @@ static func sealed_letter() -> ImportantDefinition:
 	i.max_stack = 1
 	return _with_icon(i) as ImportantDefinition
 
-static func blessed_sigil() -> ImportantDefinition:
+static func shield_of_hero() -> ImportantDefinition:
 	var i := ImportantDefinition.new()
-	i.id = &"blessed_sigil"
-	i.display_name = "Blessed Sigil"
-	i.description = "+10 max HP next battle."
+	i.id = &"shield_of_hero"
+	i.display_name = "Shield of Hero"
+	i.description = "+3 Shields in the start of the battle permanently"
 	i.usable = true
 	i.consumed_on_use = true
-	i.use_effect = UseEffect.Kind.TEMP_MAX_HP
-	i.use_amount = RunConfig.BLESSED_SIGIL_MAX_HP_BONUS
+	i.use_effect = UseEffect.Kind.PERM_START_SHIELD
+	i.use_amount = RunConfig.SHIELD_OF_HERO_BONUS
 	i.max_stack = 1
 	return _with_icon(i) as ImportantDefinition
 
@@ -132,13 +164,19 @@ static func fragments() -> Array[FragmentDefinition]:
 	return out
 
 static func all_equipment() -> Array[EquipmentDefinition]:
-	return [wooden_rod(), travel_cloak(), leather_greaves(), copper_ring()]
+	return [starter_rod(), starter_robe(), starter_shoes(), starter_necklace()]
 
 static func all_consumables() -> Array[ConsumableDefinition]:
-	return [minor_tonic(), warding_charm()]
+	return [healing_potion(), protective_ring(), fire_booster(), pieces_of_hp(), pieces_of_atk()]
 
 static func all_importants() -> Array[ImportantDefinition]:
-	return [sealed_letter(), blessed_sigil()]
+	return [sealed_letter(), shield_of_hero()]
+
+static func consumable_by_id(id: StringName) -> ConsumableDefinition:
+	for c in all_consumables():
+		if c.id == id:
+			return c
+	return null
 
 ## Extra fragments only available via level-up rewards (not starter-owned).
 static func reward_fragments() -> Array[FragmentDefinition]:

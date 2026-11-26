@@ -9,19 +9,19 @@ var description: String = ""
 var amount: int = 0
 var item_id: StringName = &""
 
-static func gold(amount: int) -> LevelUpOffer:
+static func gold(p_amount: int) -> LevelUpOffer:
 	var o := LevelUpOffer.new()
 	o.kind = Kind.GOLD
-	o.amount = amount
-	o.label = "+%d Gold" % amount
+	o.amount = p_amount
+	o.label = "+%d Gold" % p_amount
 	o.description = "Add gold to this run."
 	return o
 
-static func heal(amount: int) -> LevelUpOffer:
+static func heal(p_amount: int) -> LevelUpOffer:
 	var o := LevelUpOffer.new()
 	o.kind = Kind.HEAL
-	o.amount = amount
-	o.label = "Heal %d HP" % amount
+	o.amount = p_amount
+	o.label = "Heal %d HP" % p_amount
 	o.description = "Restore run HP now."
 	return o
 

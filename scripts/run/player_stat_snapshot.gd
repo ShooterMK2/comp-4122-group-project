@@ -20,6 +20,10 @@ var level_attack: int = 0
 var level_defence: int = 0
 var level_speed: float = 0.0
 var start_shield: int = 0
+## Incoming damage multiplier (1.0 = normal; 0.8 = 20% resistance).
+var damage_taken_multiplier: float = 1.0
+## Additive fire spell damage bonus for this battle (from pending consumables).
+var fire_spell_damage_mult: float = 0.0
 var elemental_weaknesses: Array[int] = []
 var elemental_strengths: Array[int] = []
 var art_name: String = ""

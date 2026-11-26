@@ -34,3 +34,10 @@ static func _modifier(element: int, stat: T, delta: float,
 		player_only: bool = false) -> Dictionary:
 	return {"element": element, "stat": stat, "delta": delta,
 		"player_only": player_only}
+
+static func by_id(id: String) -> TerrainDefinition:
+	match id.to_lower():
+		"forest": return forest()
+		"volcano": return volcano()
+		"plain": return plain()
+	return random_terrain()
