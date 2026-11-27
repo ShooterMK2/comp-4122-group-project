@@ -9,5 +9,7 @@
 [resource]
 script = ExtResource("1_encounter")
 id = "test"
-terrain_id = "plain"
+primary_terrain_id = "None"
+secondary_terrain_id = "Clearing"
+terrain_id = ""
 enemies = Array[ExtResource("5_enemy")]([ExtResource("2_fire"), ExtResource("3_ice"), ExtResource("4_lightning"), ExtResource("4_lightning")])

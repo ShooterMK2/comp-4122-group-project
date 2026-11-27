@@ -76,6 +76,7 @@
 
 - [x] Implement the terrain system **[?]** - Lok
 - [x] Add terrain buffs/debuffs to specific elements **[?]** - Lok
+- [x] Primary (map) + Secondary (per node) battle terrain; player-only kits; Low/Med/High 10/25/45%
 - [ ] Add terrain–equipment interaction **[?]**
 
 ## 9. UI ()

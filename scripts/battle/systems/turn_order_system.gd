@@ -24,6 +24,7 @@ static func effective_speed(state: BattleState, actor: int) -> float:
 			BattleConfig.CHILL_MIN_SPEED_FRACTION)
 	if c.has_ailment(AilmentTypes.Ailment.SLOW):
 		mult *= BattleConfig.AILMENT_SLOW_MULTIPLIER
+	# Flat SPD terrain applies to the player only.
 	return base * mult * state.terrain.speed_multiplier_for(actor == PLAYER)
 
 static func _sorted(state: BattleState, ids: Array[int]) -> Array[int]:

@@ -14,6 +14,10 @@ const OTHER_MULTIPLIER_DEFAULT := 1.0
 const OTHER_MULTIPLIER_LOW := 0.20
 const OTHER_MULTIPLIER_MEDIUM := 0.45
 const OTHER_MULTIPLIER_HIGH := 0.90
+# Terrain Primary/Secondary kits only (spell Other tiers stay above).
+const TERRAIN_MULT_LOW := 0.10
+const TERRAIN_MULT_MEDIUM := 0.25
+const TERRAIN_MULT_HIGH := 0.45
 const SPELL_ATTACK_FACTOR := 0.40
 const DAMAGE_RANDOM_MIN := 0.90
 const DAMAGE_RANDOM_MAX := 1.15

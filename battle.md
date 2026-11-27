@@ -358,15 +358,40 @@ spend / threshold but apply heal, shield, ATK buff, or AoE hit instead. See
 
 ## 7. Terrain
 
-One terrain is selected randomly at battle start:
+Battle terrain is **Primary · Secondary**. Primary comes from the map layer
+(`None` / `Snow` / `Forest` / `Desert` / `Volcano`). Secondary is chosen when
+the map is generated, stored on the node, and fixed for that node for the run.
+Modifiers **compose** (multiply `1 + delta` factors). All terrain buffs and
+debuffs apply to the **player only**.
 
-| Terrain | Active modifiers |
+Terrain tiers (separate from spell Other multipliers): Low `±10%`, Medium
+`±25%`, High `±45%`. ATK mods are element-scoped; DEF and SPD are flat.
+
+### Primary kits
+
+| Primary | Active modifiers |
 |---|---|
-| **Forest** | Wind ATK `+20%`; player Wind SPD `+20%`; Earth ATK `+45%`; Fire ATK `-20%`; Ice ATK `-20%` |
-| **Volcano** | Fire ATK `+90%`; Wind ATK `+20%`; Ice ATK `-45%` |
-| **Plain** | Wind ATK `+45%`; Ice ATK `+45%`; Fire ATK `-20%` |
+| **None** | Wind ATK `+10%`; DEF `+10%` |
+| **Snow** | Ice ATK `+25%`; Wind ATK `+10%`; Fire ATK `-25%` |
+| **Forest** | Wind ATK `+10%`; Earth ATK `+25%`; Fire ATK `-10%`; Ice ATK `-10%`; SPD `+10%` |
+| **Desert** | Fire ATK `+25%`; Earth ATK `+10%`; Ice ATK `-25%`; Wind ATK `-10%` |
+| **Volcano** | Fire ATK `+45%`; Wind ATK `+10%`; Ice ATK `-25%`; DEF `-10%` |
 
-The active terrain and its description are displayed above the battlefield.
+### Secondary kits
+
+| Secondary | Active modifiers |
+|---|---|
+| **Mountain** | Wind ATK `+25%`; DEF `+10%`; SPD `+10%`; Lightning ATK `-10%` |
+| **Waterside** | Ice ATK `+25%`; Lightning ATK `+10%`; Fire ATK `-25%`; Earth ATK `-10%` |
+| **Clearing** | Wind ATK `+10%`; Ice ATK `+10%`; Dark ATK `-10%` |
+| **Ruins** | Dark ATK `+25%`; Earth ATK `+10%`; Wind ATK `-10%`; DEF `-10%` |
+| **Cave** | Earth ATK `+25%`; Dark ATK `+10%`; DEF `+10%`; Wind ATK `-25%`; SPD `-10%` |
+| **Indoor** | DEF `+10%`; Lightning ATK `+10%`; Wind ATK `-25%`; Fire ATK `-10%` |
+| **City** | Lightning ATK `+25%`; Dark ATK `+10%`; DEF `+10%`; Earth ATK `-10%`; Wind ATK `-10%` |
+
+Allowed secondaries are filtered per primary (e.g. City on None/Snow/Desert;
+Indoor on None/Desert; no Waterside on Desert). The composed name and
+description are shown above the battlefield.
 
 ## 8. Special board tiles
 

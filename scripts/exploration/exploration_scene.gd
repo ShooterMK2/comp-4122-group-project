@@ -232,6 +232,11 @@ func generate_map_graph() -> void:
 			new_node.set_meta("node_type", random_type)
 			new_node.set_meta("layer", layer_idx)
 			new_node.set_meta("index", node_idx)
+			# Battle terrain: primary from layer, secondary fixed for this node (seeded RNG).
+			var primary_terrain := get_terrain(layer_idx)
+			var secondary_terrain := TerrainSystem.pick_secondary(primary_terrain)
+			new_node.set_meta("primary_terrain", primary_terrain)
+			new_node.set_meta("secondary_terrain", secondary_terrain)
 			# Set Visuals
 			var icon_rect = new_node.get_node("NodePanel/NodeIcon")
 			var panel = new_node.get_node("NodePanel")
@@ -386,6 +391,19 @@ func _band_for_index(index: int) -> StringName:
 		return &"mid"
 	return &"late"
 
+func _sync_pending_terrain_from_current_node() -> void:
+	var layer_idx := RunState.current_layer
+	var node_idx := RunState.current_node_index
+	var primary := get_terrain(maxi(0, layer_idx))
+	var secondary := "Clearing"
+	if layer_idx >= 0 and layer_idx < map_nodes.size() \
+			and node_idx >= 0 and node_idx < map_nodes[layer_idx].size():
+		var n: Control = map_nodes[layer_idx][node_idx]
+		primary = str(n.get_meta("primary_terrain", primary))
+		secondary = str(n.get_meta("secondary_terrain", secondary))
+	RunState.pending_primary_terrain = primary
+	RunState.pending_secondary_terrain = secondary
+
 func _on_event_choice_made(choice: Dictionary) -> void:
 	var effects: Array = choice.get("effects", [])
 	var battle_triggered = _apply_effects(effects)
@@ -401,6 +419,7 @@ func _on_event_choice_made(choice: Dictionary) -> void:
 			RunState.karma_pending = true
 	if battle_triggered:  # choose battle in special event
 		_pending_node_after_karma = null
+		_sync_pending_terrain_from_current_node()
 		_mark_node_as_cleared() 
 		_clear_notifications()
 		await ScreenTransition.fade_out()
@@ -491,6 +510,8 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 			if RunState.fragment_deck_count() <= 0:
 				RunState.autofill_fragment_deck()
 			RunState.pending_encounter_band = _band_for_index(node_idx)
+			RunState.pending_primary_terrain = str(node.get_meta("primary_terrain", get_terrain(layer_idx)))
+			RunState.pending_secondary_terrain = str(node.get_meta("secondary_terrain", "Clearing"))
 			_clear_notifications()
 			await ScreenTransition.fade_out()
 			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")

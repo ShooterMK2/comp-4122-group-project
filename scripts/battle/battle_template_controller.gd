@@ -45,7 +45,9 @@ func _ready() -> void:
 	spells = RunState.spell_deck()
 	_deck_draw = RunState.create_battle_draw()
 	var encounter := ZoneEncounters.for_zone(RunState.zone_id, RunState.pending_encounter_band)
-	state = BattleState.new(encounter, TerrainSystem.random_terrain())
+	var terrain := TerrainSystem.compose(
+			RunState.pending_primary_terrain, RunState.pending_secondary_terrain)
+	state = BattleState.new(encounter, terrain)
 	_terrain_label.text = "TERRAIN: %s  |  %s" % [
 		state.terrain.display_name, state.terrain.description().replace("\n", "  ")]
 	_battlefield.setup(state)
@@ -579,7 +581,9 @@ func _charge_for_spell(q: QueuedSpell) -> float:
 
 # ---------- refresh ----------
 func _refresh_all() -> void:
-	_battlefield.refresh(state)
+	var can_ultimate := (not state.over and not _casting and _awaiting_enemy < 0
+			and state.charge_gauge >= 100.0 and RunState.equipped_ultimate() != null)
+	_battlefield.refresh(state, can_ultimate)
 	_round_label.text = "Round %d" % state.turn
 	_order_label.text = _order_text()
 	_refresh_board()

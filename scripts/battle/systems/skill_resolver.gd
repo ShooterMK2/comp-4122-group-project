@@ -8,24 +8,27 @@ const A := AilmentTypes.Ailment
 # damage = ceil(tier_power * ATK * atk_mult * weaken * defence_mult * random)
 # defence_mult uses the same curve as player spells; random uses DAMAGE_RANDOM_MIN/MAX.
 static func attack_damage(skill: SkillDefinition, caster: CombatantState,
-		defender: CombatantState = null) -> int:
+		defender: CombatantState = null, terrain: TerrainDefinition = null) -> int:
 	var raw: float = skill.tier_power() * maxf(1.0, caster.attack) * caster.attack_multiplier
 	raw *= caster.outgoing_ailment_multiplier()
 	if defender != null:
-		raw *= DamageCalculator.defence_multiplier_of(caster, defender)
+		# Terrain ATK does not apply to enemy skills; player DEF terrain does when defending.
+		raw *= DamageCalculator.defence_multiplier_of(
+				caster, defender, Elements.Element.NONE, terrain)
 	raw *= DamageCalculator.overlevel_multiplier_of(caster, defender)
 	raw *= randf_range(BattleConfig.DAMAGE_RANDOM_MIN, BattleConfig.DAMAGE_RANDOM_MAX)
 	return maxi(0, ceili(raw))
 
 static func cast(skill: SkillDefinition, caster: CombatantState, chosen: CombatantState,
-		_state: BattleState, _log: Array[String]) -> int:
+		state: BattleState, _log: Array[String]) -> int:
 	var target := caster if skill.target_kind == SkillDefinition.TargetKind.SELF else chosen
 	var dealt := 0
 	var notes: Array[String] = []
+	var terrain: TerrainDefinition = state.terrain if state != null else null
 
 	match skill.kind:
 		SkillDefinition.SkillKind.ATTACK:
-			var dmg := attack_damage(skill, caster, target)
+			var dmg := attack_damage(skill, caster, target, terrain)
 			if dmg > 0:
 				var res := target.take_damage(dmg)
 				dealt = res["hp"] + res["absorbed"]

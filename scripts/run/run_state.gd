@@ -44,6 +44,9 @@ var zone_id: int = 1
 var zone_exit_claimed: bool = false
 ## early | mid | late — set by exploration before entering battle
 var pending_encounter_band: StringName = &"mid"
+## Primary + secondary battle terrain — set by exploration before entering battle
+var pending_primary_terrain: String = "None"
+var pending_secondary_terrain: String = "Clearing"
 ## Queue of {level, stat_label, stat_text, offers: Array[LevelUpOffer]}
 var _pending_level_ups: Array[Dictionary] = []
 
@@ -76,6 +79,8 @@ func reset_run() -> void:
 	zone_id = 1
 	zone_exit_claimed = false
 	pending_encounter_band = &"mid"
+	pending_primary_terrain = "None"
+	pending_secondary_terrain = "Clearing"
 	_pending_level_ups.clear()
 	_base_player = PlayerDefinition.default_player()
 	_seed_starter()

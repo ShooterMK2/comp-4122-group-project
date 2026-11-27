@@ -137,17 +137,19 @@ static func defence_multiplier_of(attacker: CombatantState, defender: CombatantS
 	var effective_defence: float = maxf(0.0,
 		defender.defence * defender.defence_multiplier)
 	if terrain != null:
-		effective_defence *= terrain.defence_multiplier_for(element)
+		# Flat DEF terrain applies only when the player is defending.
+		effective_defence *= terrain.defence_multiplier_for(defender.is_player)
 	var compared_defence: float = effective_defence \
 		* BattleConfig.DEFENCE_REFERENCE_ATTACK / effective_attack
 	return BattleConfig.DEFENCE_MULTIPLIER_BASE / (
 		BattleConfig.DEFENCE_MULTIPLIER_BASE + compared_defence)
 
-static func _attack_multiplier(_attacker: CombatantState, element: int,
+static func _attack_multiplier(attacker: CombatantState, element: int,
 		terrain: TerrainDefinition) -> float:
-	if terrain == null:
+	if terrain == null or attacker == null:
 		return 1.0
-	return terrain.attack_multiplier_for(element)
+	# Element ATK terrain applies only when the player is attacking.
+	return terrain.attack_multiplier_for(element, attacker.is_player)
 
 static func _element_spell_multiplier(attacker: CombatantState, element: int) -> float:
 	if attacker == null or attacker.element_spell_damage_mult.is_empty():
