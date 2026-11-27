@@ -11,12 +11,12 @@ signal enemy_acted(enemy_index: int, text: String)     # for a future floating-t
 @export var encounter: EncounterDefinition
 @export var enemy_action_delay := 0.6    # TUNABLE: seconds before each enemy acts; 0 = instant
 
-@onready var _battlefield: Battlefield = %Battlefield
+@onready var _battlefield: BattlefieldPanel = %Battlefield
 @onready var _top_panel: TopPanel = %TopPanel
 @onready var _io: BattleIO = %BattleIO
 @onready var _result: ResultOverlay = %ResultOverlay
 @onready var _console: LogConsole = %LogConsole
-@onready var _deadlock: _DeadlockOverlay = %DeadlockOverlay
+@onready var _deadlock: n_DeadlockOverlay = %DeadlockOverlay
 
 var _session: BattleSession
 var _flow := BattleFlow.new()

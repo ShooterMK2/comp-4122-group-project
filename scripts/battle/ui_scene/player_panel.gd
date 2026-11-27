@@ -36,7 +36,7 @@ func setup(art_name: String, color: Color) -> void:
 	%PortraitPlaceholder.visible = tex == null
 	%PortraitPlaceholder.color = color
 
-func refresh(c: CombatantState, charge: float, can_ultimate: bool) -> void:
+func refresh(c: CombatantState, charge: float, can_ultimate: bool, ultimate_label: String) -> void:
 	var dead := c.is_dead()
 	var pct := 100.0 * float(c.hp) / float(maxi(c.max_hp, 1))
 	%HpLabel.text = "%d/%d" % [c.hp, c.max_hp]

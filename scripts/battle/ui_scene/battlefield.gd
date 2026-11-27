@@ -30,7 +30,7 @@ func _ready() -> void:
 		spawn_enemies(encounter.make_enemies())
 		var def := PlayerDefinition.default_player()
 		_show_player(def)
-		_player_panel.refresh(CombatantState.from_definition(def), 0.0, false)
+		_player_panel.refresh(CombatantState.from_definition(def), 0.0, false,"sth")
 
 
 # ---------- spawning ----------
@@ -77,7 +77,7 @@ func setup(state: BattleState) -> void:
 
 
 func refresh(state: BattleState, can_ultimate: bool) -> void:
-	_player_panel.refresh(state.player, state.charge_gauge, can_ultimate)
+	_player_panel.refresh(state.player, state.charge_gauge, can_ultimate, "sth")
 	if player_actor != null:
 		player_actor.set_dead(state.player.is_dead())
 	for i in mini(_enemy_slots.get_child_count(), state.enemies.size()):

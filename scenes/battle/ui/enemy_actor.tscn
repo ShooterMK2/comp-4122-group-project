@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://mqbwc1rytvdh"]
 
 [ext_resource type="Script" uid="uid://c8583lk8s2ii2" path="res://scenes/battle/ui/sprite_slot.gd" id="1_o4kih"]
-[ext_resource type="Script" uid="uid://e7hphka4s87y" path="res://scenes/battle/ui/enemy_actor.gd" id="1_p18a1"]
+[ext_resource type="Script" uid="uid://dfejem1t574ny" path="res://scripts/battle/ui_scene/enemy_actor.gd" id="1_p18a1"]
 [ext_resource type="Theme" uid="uid://y1yijd4fntne" path="res://actorNames.tres" id="2_theme"]
 [ext_resource type="Texture2D" uid="uid://bnfk86cm7i1xs" path="res://assets/enemies/enemy_wooden_dummy.png" id="2_wnsej"]
-[ext_resource type="FontFile" uid="uid://ddn1lswv0ikau" path="res://assets/fonts/Quadlet/Quadlet.ttf" id="3_font"]
+[ext_resource type="FontFile" uid="uid://ddn1lswv0ikau" path="res://dontTrack/LocalAssets/quadlet-fonts/Quadlet/Quadlet.ttf" id="3_font"]
 [ext_resource type="PackedScene" uid="uid://buno6w5sl62jo" path="res://scenes/battle/ui/status_chip.tscn" id="4_7p0qe"]
-[ext_resource type="Texture2D" path="res://assets/ui/hp_bar_frame.png" id="5_progress"]
+[ext_resource type="Texture2D" uid="uid://bicdlgekianpo" path="res://assets/ui/hp_bar_frame.png" id="5_progress"]
 [ext_resource type="Script" uid="uid://dn747alp275jw" path="res://scripts/battle/ui_scene/actor_hitbox.gd" id="7_o4kih"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_wnsej"]
