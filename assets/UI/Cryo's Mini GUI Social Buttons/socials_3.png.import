@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://wscrq6rtesx7"
-path="res://.godot/imported/socials_3.png-9988a74774264d343964a1cbb4f68472.ctex"
+path="res://.godot/imported/socials_3.png-afd6bbb200b0d9feca837cae42664085.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/Cryo's Mini GUI Social Buttons/socials_3.png"
-dest_files=["res://.godot/imported/socials_3.png-9988a74774264d343964a1cbb4f68472.ctex"]
+source_file="res://assets/UI/Cryo's Mini GUI Social Buttons/socials_3.png"
+dest_files=["res://.godot/imported/socials_3.png-afd6bbb200b0d9feca837cae42664085.ctex"]
 
 [params]
 

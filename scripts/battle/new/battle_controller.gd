@@ -381,15 +381,18 @@ func _refresh_detail() -> void:
 	var self_spell := spell != null and spell.target_kind == SpellDefinition.TargetKind.SELF
 	var on_player := _inspect_player or self_spell
 	var index := state.target_index
+	var sim := state.duplicate_state()
+	sim.target_index = index
 	var subject: CombatantState = state.player if on_player else state.enemies[index]
 	var data := {"role": "YOU" if on_player else "TARGET"}
 	if not on_player:
 		data["intent"] = _session.intent_text(index)
-	var tiles := _session.board.filled_count()
-	if tiles > 0:
-		var none: Array[QueuedSpell] = []
-		data["basic_tiles"] = tiles
-		data["basic_info"] = "Projected %d damage" % int(SpellResolver.preview(none, tiles, state)["basic"])
+		var tiles := _session.board.filled_count()
+		if tiles > 0:
+			data["basic_tiles"] = tiles
+			# TargetDetail expects DamageCalculator.explain_* dictionaries, not summary strings.
+			data["basic_info"] = DamageCalculator.explain_basic_attack(
+					tiles, sim.player, sim.enemies[index], sim.terrain)
 	if spell != null:
 		data["spell_name"] = spell.display_name
 		var fx: Array[String] = []
@@ -398,5 +401,9 @@ func _refresh_detail() -> void:
 		data["spell_effects"] = ", ".join(fx)
 		var first := _session.first_queued(spell)
 		if first != null and spell.base_damage > 0 and not on_player:
-			data["spell_info"] = "Projected %d damage" % _projected_damage(first)
+			var target := sim.enemies[index]
+			SpellResolver.apply_special_tiles(first.special_tiles, sim.player, target, [])
+			data["spell_info"] = DamageCalculator.explain_spell(
+					spell.base_damage, sim.player, target,
+					spell.primary_element(), spell.other_multiplier, sim.terrain)
 	_io.target_detail.show_data(subject, data)
