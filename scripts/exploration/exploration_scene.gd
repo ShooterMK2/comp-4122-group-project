@@ -31,6 +31,12 @@ const FIXED_TYPES = {
 	"12_0": "BATTLE",	# Final Boss
 }
 
+## Map encounter tiers (minors use terrain pools; elite/boss use dummy placeholders).
+const FIXED_TIERS = {
+	"8_0": &"elite",
+	"12_0": &"boss",
+}
+
 # Determines the terrain
 func get_terrain(layer_idx: int) -> String:
 	if layer_idx <= 1: return "None"
@@ -87,7 +93,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _ensure_hud() -> void:
 	if has_node("RunHud"):
 		return
-	# Gold + Zone Exit top-left; Player Card bottom-left; backpack bottom-right.
+	# Gold top-left; Player Card bottom-left; backpack bottom-right.
+	# Zone-clear XP is granted on winning the final map battle (no HUD button).
 	var hud_layer := CanvasLayer.new()
 	hud_layer.name = "RunHudLayer"
 	hud_layer.layer = 1
@@ -109,20 +116,6 @@ func _ensure_hud() -> void:
 	gold.offset_bottom = 40
 	gold.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud.add_child(gold)
-
-	var exit_btn := Button.new()
-	exit_btn.name = "ZoneExitButton"
-	exit_btn.text = "Zone Exit"
-	exit_btn.tooltip_text = "Claim zone-clear XP (once per zone)"
-	exit_btn.focus_mode = Control.FOCUS_NONE
-	exit_btn.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	exit_btn.offset_left = 12
-	exit_btn.offset_top = 44
-	exit_btn.offset_right = 140
-	exit_btn.offset_bottom = 76
-	exit_btn.disabled = RunState.zone_exit_claimed
-	exit_btn.pressed.connect(_on_zone_exit)
-	hud.add_child(exit_btn)
 
 	var player_btn := TextureButton.new()
 	player_btn.name = "PlayerCardButton"
@@ -159,34 +152,11 @@ func _ensure_hud() -> void:
 
 	RunState.changed.connect(func():
 		if is_instance_valid(gold):
-			gold.text = "$%d" % RunState.gold
-		if is_instance_valid(exit_btn):
-			exit_btn.disabled = RunState.zone_exit_claimed)
+			gold.text = "$%d" % RunState.gold)
 
 func _on_player_card_pressed() -> void:
 	if _player_card != null and _player_card.has_method("open"):
 		_player_card.open()
-
-func _on_zone_exit() -> void:
-	var dialog := AcceptDialog.new()
-	if RunState.zone_exit_claimed:
-		dialog.dialog_text = "Zone exit XP already claimed."
-	else:
-		var levels := RunState.claim_zone_exit_xp()
-		dialog.dialog_text = "Zone clear! +%d XP (Lv %d)%s" % [
-			RunConfig.MILESTONE_ZONE_EXIT_XP,
-			RunState.player_level,
-			("\nLevel-up!" if levels > 0 else "")]
-	add_child(dialog)
-	dialog.confirmed.connect(func():
-		if RunState.has_pending_level_ups():
-			_present_next_level_up()
-		dialog.queue_free())
-	dialog.canceled.connect(func():
-		if RunState.has_pending_level_ups():
-			_present_next_level_up()
-		dialog.queue_free())
-	dialog.popup_centered()
 
 func _present_next_level_up() -> void:
 	if not RunState.has_pending_level_ups():
@@ -232,6 +202,8 @@ func generate_map_graph() -> void:
 			new_node.set_meta("node_type", random_type)
 			new_node.set_meta("layer", layer_idx)
 			new_node.set_meta("index", node_idx)
+			var encounter_tier: StringName = FIXED_TIERS.get(type_key, &"minor")
+			new_node.set_meta("encounter_tier", encounter_tier)
 			# Battle terrain: primary from layer, secondary fixed for this node (seeded RNG).
 			var primary_terrain := get_terrain(layer_idx)
 			var secondary_terrain := TerrainSystem.pick_secondary(primary_terrain)
@@ -244,7 +216,12 @@ func generate_map_graph() -> void:
 			var icon_path = NODE_TYPES[random_type]["icon"]
 			if ResourceLoader.exists(icon_path):
 				icon_rect.texture = load(icon_path)
-			label.text = NODE_TYPES[random_type]["name"]
+			if encounter_tier == &"elite":
+				label.text = "Elite"
+			elif encounter_tier == &"boss":
+				label.text = "Boss"
+			else:
+				label.text = NODE_TYPES[random_type]["name"]
 			if not panel.gui_input.is_connected(_on_node_clicked):
 				panel.gui_input.connect(_on_node_clicked.bind(new_node))
 			# Visuals for cleared Nodes
@@ -417,10 +394,16 @@ func _on_event_choice_made(choice: Dictionary) -> void:
 		_show_notification("%s%d Morality" % [sign_str, morality_change], color)
 		if RunState.morality <= -2 and not RunState.karma_pending:
 			RunState.karma_pending = true
-	if battle_triggered:  # choose battle in special event
+	if battle_triggered:  # choose battle in special event / karma
 		_pending_node_after_karma = null
 		_sync_pending_terrain_from_current_node()
-		_mark_node_as_cleared() 
+		# Override set in _apply_effects (bandit / elite).
+		if RunState.pending_encounter_override == &"" \
+				and RunState.pending_encounter_tier == &"minor":
+			# Karma Fight defaults to bandit pack.
+			RunState.pending_encounter_override = &"bandit"
+		RunState.pending_is_zone_finale = false
+		_mark_node_as_cleared()
 		_clear_notifications()
 		await ScreenTransition.fade_out()
 		get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")
@@ -470,6 +453,14 @@ func _apply_effects(effects: Array) -> bool:
 				_show_notification("+%s Spell (WIP)" % value, Color.MAGENTA)
 			"battle":
 				battle_triggered = true
+				var battle_kind := str(value)
+				if battle_kind == "elite":
+					RunState.pending_encounter_override = &""
+					RunState.pending_encounter_tier = &"elite"
+				else:
+					# Karma / normal event fight → Human Bandit pack.
+					RunState.pending_encounter_override = &"bandit"
+					RunState.pending_encounter_tier = &"minor"
 	return battle_triggered
 
 
@@ -509,9 +500,13 @@ func _on_node_clicked(event: InputEvent, node: Control) -> void:
 		if type == "BATTLE":
 			if RunState.fragment_deck_count() <= 0:
 				RunState.autofill_fragment_deck()
-			RunState.pending_encounter_band = _band_for_index(node_idx)
+			RunState.pending_encounter_band = _band_for_index(layer_idx)
 			RunState.pending_primary_terrain = str(node.get_meta("primary_terrain", get_terrain(layer_idx)))
 			RunState.pending_secondary_terrain = str(node.get_meta("secondary_terrain", "Clearing"))
+			RunState.pending_encounter_tier = node.get_meta("encounter_tier", &"minor")
+			RunState.pending_encounter_override = &""
+			RunState.pending_is_zone_finale = (RunState.pending_encounter_tier == &"boss") \
+					or (layer_idx == 12 and node_idx == 0)
 			_clear_notifications()
 			await ScreenTransition.fade_out()
 			get_tree().change_scene_to_file("res://scenes/battle/battle_scene_template.tscn")

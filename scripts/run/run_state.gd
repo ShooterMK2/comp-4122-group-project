@@ -42,11 +42,20 @@ var level_bonus_speed: float = 0.0
 var perm_start_shield: int = 0
 var zone_id: int = 1
 var zone_exit_claimed: bool = false
-## early | mid | late — set by exploration before entering battle
+## early | mid | late — legacy; terrain bands own levels now
 var pending_encounter_band: StringName = &"mid"
 ## Primary + secondary battle terrain — set by exploration before entering battle
 var pending_primary_terrain: String = "None"
 var pending_secondary_terrain: String = "Clearing"
+## minor | elite | boss — map node encounter tier
+var pending_encounter_tier: StringName = &"minor"
+## "" | bandit | … — special encounter override (karma, events)
+var pending_encounter_override: StringName = &""
+## True when entering final map node (12_0) for zone-clear XP + screen
+var pending_is_zone_finale: bool = false
+## Last battle XP breakdown for Zone Cleared UI
+var last_battle_xp: int = 0
+var last_zone_bonus_xp: int = 0
 ## Queue of {level, stat_label, stat_text, offers: Array[LevelUpOffer]}
 var _pending_level_ups: Array[Dictionary] = []
 
@@ -81,6 +90,11 @@ func reset_run() -> void:
 	pending_encounter_band = &"mid"
 	pending_primary_terrain = "None"
 	pending_secondary_terrain = "Clearing"
+	pending_encounter_tier = &"minor"
+	pending_encounter_override = &""
+	pending_is_zone_finale = false
+	last_battle_xp = 0
+	last_zone_bonus_xp = 0
 	_pending_level_ups.clear()
 	_base_player = PlayerDefinition.default_player()
 	_seed_starter()
@@ -193,16 +207,25 @@ func add_xp(amount: int) -> int:
 	return levels_gained
 
 func grant_battle_xp(enemy_defs: Array) -> int:
-	return add_xp(LevelProgression.battle_xp_for_enemies(enemy_defs))
+	last_battle_xp = LevelProgression.battle_xp_for_enemies(enemy_defs)
+	return add_xp(last_battle_xp)
 
 func grant_milestone_xp(amount: int = RunConfig.MILESTONE_NODE_XP) -> int:
 	return add_xp(amount)
 
 func claim_zone_exit_xp() -> int:
 	if zone_exit_claimed:
+		last_zone_bonus_xp = 0
 		return 0
 	zone_exit_claimed = true
-	return grant_milestone_xp(RunConfig.MILESTONE_ZONE_EXIT_XP)
+	last_zone_bonus_xp = RunConfig.MILESTONE_ZONE_EXIT_XP
+	return grant_milestone_xp(last_zone_bonus_xp)
+
+func clear_battle_encounter_flags() -> void:
+	pending_encounter_tier = &"minor"
+	pending_encounter_override = &""
+	pending_is_zone_finale = false
+
 
 func has_pending_level_ups() -> bool:
 	return not _pending_level_ups.is_empty()
@@ -213,15 +236,17 @@ func peek_pending_level_up() -> Dictionary:
 	return _pending_level_ups[0]
 
 func _queue_level_up(new_level: int) -> void:
-	var stat := LevelProgression.pick_guaranteed_stat(new_level)
-	_apply_guaranteed_stat(stat)
+	var stats := LevelProgression.pick_level_up_stats(new_level)
+	for stat in stats:
+		_apply_guaranteed_stat(stat)
 	var offers := LevelProgression.roll_non_stat_offers(self, 3)
-	var stat_text := "+%d %s" % [stat["amount_i"], stat["label"]]
-	if int(stat["kind"]) == LevelProgression.StatKind.SPEED:
-		stat_text = "+%.2f %s" % [float(stat["amount_f"]), stat["label"]]
+	var parts: PackedStringArray = PackedStringArray()
+	for stat in stats:
+		parts.append(LevelProgression.format_stat_text(stat))
+	var stat_text := ", ".join(parts)
 	_pending_level_ups.append({
 		"level": new_level,
-		"stat_label": str(stat["label"]),
+		"stat_label": str(stats[0]["label"]) if not stats.is_empty() else "",
 		"stat_text": stat_text,
 		"offers": offers,
 	})
@@ -539,6 +564,7 @@ func clear_ultimate() -> void:
 
 func clear_pending_after_battle() -> void:
 	pending.clear()
+	clear_battle_encounter_flags()
 	_clamp_run_hp()
 	changed.emit()
 

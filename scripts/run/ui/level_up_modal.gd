@@ -70,7 +70,7 @@ func _ready() -> void:
 func present(entry: Dictionary) -> void:
 	var lv: int = int(entry.get("level", 1))
 	_title.text = "LEVEL UP!  →  Lv %d" % lv
-	_stat_label.text = "Guaranteed: %s" % str(entry.get("stat_text", "+STAT"))
+	_stat_label.text = "Stats: %s" % str(entry.get("stat_text", "+STAT"))
 	var offers: Array = entry.get("offers", [])
 	for i in _buttons.size():
 		if i < offers.size():

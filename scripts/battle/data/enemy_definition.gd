@@ -9,6 +9,12 @@ enum Rank { MINOR, ELITE, BOSS }
 # Author on the .tres; factories only load + duplicate.
 @export var skills: Array[SkillDefinition] = []
 
+## Kind bias applied after level curve (1.0 = average). Used for role fantasy.
+@export var hp_mult: float = 1.0
+@export var attack_mult: float = 1.0
+@export var defence_mult: float = 1.0
+@export var speed_mult: float = 1.0
+
 static func _load_enemy(path: String) -> EnemyDefinition:
 	var d := load(path) as EnemyDefinition
 	if d == null:
@@ -27,5 +33,5 @@ static func wooden_dummy_variant(index: int) -> EnemyDefinition:
 	]
 	return _load_enemy(paths[clampi(index, 0, paths.size() - 1)])
 
-static func ash_hound() -> EnemyDefinition:
-	return _load_enemy("res://resources/enemies/ash_hound.tres")
+static func human_bandit() -> EnemyDefinition:
+	return MinorEnemyLibrary.human_bandit().duplicate(true) as EnemyDefinition

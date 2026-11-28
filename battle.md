@@ -13,12 +13,13 @@ the playable Godot battle prototype. It describes the implementation, not planne
 | Reordering | Remaining actors are re-sorted after every spell/action |
 | Victory | All enemies reach 0 HP |
 | Defeat | Player reaches 0 HP |
-| Test encounter | Ash Hound + Wooden Dummy (Fire) + Wooden Dummy (Ice) |
+| Minor encounters | 2–3 from primary-terrain pool (`MinorEnemyLibrary`); kind repeats allowed |
+| Elite / Boss map | Nodes `8_0` / `12_0`; Wooden Dummy placeholders until real content |
+| Karma fight | 2–3 **Human Bandit** at current primary terrain level band |
 | Player defaults | 100 HP, 5 ATK, 3 DEF, 4 SPD |
-| Ash Hound | Level 2, Rank MINOR; 100 HP, 5 ATK, 2 DEF, 4 SPD; weak Ice, strong Fire |
-| Ash Hound skills | Cinder Bite → Smoke Snarl → Ember Fever → Lick Wounds (cycle) |
-| Dummy (Fire) | Level 1, Rank MINOR; 500 HP, 1 ATK, 2 DEF, 6 SPD; **Mend** only |
-| Dummy (Ice) | Level 1, Rank MINOR; 750 HP, 1 ATK, 4 DEF, 2 SPD; **Mend** only |
+| Level-up | Guaranteed MAX HP + 2 distinct random ATK/DEF/SPD, then 1-of-3 non-stat offer |
+| Enemy stats | Level curve × per-kind bias (HP/ATK/DEF/SPD) × ~±8–10% spawn jitter |
+| Zone clear | Win final Boss node → battle XP + zone bonus + Zone Cleared screen |
 | Player actions | Board **spells** via `SpellResolver` |
 | Enemy actions | Authored **skills** via `SkillResolver` (no casting board) |
 
@@ -209,7 +210,7 @@ damage = ceil(
 )
 ```
 
-Then `take_damage` (Expose + Shield). Example: Ash Hound **Cinder Bite**
+Then `take_damage` (Expose + Shield). Example: Human Bandit **Bandit Slash**
 (Medium, ATK 5, no mods) is `ceil(4 × 5 × …)` before DEF/random/Shield.
 
 ### Direct status / DoT damage
@@ -287,14 +288,15 @@ Enemies do not use the casting board. Each `EnemyDefinition` authors
 | **Support** | ATK / DEF / SPD buff or debuff for N turns (`apply_stat_mod`) |
 | **Status Ailment** | Apply one enemy ailment with duration; no primary Attack damage |
 
-### Ash Hound skill cycle
+### Example minors
 
-| Order | Skill | Kind | Detail |
-|---|---|---|---|
-| 1 | Cinder Bite | Attack | Medium tier |
-| 2 | Smoke Snarl | Support | DEF debuff on player, 3 turns |
-| 3 | Ember Fever | Status Ailment | Poison, 3 turns |
-| 4 | Lick Wounds | Heal | +12 HP self |
+| Enemy | Pool | Weak | Strong | Skill cycle (summary) |
+|---|---|---|---|---|
+| Human Bandit | None + karma | Fire, Lightning | — | Med Attack → DEF debuff → Light Attack |
+| Frost Hare | Snow | Fire | Ice | Light Attack → Slow → Light Attack |
+| Magma Beetle | Volcano | Ice, Wind | Fire, Earth | Med Attack → Heavy Attack → self DEF buff |
+
+Rule: if an enemy has any elemental strength, it must have at least one weakness.
 
 ### Enemy ailments (`AilmentTypes`)
 

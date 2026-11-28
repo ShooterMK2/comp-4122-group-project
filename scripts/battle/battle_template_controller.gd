@@ -44,7 +44,7 @@ func _ready() -> void:
 		RunState.autofill_fragment_deck()
 	spells = RunState.spell_deck()
 	_deck_draw = RunState.create_battle_draw()
-	var encounter := ZoneEncounters.for_zone(RunState.zone_id, RunState.pending_encounter_band)
+	var encounter := ZoneEncounters.build_pending_encounter()
 	var terrain := TerrainSystem.compose(
 			RunState.pending_primary_terrain, RunState.pending_secondary_terrain)
 	state = BattleState.new(encounter, terrain)
@@ -254,18 +254,31 @@ func _finish(won: bool) -> void:
 	_won_battle = won
 	_prompt.visible = false
 	_battlefield.set_drop_enabled(false)
+	var was_finale := RunState.pending_is_zone_finale
 	var xp_line := ""
+	var stats := "Rounds: %d" % state.turn
 	if won and not _xp_granted:
 		_xp_granted = true
-		var gained := RunState.grant_battle_xp(state.enemy_defs)
-		xp_line = "  |  +%d XP (Lv %d)" % [LevelProgression.battle_xp_for_enemies(state.enemy_defs), RunState.player_level]
-		if gained > 0:
-			xp_line += "  |  %d level-up(s) pending" % gained
+		RunState.grant_battle_xp(state.enemy_defs)
+		var battle_xp := RunState.last_battle_xp
+		var zone_xp := 0
+		if was_finale:
+			RunState.claim_zone_exit_xp()
+			zone_xp = RunState.last_zone_bonus_xp
+		xp_line = "  |  +%d XP (Lv %d)" % [battle_xp + zone_xp, RunState.player_level]
+		if RunState.has_pending_level_ups():
+			xp_line += "  |  level-up(s) pending"
+		if was_finale:
+			stats = "ZONE CLEARED\nBattle XP: +%d\nZone clear bonus: +%d\nTotal: +%d\nRounds: %d" % [
+				battle_xp, zone_xp, battle_xp + zone_xp, state.turn]
+		else:
+			stats = "Rounds: %d%s" % [state.turn, xp_line]
 	_sync_run_after_battle()
+	var title_sub := "All enemies are down." if won else "You ran out of HP."
+	if won and was_finale:
+		title_sub = "Zone Cleared! All enemies are down."
 	_log_line("system", ("VICTORY! All enemies are down." if won else "DEFEAT... you ran out of HP.") + xp_line)
-	_result.show_result(won,
-		"All enemies are down." if won else "You ran out of HP.",
-		"Rounds: %d%s" % [state.turn, xp_line])
+	_result.show_result(won, title_sub, stats, won and was_finale)
 	_refresh_all()
 
 # ---------- chanting period: hand and board ----------

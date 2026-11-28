@@ -35,7 +35,7 @@
 - [x] Implement FEVER mode: trigger, duration, effects () - Lok
 - [x] Implement the character ultimate (selectable ultimates; Overdrive = original charge damage burst)
 - [ ] Implement talents (element buffs, stat changes) **[deferred]** 
-- [x] Implement levels/progression (run Lv 1–120, battle+milestone XP, guaranteed stat + 1-of-3 non-stat pick; zone enemy levels; overlevel soft gap ~18; level HUD deferred) 
+- [x] Implement levels/progression (run Lv 1–120, battle+milestone XP, guaranteed HP + 2 random ATK/DEF/SPD + 1-of-3 non-stat pick; terrain minor pools; overlevel soft gap ~18; level HUD deferred) 
 - [ ] Add more selectable characters and a select screen **[?]**
 
 ## 5. Enemy and Boss AI
@@ -49,7 +49,8 @@
 - [ ] Add boss ultimate spells on the set interval ()
 - [ ] Add the boss ability to ban grids on the board ()
 - [ ] Add boss terrain-change status **[?]**
-- [x] Add more enemies ()
+- [x] Add more enemies (30 minors by primary terrain + Human Bandit; elite/boss placeholders)
+- [ ] Replace elite/boss Wooden Dummy placeholders with real encounters
 
 ## 6. Equipment, Inventory and Economy
 
@@ -63,13 +64,13 @@
 
 ## 7. Exploration and Run Flow
 
-- [ ] Generate the node-based map ()
-- [ ] Add battle nodes with scaling difficulty ()
-- [ ] Add elite battle nodes ()
-- [ ] Add the boss node ()
+- [x] Generate the node-based map ()
+- [x] Add battle nodes with scaling difficulty (terrain pools, Lv bands ≤20)
+- [x] Add elite battle nodes (tagged `8_0`; dummy placeholder fight)
+- [x] Add the boss node (tagged `12_0`; dummy placeholder; Zone Cleared + zone XP on win)
 - [ ] Add shop nodes ()
-- [ ] Add treasure nodes ()
-- [ ] Add event nodes with choices and outcomes ()
+- [x] Add treasure nodes ()
+- [x] Add event nodes with choices and outcomes ()
 - [ ] Implement save/load and run resume ()
 
 ## 8. Terrain **[?]**
@@ -148,15 +149,17 @@ spell bag + spell deck (cap 18), fragment bag and fragment deck (size 12),
 pending next-battle modifiers, and **run leveling** (Lv 1–120).
 
 **Leveling (locked):**
-- XP from battle wins and milestones (map nodes / zone exit).
-- Each level-up: **guaranteed** permanent stat-up, then pick **1 of 3** non-stat rewards.
-- Zone 1 encounters are authored by band (early/mid/late, enemy Lv 1–20); stats suggested in the 1–500 band.
+- XP from battle wins, map milestones, and **zone-clear bonus** (granted when winning the final Boss node — no Zone Exit button).
+- Each level-up: **guaranteed MAX HP** + **2 random** of ATK / DEF / SPD (distinct), then pick **1 of 3** non-stat rewards.
+- Zone 1 **minor** battles roll 2–3 enemies from the node’s **primary terrain pool** (6 types; duplicates allowed). Levels follow terrain bands (None 1–4 … Volcano 16–20).
+- Elite (`8_0`) / Boss (`12_0`) use Wooden Dummy placeholders until real content ships. Karma Fight uses **Human Bandit**.
 - Overlevel soft combat penalty (deal less / take more); harsh around **gap 18**.
 - Talents and on-HUD level display are **deferred**.
 
 - Inventory UI: `scenes/run/inventory_screen.tscn`
 - Level-up modal: `scripts/run/ui/level_up_modal.gd`
 - Starter content: `scripts/content/items/starter_content.gd`
+- Minor enemies: `scripts/content/enemies/minor_enemy_library.gd`
 - Zone encounters: `scripts/content/encounters/zone_encounters.gd`
 - Ultimates: `scripts/content/ultimates/ultimate_library.gd` — own several; equip from the exploration **Player Card** only (not Inventory). Battle button uses the active skill (`Overdrive` = original charge-scaled damage burst).
 - Player Card: map icon → `scripts/run/ui/player_card_overlay.gd` — HP/Lv/XP/stats/gear/ultimate; Details expands breakdown, start shield, pending modifiers.

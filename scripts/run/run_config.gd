@@ -28,15 +28,16 @@ const PLAYER_LEVEL_MIN := 1
 const PLAYER_LEVEL_MAX := 120
 const STAT_BAND_MAX := 500
 
-const LEVEL_UP_HP := 8
+# HP every level; random bonus is ATK/DEF/SPD. Tuned for Zone 1 pace ~Lv 12–20.
+const LEVEL_UP_HP := 5
 const LEVEL_UP_ATTACK := 1
 const LEVEL_UP_DEFENCE := 1
-const LEVEL_UP_SPEED := 0.25
+const LEVEL_UP_SPEED := 0.35
 
-const BATTLE_XP_BASE := 12
-const BATTLE_XP_PER_ENEMY_LEVEL := 4
-const MILESTONE_ZONE_EXIT_XP := 60
-const MILESTONE_NODE_XP := 15
+const BATTLE_XP_BASE := 14
+const BATTLE_XP_PER_ENEMY_LEVEL := 5
+const MILESTONE_ZONE_EXIT_XP := 80
+const MILESTONE_NODE_XP := 18
 
 # Soft overlevel combat curve (gap = encounter_level - player_level)
 const OVERLEVEL_MILD_GAP := 5

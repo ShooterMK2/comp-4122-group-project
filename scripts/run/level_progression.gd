@@ -6,7 +6,9 @@ enum StatKind { MAX_HP, ATTACK, DEFENCE, SPEED }
 ## XP required to go from `level` -> level+1.
 static func xp_to_next(level: int) -> int:
 	var lv := clampi(level, RunConfig.PLAYER_LEVEL_MIN, RunConfig.PLAYER_LEVEL_MAX)
-	# Early levels fast; slows toward 120.
+	# Gentler early curve so Zone 1 (Lv 1–20) advances with map battles + milestones.
+	if lv <= 20:
+		return 16 + lv * 8 + int((lv * lv) / 8.0)
 	return 20 + lv * 12 + int((lv * lv) / 5.0)
 
 static func battle_xp_for_enemies(defs: Array) -> int:
@@ -40,9 +42,7 @@ static func damage_taken_mult(gap: int) -> float:
 	var t := overlevel_t(gap)
 	return lerpf(1.0, RunConfig.OVERLEVEL_DAMAGE_TAKEN_AT_HARSH, clampf(t, 0.0, 1.0))
 
-static func pick_guaranteed_stat(level_after: int) -> Dictionary:
-	# Round-robin by level so every fourth level hits the same stat family.
-	var kind: int = (level_after - 1) % 4
+static func _stat_dict(kind: int) -> Dictionary:
 	match kind:
 		StatKind.MAX_HP:
 			return {"kind": kind, "label": "MAX HP", "amount_i": RunConfig.LEVEL_UP_HP, "amount_f": 0.0}
@@ -52,6 +52,26 @@ static func pick_guaranteed_stat(level_after: int) -> Dictionary:
 			return {"kind": kind, "label": "DEF", "amount_i": RunConfig.LEVEL_UP_DEFENCE, "amount_f": 0.0}
 		_:
 			return {"kind": StatKind.SPEED, "label": "SPD", "amount_i": 0, "amount_f": RunConfig.LEVEL_UP_SPEED}
+
+static func format_stat_text(stat: Dictionary) -> String:
+	if int(stat["kind"]) == StatKind.SPEED:
+		return "+%.2f %s" % [float(stat["amount_f"]), str(stat["label"])]
+	return "+%d %s" % [int(stat["amount_i"]), str(stat["label"])]
+
+## Always MAX HP, plus two distinct random of ATK / DEF / SPD.
+static func pick_level_up_stats(_level_after: int = 1) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	out.append(_stat_dict(StatKind.MAX_HP))
+	var others: Array[int] = [StatKind.ATTACK, StatKind.DEFENCE, StatKind.SPEED]
+	others.shuffle()
+	out.append(_stat_dict(others[0]))
+	out.append(_stat_dict(others[1]))
+	return out
+
+## Deprecated alias — prefer pick_level_up_stats.
+static func pick_guaranteed_stat(level_after: int) -> Dictionary:
+	var picked := pick_level_up_stats(level_after)
+	return picked[0]
 
 static func roll_non_stat_offers(run: Node, count: int = 3) -> Array[LevelUpOffer]:
 	var pool: Array[LevelUpOffer] = []

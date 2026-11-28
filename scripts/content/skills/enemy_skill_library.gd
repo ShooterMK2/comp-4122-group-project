@@ -49,5 +49,6 @@ static func open_guard() -> SkillDefinition:
 	return SkillDefinition.make_ailment(&"open_guard", "Open Guard",
 		AilmentTypes.Ailment.EXPOSE, BattleConfig.AILMENT_EXPOSE_DEFAULT_TURNS)
 
-static func ash_hound_skills() -> Array[SkillDefinition]:
+## Legacy skill cycle (kept for content reuse; Ash Hound encounter removed).
+static func demo_attack_cycle_skills() -> Array[SkillDefinition]:
 	return [cinder_bite(), smoke_snarl(), ember_fever(), lick_wounds()]
